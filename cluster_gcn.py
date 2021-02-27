@@ -42,7 +42,6 @@ def main(args):
     labels = g.ndata['label']
 
     psize = len(train_mask)/args.psize
-
     train_nid = np.nonzero(train_mask.data.numpy())[0].astype(np.int64)
 
     # Normalize features
@@ -72,16 +71,17 @@ def main(args):
             n_train_samples,
             n_val_samples,
             n_test_samples))
+
     # create GCN model
     if args.self_loop and not args.dataset.startswith('reddit'):
         g = dgl.remove_self_loop(g)
         g = dgl.add_self_loop(g)
         print("adding self-loop edges")
+
     # metis only support int64 graph
     g = g.long()
 
-    cluster_iterator = ClusterIter(
-        args.dataset, g, args.psize, args.batch_size, train_nid, use_pp=args.use_pp)
+    cluster_iterator = ClusterIter(args.dataset, g, args.psize, args.batch_size, train_nid, use_pp=args.use_pp)
 
     # set device for dataset tensors
     if args.gpu < 0:
@@ -95,6 +95,7 @@ def main(args):
 
     print('labels shape:', g.ndata['label'].shape)
     print("features shape, ", g.ndata['feat'].shape)
+    feat_size  = g.ndata['feat'].shape[1]
 
     model = GraphSAGE(in_feats,
                       args.n_hidden,
@@ -137,6 +138,12 @@ def main(args):
     start_time = time.time()
     best_f1 = -1
 
+    hidden_1 = 128
+    # hidden_2 = 2048
+    output = 42
+
+    total_ops = 0
+
     for epoch in range(args.n_epochs):
         # cluster_node_sizes = []
         # cluster_edge_sizes = []
@@ -156,19 +163,50 @@ def main(args):
             # plt.show()
             plt.savefig('reddit_subgraphs/{}.png'.format(j))
             '''
-
-            edges = cluster.edges()
-            row  = edges[0].cpu().numpy()
-            col  = edges[1].cpu().numpy()
-            data = np.ones(len(row))
-            num_nodes = max(max(row), max(col)) + 1
+            # edges = cluster.edges()
+            # row  = edges[0].cpu().numpy()
+            # col  = edges[1].cpu().numpy()
+            # data = np.ones(len(row))
+            # num_nodes = max(max(row), max(col)) + 1
             # print(num_nodes)
             # print("cluster -- {}".format(j))
+
+            # edges = cluster.edges()
+            # row  = edges[0].cpu().numpy()
+            # col  = edges[1].cpu().numpy()
+
+            num_nodes = len(cluster.nodes())
+            # data = np.ones(len(row))
+            # num_nodes = max(max(row), max(col)) + 1
+            # A = coo_matrix((data, (row, col)), shape=(num_nodes, num_nodes)).todense()
             
+            
+
             if cuda:
                 cluster = cluster.to(torch.cuda.current_device())
-            model.train()
+            # model.train()
+
+            # A = torch.ones((num_nodes, num_nodes)).cuda()
+            # X = torch.ones((num_nodes, feat_size)).cuda()
+            # W = torch.ones((feat_size, hidden_1)).cuda()
+
+            A = torch.ones((num_nodes, num_nodes)).cuda()
+            X = torch.ones((num_nodes, feat_size)).cuda()
+            W_1 = torch.ones((feat_size, hidden_1)).cuda()
+            W_2 = torch.ones((hidden_1, output)).cuda()
+
+
+            X_out = torch.mm(X, W_1)
+            X_out = torch.mm(A, X_out)
+            X_out = torch.mm(X_out, W_2)
+            X_out = torch.mm(A, X_out)
+
+            total_ops += 2 * num_nodes * num_nodes * hidden_1 +  2 * num_nodes * feat_size * hidden_1 \
+                        + 2 * num_nodes * num_nodes * output + 2 * num_nodes * hidden_1 * output
+
             # forward
+            # print(cluster.feat)
+            # exit(0)
 
             # print("nodes: ", len(cluster.nodes()))
             # print("edges: ", len(cluster.edges()[0]))
@@ -185,33 +223,26 @@ def main(args):
             # cluster_edge_sizes.append(len(cluster.edges()[0]))
             # sys.exit(0)
 
-            pred = model(cluster)
-            # print(cluster.edges()[0])
-            # print(cluster.edges()[1])
+            # pred = model(cluster)
 
-            # src_li = cluster.edges()[0].cpu().numpy().tolist()
-            # dst_li = cluster.edges()[1].cpu().numpy().tolist()
+            # batch_labels = cluster.ndata['label']
+            # batch_train_mask = cluster.ndata['train_mask']
+            # loss = loss_f(pred[batch_train_mask],
+            #               batch_labels[batch_train_mask])
 
-            # fp = open("reddit_small", "w")
-            # for src, dst in zip(src_li, dst_li):
-                # fp.write(f"{src} {dst}\n")
-
-            batch_labels = cluster.ndata['label']
-            batch_train_mask = cluster.ndata['train_mask']
-            loss = loss_f(pred[batch_train_mask],
-                          batch_labels[batch_train_mask])
-
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+            # optimizer.zero_grad()
+            # loss.backward()
+            # optimizer.step()
 
             # in PPI case, `log_every` is chosen to log one time per epoch. 
             # Choose your log freq dynamically when you want more info within one epoch
             if j % args.log_every == 0:
-                print(f"epoch:{epoch}/{args.n_epochs}, Iteration {j}/"
-                      f"{len(cluster_iterator)}, loss", "{:.3f}, ".format(loss.item()), 
-                      "#N: {}, ".format(num_nodes),
-                      "{:.3f} GB".format(torch.cuda.memory_allocated(device=pred.device) / 1024 / 1024 / 1024))
+                print("epoch:{}/{}, Iteration {}/{}, #N: {}, {:.3f} GB"\
+                .format(epoch, args.n_epochs, j, len(cluster_iterator), num_nodes,torch.cuda.memory_allocated(device=A.device) / 1024 / 1024 / 1024)),
+                # print(f"epoch:{epoch}/{args.n_epochs}, Iteration {j}/"
+                #       f"{len(cluster_iterator)}, loss", "{:.3f}, ".format(loss.item()), 
+                #       "#N: {}, ".format(num_nodes),
+                #       "{:.3f} GB".format(torch.cuda.memory_allocated(device=pred.device) / 1024 / 1024 / 1024))
             cnt += 1
             
         # print("current memory: {:.3f} GB".format(torch.cuda.memory_allocated(device=pred.device) / 1024 / 1024 / 1024))
@@ -238,7 +269,7 @@ def main(args):
         # break
     end_time = time.time()
     print("Avg. Epoch: {:.3} ms".format((end_time - start_time)*1000/cnt))
-
+    print("GFLOPS: %f", total_ops/(end_time - start_time) / 10e9)
     # test
     # if args.use_val:
     #     model.load_state_dict(torch.load(os.path.join(
@@ -251,11 +282,11 @@ if __name__ == '__main__':
     register_data_args(parser)
     parser.add_argument("--dropout", type=float, default=0.5,
                         help="dropout probability")
-    parser.add_argument("--gpu", type=int, default=-1,
+    parser.add_argument("--gpu", type=int, default=0,
                         help="gpu")
     parser.add_argument("--lr", type=float, default=3e-2,
                         help="learning rate")
-    parser.add_argument("--n-epochs", type=int, default=200,
+    parser.add_argument("--n-epochs", type=int, default=10,
                         help="number of training epochs")
     parser.add_argument("--log-every", type=int, default=100,
                         help="the frequency to save model")
