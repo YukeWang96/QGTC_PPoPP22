@@ -176,12 +176,10 @@ def main(args):
 
             num_nodes = len(cluster.nodes())
             '''
-
-            # '''
             torch.cuda.synchronize()
             t = time.perf_counter()
             cluster = cluster.cuda()
-            A = cluster.A
+            A = cluster.A.to_dense()
             X = cluster.X
             torch.cuda.synchronize()
             allocation += time.perf_counter() - t
@@ -198,8 +196,6 @@ def main(args):
             num_nodes = A.size(0)
             total_ops += 2*num_nodes*num_nodes*hidden_1 +  2*num_nodes*feat_size*hidden_1 \
                         + 2*num_nodes*num_nodes*output + 2*num_nodes*hidden_1*output
-            # '''
-
             # batch_labels = cluster.ndata['label']
             # batch_train_mask = cluster.ndata['train_mask']
             # loss = loss_f(pred[batch_train_mask],

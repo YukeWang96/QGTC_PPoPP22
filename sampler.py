@@ -68,9 +68,6 @@ class ClusterIter(object):
         random.shuffle(self.par_li)
         self.get_fn = get_subgraph
 
-        # '''
-        self.A_li = [] 
-        self.X_li = []
         self.cTensor_li = []
         # preprocess all subgraphs.
         for cid in range(self.max):
@@ -81,17 +78,15 @@ class ClusterIter(object):
             row  = edges[0].numpy()
             col  = edges[1].numpy()
             data = np.ones(len(row))
-            A = coo_matrix((data, (row, col)), shape=(num_nodes, num_nodes)).toarray()
             X = cluster.ndata['feat']
+            indices = np.vstack((row, col))
 
-            A = torch.FloatTensor(A)
+            i = torch.LongTensor(indices)
+            v = torch.FloatTensor(data)
+            A = torch.sparse.FloatTensor(i, v, torch.Size((num_nodes, num_nodes)))
             X = torch.FloatTensor(X)
-            # self.A_li.append(A)
-            # self.X_li.append(X)
             cTensor = ClusterTensor(A, X)
             self.cTensor_li.append(cTensor)
-
-        # '''
 
     def precalc(self, g):
         norm = self.get_norm(g)
