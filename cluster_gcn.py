@@ -81,6 +81,7 @@ def main(args):
     # metis only support int64 graph
     g = g.long()
 
+    # get the subgraph based on the partitioning nodes list.
     cluster_iterator = ClusterIter(args.dataset, g, args.psize, args.batch_size, train_nid, use_pp=args.use_pp)
 
     # set device for dataset tensors
@@ -143,11 +144,13 @@ def main(args):
     output = 42
 
     total_ops = 0
+    allocation = 0
+    running_time = 0
+
+    W_1 = torch.ones((feat_size*2, hidden_1)).cuda()
+    W_2 = torch.ones((hidden_1, output)).cuda()
 
     for epoch in range(args.n_epochs):
-        # cluster_node_sizes = []
-        # cluster_edge_sizes = []
-        # feat_dim = []
         cnt = 0
         for j, cluster in enumerate(cluster_iterator):
             # sync with upper level training graph            
@@ -155,7 +158,7 @@ def main(args):
             #     cluster = cluster.to(torch.cuda.current_device())
             # model.train()
             # pred = model(cluster)
-            num_nodes = len(cluster.nodes())
+            # num_nodes = len(cluster.nodes())
 
             # edges = cluster.edges()
             # row  = edges[0].cpu().numpy()
@@ -163,16 +166,23 @@ def main(args):
             # data = np.ones(len(row))
             # A = coo_matrix((data, (row, col)), shape=(num_nodes, num_nodes)).todense()
 
-            A = torch.ones((num_nodes, num_nodes)).cuda()
-            X = torch.ones((num_nodes, feat_size)).cuda()
-            W_1 = torch.ones((feat_size, hidden_1)).cuda()
-            W_2 = torch.ones((hidden_1, output)).cuda()
-
+            torch.cuda.synchronize()
+            t = time.perf_counter()
+            A = cluster[0].cuda()
+            X = cluster[1].cuda()   
+            torch.cuda.synchronize()
+            allocation += time.perf_counter() - t
+            
+            torch.cuda.synchronize()
+            t = time.perf_counter() 
             X_out = torch.mm(X, W_1)
             X_out = torch.mm(A, X_out)
             X_out = torch.mm(X_out, W_2)
             X_out = torch.mm(A, X_out)
+            torch.cuda.synchronize()
+            running_time += time.perf_counter() - t
 
+            num_nodes = A.size(0)
             total_ops += 2 * num_nodes * num_nodes * hidden_1 +  2 * num_nodes * feat_size * hidden_1 \
                         + 2 * num_nodes * num_nodes * output + 2 * num_nodes * hidden_1 * output
 
@@ -185,7 +195,6 @@ def main(args):
             # optimizer.zero_grad()
             # loss.backward()
             # optimizer.step()
-
             if j % args.log_every == 0:
                 print("epoch:{}/{}, Iteration {}/{}, #N: {}, {:.3f} GB"\
                 .format(epoch, args.n_epochs, j, len(cluster_iterator), num_nodes, torch.cuda.memory_allocated(device=A.device) / 1024 / 1024 / 1024)),
@@ -193,8 +202,9 @@ def main(args):
             
         
     end_time = time.time()
-    print("Avg. Epoch: {:.3} ms".format((end_time - start_time)*1000/cnt))
-    print("GFLOPS: %f", total_ops/(end_time - start_time) / 10e9)
+    print("allocation: {}, inference: {}".format(allocation, running_time))
+    print("Avg. Epoch: {:.3f} ms".format((end_time - start_time)*1000/cnt))
+    print("GFLOPS: {:.3f}".format(total_ops/(end_time - start_time) / 10e9))
 
 
 if __name__ == '__main__':

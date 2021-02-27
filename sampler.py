@@ -5,7 +5,8 @@ import dgl.function as fn
 import torch
 
 from partition_utils import *
-
+import sys
+from scipy.sparse import coo_matrix
 
 class ClusterIter(object):
     '''The partition sampler given a DGLGraph and partition number.
@@ -32,6 +33,7 @@ class ClusterIter(object):
         self.use_pp = use_pp
         self.g = g.subgraph(seed_nid)
 
+        # print(use_pp)
         # precalc the aggregated features from training graph only
         if use_pp:
             self.precalc(self.g)
@@ -50,9 +52,29 @@ class ClusterIter(object):
                 np.save(fn, self.par_li)
         else:
             self.par_li = get_partition_list(self.g, psize)
+        
         self.max = int((psize) // batch_size)
         random.shuffle(self.par_li)
         self.get_fn = get_subgraph
+
+        self.A_li = [] 
+        self.X_li = []
+        # preprocess all subgraphs.
+        for cid in range(self.max):
+            cluster = self.get_fn(self.g, self.par_li, cid, self.psize, self.batch_size)
+            
+            num_nodes = len(cluster.nodes())
+            edges = cluster.edges()
+            row  = edges[0].numpy()
+            col  = edges[1].numpy()
+            data = np.ones(len(row))
+            A = coo_matrix((data, (row, col)), shape=(num_nodes, num_nodes)).toarray()
+            X = cluster.ndata['feat']
+
+            A = torch.FloatTensor(A)
+            X = torch.FloatTensor(X)
+            self.A_li.append(A)
+            self.X_li.append(X)
 
     def precalc(self, g):
         norm = self.get_norm(g)
@@ -83,9 +105,13 @@ class ClusterIter(object):
 
     def __next__(self):
         if self.n < self.max:
-            result = self.get_fn(self.g, self.par_li, self.n,
-                                 self.psize, self.batch_size)
+            # result = self.get_fn(self.g, self.par_li, self.n,
+            #                      self.psize, self.batch_size)
+            A = self.A_li[self.n]
+            X = self.X_li[self.n]
             self.n += 1
+
+            return (A, X)
             return result
         else:
             random.shuffle(self.par_li)

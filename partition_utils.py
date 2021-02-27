@@ -1,7 +1,7 @@
 from time import time
 
 import numpy as np
-
+import sys
 from utils import arg_list
 
 from dgl.transform import metis_partition
@@ -18,8 +18,7 @@ def get_partition_list(g, psize):
     return graphs
 
 def get_subgraph(g, par_arr, i, psize, batch_size):
-    par_batch_ind_arr = [par_arr[s] for s in range(
-        i * batch_size, (i + 1) * batch_size) if s < psize]
-    g1 = g.subgraph(np.concatenate(
-        par_batch_ind_arr).reshape(-1).astype(np.int64))
+    par_batch_ind_arr = [par_arr[s] for s in range(i * batch_size, (i + 1) * batch_size) if s < psize]
+    # get the nodes id of the batch and build a subgraph based on these nodes. 
+    g1 = g.subgraph(np.concatenate(par_batch_ind_arr).reshape(-1).astype(np.int64))
     return g1
