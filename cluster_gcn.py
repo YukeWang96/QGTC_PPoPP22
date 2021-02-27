@@ -150,51 +150,23 @@ def main(args):
         # feat_dim = []
         cnt = 0
         for j, cluster in enumerate(cluster_iterator):
-            # sync with upper level training graph
-            '''
-            edges = cluster.edges()
-            row  = edges[0].cpu().numpy()
-            col  = edges[1].cpu().numpy()
-            data = np.ones(len(row))
-            num_nodes = max(max(row), max(col)) + 1
-            A = coo_matrix((data, (row, col)), shape=(num_nodes, num_nodes)).toarray()
-            # print(A)
-            plt.spy(A)
-            # plt.show()
-            plt.savefig('reddit_subgraphs/{}.png'.format(j))
-            '''
-            # edges = cluster.edges()
-            # row  = edges[0].cpu().numpy()
-            # col  = edges[1].cpu().numpy()
-            # data = np.ones(len(row))
-            # num_nodes = max(max(row), max(col)) + 1
-            # print(num_nodes)
-            # print("cluster -- {}".format(j))
-
-            # edges = cluster.edges()
-            # row  = edges[0].cpu().numpy()
-            # col  = edges[1].cpu().numpy()
-
-            num_nodes = len(cluster.nodes())
-            # data = np.ones(len(row))
-            # num_nodes = max(max(row), max(col)) + 1
-            # A = coo_matrix((data, (row, col)), shape=(num_nodes, num_nodes)).todense()
-            
-            
-
-            if cuda:
-                cluster = cluster.to(torch.cuda.current_device())
+            # sync with upper level training graph            
+            # if cuda:
+            #     cluster = cluster.to(torch.cuda.current_device())
             # model.train()
+            # pred = model(cluster)
+            num_nodes = len(cluster.nodes())
 
-            # A = torch.ones((num_nodes, num_nodes)).cuda()
-            # X = torch.ones((num_nodes, feat_size)).cuda()
-            # W = torch.ones((feat_size, hidden_1)).cuda()
+            # edges = cluster.edges()
+            # row  = edges[0].cpu().numpy()
+            # col  = edges[1].cpu().numpy()
+            # data = np.ones(len(row))
+            # A = coo_matrix((data, (row, col)), shape=(num_nodes, num_nodes)).todense()
 
             A = torch.ones((num_nodes, num_nodes)).cuda()
             X = torch.ones((num_nodes, feat_size)).cuda()
             W_1 = torch.ones((feat_size, hidden_1)).cuda()
             W_2 = torch.ones((hidden_1, output)).cuda()
-
 
             X_out = torch.mm(X, W_1)
             X_out = torch.mm(A, X_out)
@@ -204,26 +176,6 @@ def main(args):
             total_ops += 2 * num_nodes * num_nodes * hidden_1 +  2 * num_nodes * feat_size * hidden_1 \
                         + 2 * num_nodes * num_nodes * output + 2 * num_nodes * hidden_1 * output
 
-            # forward
-            # print(cluster.feat)
-            # exit(0)
-
-            # print("nodes: ", len(cluster.nodes()))
-            # print("edges: ", len(cluster.edges()[0]))
-            # subgraph = collections.defaultdict(list)
-            # edges = cluster.edges()
-            # for src, trg in zip(edges[0].cpu().numpy().tolist(), edges[1].cpu().numpy().tolist()):
-            #     subgraph[trg].append(src)
-            # # print(subgraph)
-            # for key in sorted(list(subgraph.keys())):
-            #     print(key, subgraph[key])
-            # sys.exit(0)
-            
-            # cluster_node_sizes.append(len(cluster.nodes()))
-            # cluster_edge_sizes.append(len(cluster.edges()[0]))
-            # sys.exit(0)
-
-            # pred = model(cluster)
 
             # batch_labels = cluster.ndata['label']
             # batch_train_mask = cluster.ndata['train_mask']
@@ -234,48 +186,16 @@ def main(args):
             # loss.backward()
             # optimizer.step()
 
-            # in PPI case, `log_every` is chosen to log one time per epoch. 
-            # Choose your log freq dynamically when you want more info within one epoch
             if j % args.log_every == 0:
                 print("epoch:{}/{}, Iteration {}/{}, #N: {}, {:.3f} GB"\
-                .format(epoch, args.n_epochs, j, len(cluster_iterator), num_nodes,torch.cuda.memory_allocated(device=A.device) / 1024 / 1024 / 1024)),
-                # print(f"epoch:{epoch}/{args.n_epochs}, Iteration {j}/"
-                #       f"{len(cluster_iterator)}, loss", "{:.3f}, ".format(loss.item()), 
-                #       "#N: {}, ".format(num_nodes),
-                #       "{:.3f} GB".format(torch.cuda.memory_allocated(device=pred.device) / 1024 / 1024 / 1024))
+                .format(epoch, args.n_epochs, j, len(cluster_iterator), num_nodes, torch.cuda.memory_allocated(device=A.device) / 1024 / 1024 / 1024)),
             cnt += 1
             
-        # print("current memory: {:.3f} GB".format(torch.cuda.memory_allocated(device=pred.device) / 1024 / 1024 / 1024))
-
-        # evaluate
-        # if epoch % args.val_every == 0:
-        #     val_f1_mic, val_f1_mac = evaluate(
-        #         model, g, labels, val_mask, multitask)
-        #     print(
-        #         "Val F1-mic{:.4f}, Val F1-mac{:.4f}". format(val_f1_mic, val_f1_mac))
-        #     if val_f1_mic > best_f1:
-        #         best_f1 = val_f1_mic
-        #         print('new best val f1:', best_f1)
-        #         torch.save(model.state_dict(), os.path.join(
-        #             log_dir, 'best_model.pkl'))
         
-        # fout = open("cluster_sparsity_reddit.csv", "w")
-        # fout = open("cluster_sparsity_ppi.csv", "w")
-        # fout.write('nodes, edges, sparsity_ratio\n')
-        # for i in range(len(cluster_node_sizes)):
-        #     fout.write("{}, {}, {}\n".format(cluster_node_sizes[i], cluster_edge_sizes[i], cluster_edge_sizes[i]/cluster_node_sizes[i]**2))
-        # fout.close()
-        # sys.exit(0)
-        # break
     end_time = time.time()
     print("Avg. Epoch: {:.3} ms".format((end_time - start_time)*1000/cnt))
     print("GFLOPS: %f", total_ops/(end_time - start_time) / 10e9)
-    # test
-    # if args.use_val:
-    #     model.load_state_dict(torch.load(os.path.join(
-    #         log_dir, 'best_model.pkl')))
-    test_f1_mic, test_f1_mac = evaluate(model, g, labels, test_mask, multitask)
-    print("Test F1-mic: {:.4f}\nTest F1-mac: {:.4f}". format(test_f1_mic, test_f1_mac))
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='GCN')
