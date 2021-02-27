@@ -22,6 +22,7 @@ import matplotlib.pylab as plt
 import numpy as np
 from scipy.sparse import coo_matrix
 
+regular = False
 
 def main(args):
     torch.manual_seed(args.rnd_seed)
@@ -154,48 +155,49 @@ def main(args):
         cnt = 0
         for j, cluster in enumerate(cluster_iterator):
             # sync with upper level training graph      
-            
-            '''
-            torch.cuda.synchronize()
-            t = time.perf_counter()      
-            
-            if cuda:
-                cluster = cluster.to(torch.cuda.current_device())
+            if regular:
 
-            torch.cuda.synchronize()
-            allocation += time.perf_counter() - t
-            # model.train()
+                torch.cuda.synchronize()
+                t = time.perf_counter()      
+                
+                if cuda:
+                    cluster = cluster.to(torch.cuda.current_device())
 
-            torch.cuda.synchronize()
-            t = time.perf_counter()   
+                torch.cuda.synchronize()
+                allocation += time.perf_counter() - t
+                # model.train()
 
-            pred = model(cluster)
-            
-            torch.cuda.synchronize()
-            running_time += time.perf_counter() - t
+                torch.cuda.synchronize()
+                t = time.perf_counter()   
 
-            num_nodes = len(cluster.nodes())
-            '''
-            torch.cuda.synchronize()
-            t = time.perf_counter()
-            cluster = cluster.cuda()
-            A = cluster.A.to_dense()
-            X = cluster.X
-            torch.cuda.synchronize()
-            allocation += time.perf_counter() - t
-            
-            torch.cuda.synchronize()
-            t = time.perf_counter() 
-            X_out = torch.mm(X, W_1)
-            X_out = torch.mm(A, X_out)
-            X_out = torch.mm(X_out, W_2)
-            X_out = torch.mm(A, X_out)
-            torch.cuda.synchronize()
-            running_time += time.perf_counter() - t
+                pred = model(cluster)
+                
+                torch.cuda.synchronize()
+                running_time += time.perf_counter() - t
+                num_nodes = len(cluster.nodes())
 
-            num_nodes = A.size(0)
-            total_ops += 2*num_nodes*num_nodes*hidden_1 +  2*num_nodes*feat_size*hidden_1 \
-                        + 2*num_nodes*num_nodes*output + 2*num_nodes*hidden_1*output
+            else:
+                torch.cuda.synchronize()
+                t = time.perf_counter()
+                cluster = cluster.cuda()
+                A = cluster.A.to_dense()
+                X = cluster.X
+                torch.cuda.synchronize()
+                allocation += time.perf_counter() - t
+                
+                torch.cuda.synchronize()
+                t = time.perf_counter() 
+                X_out = torch.mm(X, W_1)
+                X_out = torch.mm(A, X_out)
+                X_out = torch.mm(X_out, W_2)
+                X_out = torch.mm(A, X_out)
+                torch.cuda.synchronize()
+                running_time += time.perf_counter() - t
+
+                num_nodes = A.size(0)
+                total_ops += 2*num_nodes*num_nodes*hidden_1 +  2*num_nodes*feat_size*hidden_1 \
+                            + 2*num_nodes*num_nodes*output + 2*num_nodes*hidden_1*output
+
             # batch_labels = cluster.ndata['label']
             # batch_train_mask = cluster.ndata['train_mask']
             # loss = loss_f(pred[batch_train_mask],

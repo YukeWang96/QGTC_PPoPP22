@@ -8,7 +8,7 @@ from partition_utils import *
 import sys
 from scipy.sparse import coo_matrix
 
-regular=True
+regular=False
 
 class ClusterTensor(torch.nn.Module):
     def __init__(self, A, X):
@@ -68,25 +68,26 @@ class ClusterIter(object):
         random.shuffle(self.par_li)
         self.get_fn = get_subgraph
 
-        self.cTensor_li = []
-        # preprocess all subgraphs.
-        for cid in range(self.max):
-            cluster = self.get_fn(self.g, self.par_li, cid, self.psize, self.batch_size)
-            
-            num_nodes = len(cluster.nodes())
-            edges = cluster.edges()
-            row  = edges[0].numpy()
-            col  = edges[1].numpy()
-            data = np.ones(len(row))
-            X = cluster.ndata['feat']
-            indices = np.vstack((row, col))
+        if not regular:
+            self.cTensor_li = []
+            # preprocess all subgraphs.
+            for cid in range(self.max):
+                cluster = self.get_fn(self.g, self.par_li, cid, self.psize, self.batch_size)
+                
+                num_nodes = len(cluster.nodes())
+                edges = cluster.edges()
+                row  = edges[0].numpy()
+                col  = edges[1].numpy()
+                data = np.ones(len(row))
+                X = cluster.ndata['feat']
+                indices = np.vstack((row, col))
 
-            i = torch.LongTensor(indices)
-            v = torch.FloatTensor(data)
-            A = torch.sparse.FloatTensor(i, v, torch.Size((num_nodes, num_nodes)))
-            X = torch.FloatTensor(X)
-            cTensor = ClusterTensor(A, X)
-            self.cTensor_li.append(cTensor)
+                i = torch.LongTensor(indices)
+                v = torch.FloatTensor(data)
+                A = torch.sparse.FloatTensor(i, v, torch.Size((num_nodes, num_nodes)))
+                X = torch.FloatTensor(X)
+                cTensor = ClusterTensor(A, X)
+                self.cTensor_li.append(cTensor)
 
     def precalc(self, g):
         norm = self.get_norm(g)
@@ -116,20 +117,17 @@ class ClusterIter(object):
         return self
 
     def __next__(self):
+        global regular
         if self.n < self.max:
-            # '''
-            # A = self.A_li[self.n]
-            # X = self.X_li[self.n]
-            item = self.cTensor_li[self.n]
-            self.n += 1
-            # return (A, X)
-            return item
-            # '''
-
-            result = self.get_fn(self.g, self.par_li, self.n,
-                                 self.psize, self.batch_size)
-            self.n += 1
-            return result
+            if not regular:
+                item = self.cTensor_li[self.n]
+                self.n += 1
+                return item
+            else:
+                result = self.get_fn(self.g, self.par_li, self.n,
+                                    self.psize, self.batch_size)
+                self.n += 1
+                return result
         else:
             random.shuffle(self.par_li)
             raise StopIteration
