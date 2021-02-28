@@ -223,8 +223,9 @@ __global__ void QGTC_layer_hidden(
     }
 }
 
-
+//
 // (bit_X, bit_W) --> (float X_out)
+//
 __global__ void QGTC_layer_output(
     float* X_out, 
     uint32_t* __restrict__ bit_X, 

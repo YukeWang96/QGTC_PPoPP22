@@ -14,14 +14,14 @@ class Aggregation_Qnt(torch.autograd.Function):
         assert input+hidden+output == 1
 
         if input or hidden:
-            out = QGTC.mm_v1(bit_X, bit_W, act_bit, w_bit)
-            out = QGTC.mm_v1(bit_X, bit_W, 1, act_bit)
+            bit_out = QGTC.mm_v1(bit_X, bit_W, act_bit, w_bit)
+            bit_out = QGTC.mm_v1(bit_A, bit_out, 1, act_bit)
+            return bit_out
         
         if output:
-            out = QGTC.mm_v1(bit_X, bit_W, act_bit, w_bit)
-            out = QGTC.mm_v1(bit_X, bit_W, 1, act_bit)
-
-        return out
+            bit_out = QGTC.mm_v1(bit_X, bit_W, act_bit, w_bit)
+            out = QGTC.mm_v2(bit_A, bit_out, 1, act_bit)
+            return out
 
     @staticmethod
     def backward(ctx, d_output):
