@@ -15,8 +15,8 @@ using namespace nvcuda;
 /// SPMM forward (GCN, GraphSAGE)
 //////////////////////
 __global__ void QGTC_forward_cuda_kernel(
-	const int * __restrict__ nodePointer,		// node pointer.
-	const int *__restrict__ edgeList,			// edge list.
+    torch::Tensor A_mat,
+    torch::Tensor X_mat
 );
 
 ////////////////////////////////////////////
@@ -27,8 +27,6 @@ __global__ void QGTC_forward_cuda_kernel(
 std::vector<torch::Tensor> QGTC_forward_cuda(
     torch::Tensor A_mat,
     torch::Tensor X_mat,
-    torch::Tensor W_1,
-    torch::Tensor W_2,
     const int w_bit,
     const int act_bit
 ) 
@@ -69,32 +67,4 @@ std::vector<torch::Tensor> QGTC_forward_cuda(
     }
 
     return {output};
-}
-
-__kernel__ void QGTC_layer_input(){
-
-}
-
-__kernel__ void QGTC_layer_hidden(){
-
-}
-
-__kernel__ void QGTC_layer_output(){
-
-}
-
-// input: bit_A_mat, bit_X_mat, bit_W_mat, bit_hidden
-// hidden: bit_A_mat, bit_X_mat, bit_W_mat, bit_hidden
-// output: bit_A_mat, bit_X_mat, bit_W_mat, bit_output
-
-__global__ void QGTC_forward_cuda_kernel(
-    InputParam layer1,
-    OutputParam layer2
-){
-
-    QGTC_layer_input(layer1);
-    grid.sync();
-
-    QGTC_layer_output(layer2);
-    grid.sync();
 }

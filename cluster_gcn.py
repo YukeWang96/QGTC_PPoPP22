@@ -22,6 +22,9 @@ import matplotlib.pylab as plt
 import numpy as np
 from scipy.sparse import coo_matrix
 
+from QGTC_conv import *
+
+
 regular = False
 
 def main(args):
@@ -107,6 +110,7 @@ def main(args):
                       args.dropout,
                       args.use_pp)
 
+
     if cuda:
         model.cuda()
 
@@ -148,8 +152,11 @@ def main(args):
     allocation = 0
     running_time = 0
 
-    W_1 = torch.ones((feat_size*2, hidden_1)).cuda()
-    W_2 = torch.ones((hidden_1, output)).cuda()
+    # W_1 = torch.ones((feat_size*2, hidden_1)).cuda()
+    # W_2 = torch.ones((hidden_1, output)).cuda()
+
+    model = GCNConv(feat_size*2, hidden_1, output).cuda()
+
 
     for epoch in range(args.n_epochs):
         cnt = 0
@@ -186,11 +193,12 @@ def main(args):
                 allocation += time.perf_counter() - t
                 
                 torch.cuda.synchronize()
-                t = time.perf_counter() 
-                X_out = torch.mm(X, W_1)
-                X_out = torch.mm(A, X_out)
-                X_out = torch.mm(X_out, W_2)
-                X_out = torch.mm(A, X_out)
+                t = time.perf_counter()
+                X_out = model(A, X) 
+                # X_out = torch.mm(X, W_1)
+                # X_out = torch.mm(A, X_out)
+                # X_out = torch.mm(X_out, W_2)
+                # X_out = torch.mm(A, X_out)
                 torch.cuda.synchronize()
                 running_time += time.perf_counter() - t
 
@@ -211,6 +219,8 @@ def main(args):
                 .format(epoch, args.n_epochs, j, len(cluster_iterator), num_nodes, \
                     torch.cuda.memory_allocated(device=A.device) / 1024 / 1024 / 1024)),
             cnt += 1
+            
+        # hand the current tensor back to host Memory
         cluster = cluster.cpu()
 
 
