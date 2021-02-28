@@ -1,0 +1,119 @@
+running install
+running bdist_egg
+running egg_info
+writing QGTC.egg-info/PKG-INFO
+writing dependency_links to QGTC.egg-info/dependency_links.txt
+writing top-level names to QGTC.egg-info/top_level.txt
+reading manifest file 'QGTC.egg-info/SOURCES.txt'
+writing manifest file 'QGTC.egg-info/SOURCES.txt'
+installing library code to build/bdist.linux-x86_64/egg
+running install_lib
+running build_ext
+building 'QGTC' extension
+Emitting ninja build file /home/yuke/sc21_QGTC/QGTC_kernel/build/temp.linux-x86_64-3.7/build.ninja...
+Compiling objects...
+Allowing ninja to set a default number of workers... (overridable by setting the environment variable MAX_JOBS=N)
+[1/1] /usr/local/cuda-11.1/bin/nvcc -I/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include -I/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include -I/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/TH -I/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/THC -I/usr/local/cuda-11.1/include -I/home/yuke/anaconda3/envs/dgl/include/python3.7m -c -c /home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu -o /home/yuke/sc21_QGTC/QGTC_kernel/build/temp.linux-x86_64-3.7/QGTC_device.o -D__CUDA_NO_HALF_OPERATORS__ -D__CUDA_NO_HALF_CONVERSIONS__ -D__CUDA_NO_HALF2_OPERATORS__ --expt-relaxed-constexpr --compiler-options ''"'"'-fPIC'"'"'' -DTORCH_API_INCLUDE_EXTENSION_H '-DPYBIND11_COMPILER_TYPE="_gcc"' '-DPYBIND11_STDLIB="_libstdcpp"' '-DPYBIND11_BUILD_ABI="_cxxabi1011"' -DTORCH_EXTENSION_NAME=QGTC -D_GLIBCXX_USE_CXX11_ABI=0 -gencode=arch=compute_86,code=sm_86 -std=c++14
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/boxing/impl/boxing.h(100): warning: integer conversion resulted in a change of sign
+
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/op_registration/op_whitelist.h(39): warning: integer conversion resulted in a change of sign
+
+/home/yuke/sc21_QGTC/QGTC_kernel/utility.h(230): warning: unrecognized character escape sequence
+
+/home/yuke/sc21_QGTC/QGTC_kernel/utility.h(231): warning: unrecognized character escape sequence
+
+/home/yuke/sc21_QGTC/QGTC_kernel/kernel.cuh(73): warning: variable "offset" was declared but never referenced
+
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu(53): warning: expression has no effect
+
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu(59): warning: expression has no effect
+
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu(70): warning: expression has no effect
+
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/boxing/impl/boxing.h(100): warning: integer conversion resulted in a change of sign
+
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/op_registration/op_whitelist.h(39): warning: integer conversion resulted in a change of sign
+
+/home/yuke/sc21_QGTC/QGTC_kernel/utility.h(230): warning: unrecognized character escape sequence
+
+/home/yuke/sc21_QGTC/QGTC_kernel/utility.h(231): warning: unrecognized character escape sequence
+
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu(53): warning: expression has no effect
+
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu(59): warning: expression has no effect
+
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu(70): warning: expression has no effect
+
+/home/yuke/sc21_QGTC/QGTC_kernel/utility.h: In function ‘void __checkNullPointer(const char*, int, void**)’:
+/home/yuke/sc21_QGTC/QGTC_kernel/utility.h:89:50: warning: format ‘%s’ expects a matching ‘char*’ argument [-Wformat=]
+         fprintf( stderr, "Error: NULL pointer at %s:%i.\n");
+                                                  ^
+/home/yuke/sc21_QGTC/QGTC_kernel/utility.h:89:50: warning: format ‘%i’ expects a matching ‘int’ argument [-Wformat=]
+/home/yuke/sc21_QGTC/QGTC_kernel/utility.h: In function ‘void validate_prediction(float*, unsigned int*, unsigned int, unsigned int)’:
+/home/yuke/sc21_QGTC/QGTC_kernel/utility.h:230:58: warning: unknown conversion type character ‘\x0a’ in format [-Wformat=]
+     printf("Top-1:%f\%\n",float(corrects)/batch*100);
+                                                          ^
+/home/yuke/sc21_QGTC/QGTC_kernel/utility.h:231:63: warning: unknown conversion type character ‘\x0a’ in format [-Wformat=]
+     printf("Top-5:%f\%\n",float(corrects_top5)/batch*100);
+                                                               ^
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu: In function ‘at::Tensor bit_qnt_cuda(at::Tensor, int, bool)’:
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu:54:146: warning: ‘T* at::Tensor::data() const [with T = unsigned int]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+     Quantize_val<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>> \
+                                                                                                                                                  ^
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
+   T * data() const {
+ ^ ~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu:54:169: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+     Quantize_val<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>> \
+                                                                                                                                                                         ^
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
+   T * data() const {
+ ^ ~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu:62:146: warning: ‘T* at::Tensor::data() const [with T = unsigned int]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+         PackFcWeight128<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(
+                                                                                                                                                  ^
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
+   T * data() const {
+ ^ ~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu:62:176: warning: ‘T* at::Tensor::data() const [with T = unsigned int]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+         PackFcWeight128<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(
+                                                                                                                                                                                ^
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
+   T * data() const {
+ ^ ~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu:73:147: warning: ‘T* at::Tensor::data() const [with T = unsigned int]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+         QGTC_layer_input<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>> \
+                                                                                                                                                   ^
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
+   T * data() const {
+ ^ ~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu:73:177: warning: ‘T* at::Tensor::data() const [with T = unsigned int]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+         QGTC_layer_input<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>> \
+                                                                                                                                                                                 ^
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
+   T * data() const {
+ ^ ~~
+creating build/lib.linux-x86_64-3.7
+g++ -pthread -shared -B /home/yuke/anaconda3/envs/dgl/compiler_compat -L/home/yuke/anaconda3/envs/dgl/lib -Wl,-rpath=/home/yuke/anaconda3/envs/dgl/lib -Wl,--no-as-needed -Wl,--sysroot=/ /home/yuke/sc21_QGTC/QGTC_kernel/build/temp.linux-x86_64-3.7/QGTC_host.o /home/yuke/sc21_QGTC/QGTC_kernel/build/temp.linux-x86_64-3.7/QGTC_device.o -L/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/lib -L/usr/local/cuda-11.1/lib64 -lc10 -ltorch -ltorch_cpu -ltorch_python -lcudart -lc10_cuda -ltorch_cuda -o build/lib.linux-x86_64-3.7/QGTC.cpython-37m-x86_64-linux-gnu.so
+creating build/bdist.linux-x86_64
+creating build/bdist.linux-x86_64/egg
+copying build/lib.linux-x86_64-3.7/QGTC.cpython-37m-x86_64-linux-gnu.so -> build/bdist.linux-x86_64/egg
+creating stub loader for QGTC.cpython-37m-x86_64-linux-gnu.so
+byte-compiling build/bdist.linux-x86_64/egg/QGTC.py to QGTC.cpython-37.pyc
+creating build/bdist.linux-x86_64/egg/EGG-INFO
+copying QGTC.egg-info/PKG-INFO -> build/bdist.linux-x86_64/egg/EGG-INFO
+copying QGTC.egg-info/SOURCES.txt -> build/bdist.linux-x86_64/egg/EGG-INFO
+copying QGTC.egg-info/dependency_links.txt -> build/bdist.linux-x86_64/egg/EGG-INFO
+copying QGTC.egg-info/top_level.txt -> build/bdist.linux-x86_64/egg/EGG-INFO
+writing build/bdist.linux-x86_64/egg/EGG-INFO/native_libs.txt
+creating dist
+creating 'dist/QGTC-0.0.0-py3.7-linux-x86_64.egg' and adding 'build/bdist.linux-x86_64/egg' to it
+removing 'build/bdist.linux-x86_64/egg' (and everything under it)
+Processing QGTC-0.0.0-py3.7-linux-x86_64.egg
+creating /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/QGTC-0.0.0-py3.7-linux-x86_64.egg
+Extracting QGTC-0.0.0-py3.7-linux-x86_64.egg to /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages
+Adding QGTC 0.0.0 to easy-install.pth file
+
+Installed /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/QGTC-0.0.0-py3.7-linux-x86_64.egg
+Processing dependencies for QGTC==0.0.0
+Finished processing dependencies for QGTC==0.0.0

@@ -4,6 +4,15 @@
 #include "config.h"
 #include "utility.h"
 
+#define max_v 10
+#define min_v -10
+
+
+__inline__ __device__ float clip(float x, float lb, float ub){
+    if (x < lb) return lb+1;
+    if (x > ub) return ub-1;
+    return x;
+}
 
 // * quantization of a single float value
 __device__ __inline__ uin32 quantize(float val, int bitwidth){
@@ -15,11 +24,41 @@ __device__ __inline__ uin32 quantize(float val, int bitwidth){
     return ans;
 }
 
+
+// packing weight for the hidden FC layer. STEP128(A_height)*PAD128(A_width)
+__global__ void PackFcWeight128(const uin32* __restrict__ A, uin32* B, 
+                                    const int A_height, const int A_width, const int w_bit)
+{
+    GET_LANEID;
+    GET_WARPID;
+
+    const int gdx = STEP128(A_height);
+    const int gdy = STEP8(A_width);
+
+    const int lx = (warpid & 0x3); // warp x_index vertically
+    const int ly = (warpid >> 2);  // warp y_index hozerionsally.
+
+    const int offset_opt = STEP128(A_height)*PAD128(A_width)*128/32;
+
+    for (int bid=blockIdx.x; bid<gdx*gdy; bid+=gridDim.x)
+    {
+        const int bx = bid % gdx;
+        const int by = bid / gdx;
+        
+        for (int bIdx = 0; bIdx < w_bit; bIdx++){
+            float f0 = ( (bx*128+lx*32+laneid<A_height) && (by*8+ly<A_width) )? \
+                        ((A[(bx*128+lx*32+laneid)*A_width+by*8+ly]>>bIdx) & 0x01):-1.0f;
+            unsigned r0 = __brev(__ballot_sync(0xFFFFFFFF, f0 > 0));
+            if (laneid==0) 
+                B[bIdx*offset_opt + (by*8+ly)*gdx*4+bx*4 + lx] = r0;
+        }
+    }
+}
 // compress the input from 32-bit to 1-bit
 // store in 1-bit with packed 32-bit unsigned int format.
 __global__  void QGTC_layer_input(
     uint32_t* bit_T_out, 
-    __restrict__ uint32_t* T_in, 
+    uint32_t* __restrict__ T_in, 
     const int height,
     const int width,
     const int bitWidth
@@ -47,8 +86,11 @@ __global__  void QGTC_layer_input(
         // iterate through all bits
         for (int bitIdx = 0; bitIdx < bitWidth; bitIdx++){
             // boundry check whether inside, otherwise set to -1
+            // uint32_t f0 = ( (by*128+ly*32+laneid<(width)) && (bx*8+lx<(height)) )?
+            //             T_in[bitIdx*offset + (bx*8+lx)*(width)+by*128+ly*32+laneid]: 0;
+
             uint32_t f0 = ( (by*128+ly*32+laneid<(width)) && (bx*8+lx<(height)) )?
-                        T_in[bitIdx*offset + (bx*8+lx)*(width)+by*128+ly*32+laneid]: 0;
+                            ((T_in[(bx*8+lx)*(width)+by*128+ly*32+laneid]>>bitIdx) & 0x01): 0;
 
             // compressed, any thing outside boundry would be set to 0.
             // note that * f0 > 0 * in the 0/1 case. but >= 0 in 1/-1 case
@@ -65,8 +107,8 @@ __global__  void QGTC_layer_input(
 // (bit_X, bit_W) --> (uint32 bit_X_out)
 __global__ void QGTC_layer_hidden(
     uint32_t* bit_X_out, 
-    __restrict__ uint32_t* bit_X, 
-    __restrict__ uint32_t* bit_W,
+    uint32_t* __restrict__ bit_X, 
+    uint32_t* __restrict__ bit_W,
     const int X_height,
     const int X_width,
     const int W_width,
@@ -185,8 +227,8 @@ __global__ void QGTC_layer_hidden(
 // (bit_X, bit_W) --> (float X_out)
 __global__ void QGTC_layer_output(
     float* X_out, 
-    __restrict__ uint32_t* bit_X, 
-    __restrict__ uint32_t* bit_W,
+    uint32_t* __restrict__ bit_X, 
+    uint32_t* __restrict__ bit_W,
     const int X_height,
     const int X_width,
     const int W_width,

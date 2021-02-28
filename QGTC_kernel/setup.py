@@ -2,9 +2,9 @@ from setuptools import setup
 from torch.utils.cpp_extension import BuildExtension, CUDAExtension
 
 setup(
-    name='GAcc',
+    name='QGTC',
     ext_modules=[
-        CUDAExtension('GAcc', [
+        CUDAExtension('QGTC', [
             'QGTC_host.cpp',
             'QGTC_device.cu',
         ])
