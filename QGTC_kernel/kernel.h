@@ -1,23 +1,22 @@
-#ifndef COMPUTE_H
-#define COMPUTE_H
+#ifndef KERNEL_H
+#define KERNEL_H
 
-#include "config.h"
+#include <cuda.h>
+#include <mma.h>
+#include <cuda_runtime.h>
+
+
 #include "utility.h"
 
 #define max_v 10
 #define min_v -10
 
-
-__inline__ __device__ float clip(float x, float lb, float ub){
-    if (x < lb) return lb+1;
-    if (x > ub) return ub-1;
-    return x;
-}
+using namespace nvcuda;
 
 // * quantization of a single float value
 __device__ __inline__ uin32 quantize(float val, int bitwidth){
-    const int max_val = 10000;
-    const int min_val = -max_val;
+    const int max_val = max_v;
+    const int min_val = -min_v;
     if (val > max_val) val = max_val - 1;
     if (val < min_val) val = min_val + 1;
     uin32 ans = (val - min_val) * (1 << bitwidth) / (max_val - min_val); 
