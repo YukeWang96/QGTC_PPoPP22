@@ -96,9 +96,10 @@ torch::Tensor bit_qnt(
     const bool col_major=false
 ){
   CHECK_INPUT(input);
-  bit_qnt_cuda(input, bit_qnt, col_major);
-  return torch::zeros_like(input);
-
+  
+  // the pointer of the compressed address.
+  return bit_qnt_cuda(input, bit_qnt, col_major); 
+  // torch::zeros_like(input);
 }
 
 // binding to python

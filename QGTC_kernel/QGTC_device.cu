@@ -11,38 +11,6 @@
 
 using namespace nvcuda;
 
-#define max_v 10
-#define min_v -10
-
-__inline__ __device__ float clip(float x, float lb, float ub){
-    if (x < lb) return lb+1;
-    if (x > ub) return ub-1;
-    return x;
-}
-
-//
-// input_gpu (float 32-bit) -->  input_qnt_gpu (uint 32-bit)
-//
-__global__ void Quantize_val(
-    uint32_t* input_qnt_gpu, 
-    float* __restrict__ input_gpu, 
-    const int num_elements, 
-    const int bitwidth)
-{
-    // int start = blockIdx.x * blockDim.x + threadIdx.x;
-
-    // for (int tid = start; tid < num_elements; tid += blockDim.x*gridDim.x) {
-    //     /*
-    //     * Quant_val  - 0            2^{bitwidth}    
-    //     *-------------------- = ------------------
-    //     * Actual_val - min_val  max_val - min_val
-    //     */
-    //     float input_val = clip(input_gpu[tid], min_v, max_v);
-    //     float qnt_float = (input_val - min_v) * (1 << bitwidth) * 1.0f / (max_v - min_v);
-    //     input_qnt_gpu[tid]  = qnt_float;
-    // }
-}  
-
 __global__ void test_kernel(int * __restrict__ input){
     int idx = blockIdx.x*blockDim.x + threadIdx.x;
     printf("%d \n", idx);
@@ -69,32 +37,53 @@ torch::Tensor bit_qnt_cuda(
     
     // quantization float --> uint32
     torch::Tensor input_qnt = torch::zeros({height, width}, torch::kInt32);
-    test_kernel<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(input_qnt.data<int>());
-    // Quantize_val<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(input_qnt.data<uint32_t>(), input.data<float>(), 
-    //                                                                                 height*width, bit_qnt); 
+    printf("input_qnt\n");
 
-//     // column-major store for weight compression.
+    // test_kernel<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(input_qnt.data<int>());
+    Quantize_val<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(input_qnt.data<int>(), input.data<float>(), 
+                                                                                height*width, bit_qnt); 
+
+    printf("Quantize_val\n");
+
+    // column-major store for weight compression.
     if (col_major)
     {
         // allocate output in uint32.
-        auto output = torch::zeros((bit_qnt*STEP32(height), PAD8(width)));
+        auto output = torch::zeros({bit_qnt*STEP32(height), PAD8(width)}, torch::kInt32);
 
-        // cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, PackFcWeight128, numThreads, 0);
-//         PackFcWeight128<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(
-//             output.data<uint32_t>(), input_qnt.data<uint32_t>(),
-//             height, width, bit_qnt
-//         );
+        cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, PackFcWeight128, numThreads, 0);
+        PackFcWeight128<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(
+            output.data<int>(), input_qnt.data<int>(),
+            height, width, bit_qnt
+        );
+
+        cudaError_t error = cudaGetLastError();
+        if(error != cudaSuccess){
+            printf("CUDA error at mm_v1_cuda: %s\n", cudaGetErrorString(error));
+            exit(-1);
+        }
+
         return output;
     }
     else // row-major store for input compression.
     {
-        // allocate output in uint32.
-        auto output = torch::zeros((bit_qnt*PAD8(height), STEP32(width)));
 
-        // cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, QGTC_layer_input, numThreads, 0);
-        // QGTC_layer_input<<< numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>> \
-        //         (output.data<uint32_t>(), input_qnt.data<uint32_t>(),
-        //         height, width, bit_qnt);
+        printf("non column major\n");
+
+        // allocate output in uint32.
+        auto output = torch::zeros({bit_qnt*PAD8(height), STEP32(width)}, torch::kInt32);
+        // auto output = torch::zeros((2, 3));
+
+        cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, QGTC_layer_input, numThreads, 0);
+        QGTC_layer_input<<< numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>> \
+                (output.data<int>(), input_qnt.data<int>(),
+                height, width, bit_qnt);
+
+        cudaError_t error = cudaGetLastError();
+        if(error != cudaSuccess){
+            printf("CUDA error at mm_v1_cuda: %s\n", cudaGetErrorString(error));
+            exit(-1);
+        }
         return output;
     }
 }

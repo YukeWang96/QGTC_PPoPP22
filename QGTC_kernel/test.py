@@ -20,4 +20,14 @@ for i in range(len(a)):
         print(tmp, end=" ")
         # print(a[i][j].data, end="")
     print()
-# ans = QGTC.bit_qnt(a, 3)
+
+bit_encoding = QGTC.bit_qnt(a.cuda(), 3, False)
+print(" => finished bit encoding")
+# ans =  QGTC.bit_decode(bit_encoding)
+
+# for i in range(len(ans)):
+#     for j in range(len(ans[0])):
+#         tmp =  quantize(a[i][j].item(), 3)
+#         print(tmp, end=" ")
+#         # print(a[i][j].data, end="")
+#     print()
