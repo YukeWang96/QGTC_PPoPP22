@@ -104,7 +104,7 @@ torch::Tensor mm_v1_cuda(
 {
     // allocate the output Tensor on GPU.
     auto options = torch::TensorOptions().dtype(torch::kInt32).device(torch::kCUDA, 0);
-    auto bit_X_out = torch::zeros((output_bit*X1_height, STEP32(X2_width)), options);
+    auto bit_X_out = torch::zeros({output_bit*X1_height, STEP32(X2_width)}).to(torch::kCUDA);
     
     int dev = 0;
     int numThreads = 1024;
@@ -146,9 +146,16 @@ torch::Tensor mm_v2_cuda(
 )
 {
     // allocate the output Tensor on GPU.
-    auto options = torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA, 0);
-    torch::Tensor float_X_out = torch::zeros((X1_height, X2_width), options);
-    
+    // auto options = torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA, 0);
+    // printf("X1_height: %d, X2_width: %d\n", X1_height, X2_width);
+
+    torch::Tensor float_X_out = torch::zeros({X1_height, X2_width}).to(torch::kCUDA);
+    // int out_height = float_X_out.size(0);
+    // int out_width = float_X_out.size(1);
+    // printf("out_height: %d\n", out_height);
+    // printf("out_height: %d, out_width: %d\n", out_height, out_width);
+    // exit(-1);
+
     int dev = 0;
     int numThreads = 1024;
     cudaDeviceProp deviceProp;

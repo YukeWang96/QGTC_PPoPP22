@@ -41,7 +41,7 @@ print()
 # print("mm_v1")
 # print()
 
-float_output = QGTC.mm_v2(bit_a, bit_b, 2, 3, 1, 3, 3).cpu()
+float_output = QGTC.mm_v2(bit_a, bit_b, 2, 3, 2, 3, 3).cpu()
 print(float_output)
 print("mm_v2")
 print()

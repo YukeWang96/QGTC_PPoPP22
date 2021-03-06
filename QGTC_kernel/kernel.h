@@ -339,7 +339,7 @@ __global__ void QGTC_layer_output(
                 {
                     if (by*8+laneid<(W_width))
                     {
-                        float val = Cs[warpid*64+j*8+laneid] * 1.0f; //* (p->bn_scale_gpu[by*8+laneid]) + (p->bn_bias_gpu[by*8+laneid]);
+                        float val = Cs[warpid*64+j*8+laneid]*1.0f; //* (p->bn_scale_gpu[by*8+laneid]) + (p->bn_bias_gpu[by*8+laneid]);
                         output_sub[j*(W_width)+laneid] = val;
                     }
                 }
