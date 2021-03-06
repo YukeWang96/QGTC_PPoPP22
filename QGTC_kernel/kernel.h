@@ -38,7 +38,7 @@ __global__ void Quantize_val(
     const int num_elements, 
     const int bitwidth)
 {
-    int start = blockIdx.x * blockDim.x + threadIdx.x;
+    int start = blockIdx.x*blockDim.x + threadIdx.x;
 
     for (int tid = start; tid < num_elements; tid += blockDim.x*gridDim.x) {
         /*
@@ -114,10 +114,10 @@ __global__  void QGTC_layer_input(
         // iterate through all bits
         for (int bitIdx = 0; bitIdx < bitWidth; bitIdx++){
             // boundry check whether inside, otherwise set to -1
-            // uint32_t f0 = ( (by*128+ly*32+laneid<(width)) && (bx*8+lx<(height)) )?
+            // int f0 = ( (by*128+ly*32+laneid<(width)) && (bx*8+lx<(height)) )?
             //             T_in[bitIdx*offset + (bx*8+lx)*(width)+by*128+ly*32+laneid]: 0;
 
-            uint32_t f0 = 0; // ( (by*128+ly*32+laneid<(width)) && (bx*8+lx<(height)) )?
+            int f0 = 0; // ( (by*128+ly*32+laneid<(width)) && (bx*8+lx<(height)) )?
                             // ((T_in[(bx*8+lx)*(width)+by*128+ly*32+laneid]>>bitIdx) & 0x01): 0;
 
             // compressed, any thing outside boundry would be set to 0.
@@ -134,9 +134,9 @@ __global__  void QGTC_layer_input(
 
 // (bit_X, bit_W) --> (uint32 bit_X_out)
 __global__ void QGTC_layer_hidden(
-    uint32_t* bit_X_out, 
-    uint32_t* __restrict__ bit_X, 
-    uint32_t* __restrict__ bit_W,
+    int* bit_X_out, 
+    int* __restrict__ bit_X, 
+    int* __restrict__ bit_W,
     const int X_height,
     const int X_width,
     const int W_width,
@@ -150,7 +150,7 @@ __global__ void QGTC_layer_hidden(
     GET_LANEID;
     GET_WARPID;
     
-    // layerwise offset measured in uint32_t
+    // layerwise offset measured in int
     const int act_offset = PAD8(X_height)*STEP128(X_width)*128/32;
     const int w_offset = STEP128(X_width)*PAD128(W_width)*128/32;
     const int opt_offset = PAD8(X_height)*STEP128(W_width)*128/32;
@@ -231,7 +231,7 @@ __global__ void QGTC_layer_hidden(
             bool v0 = v0_in && (((Cs[warpid*64+laneid]>>bIdx) & 0x1) > 0);
             bool v1 = v1_in && (((Cs[warpid*64+32+laneid]>>bIdx) & 0x1) > 0);
 
-            union{ uint32_t data; uin8 elements[4];} p0, p1;
+            union{ int data; uin8 elements[4];} p0, p1;
 
             // pack into 32 1-bit.
             p0.data = __brev(__ballot_sync(0xFFFFFFFF, v0 > 0));
@@ -256,8 +256,8 @@ __global__ void QGTC_layer_hidden(
 //
 __global__ void QGTC_layer_output(
     float* X_out, 
-    uint32_t* __restrict__ bit_X, 
-    uint32_t* __restrict__ bit_W,
+    int* __restrict__ bit_X, 
+    int* __restrict__ bit_W,
     const int X_height,
     const int X_width,
     const int W_width,

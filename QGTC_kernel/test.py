@@ -21,9 +21,24 @@ for i in range(len(a)):
         # print(a[i][j].data, end="")
     print()
 
-bit_encoding = QGTC.bit_qnt(a.cuda(), 3, False)
-print(" => finished bit encoding")
-# ans =  QGTC.bit_decode(bit_encoding)
+#  -- * --- reference implementation -- * ---
+b = torch.FloatTensor([[1,1],[2,1],[3,1]])
+out = torch.mm(a, b)
+print(out)
+
+bit_a = QGTC.bit_qnt(a.cuda(), 3, False)
+torch.cuda.synchronize()
+print(" => bit encoding [a]")
+print()
+
+bit_b = QGTC.bit_qnt(b.cuda(), 3, True)
+torch.cuda.synchronize()
+print(" => bit-encoding [b]")
+print()
+
+
+float_output = QGTC.mm_v2(bit_a, bit_b, 2, 3, 1, 3, 3).cpu()
+print("mm_v2")
 
 # for i in range(len(ans)):
 #     for j in range(len(ans[0])):

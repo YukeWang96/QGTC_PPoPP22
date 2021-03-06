@@ -33,23 +33,30 @@ torch::Tensor bit_qnt_cuda(
 
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, dev);
-    cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, Quantize_val,  numThreads, 0);
+    cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, Quantize_val, numThreads, 0);
     
-    // quantization float --> uint32
-    torch::Tensor input_qnt = torch::zeros({height, width}, torch::kInt32);
-    printf("input_qnt\n");
+    // quantization float --> int32
+    // note that allocated data must be on CUDA device !!!!
+    auto options = torch::TensorOptions().dtype(torch::kInt32).device(torch::kCUDA, 0);
+    torch::Tensor input_qnt = torch::zeros({height, width}, options);
+    // printf("-- Input_qnt\n");
 
-    // test_kernel<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(input_qnt.data<int>());
     Quantize_val<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(input_qnt.data<int>(), input.data<float>(), 
                                                                                 height*width, bit_qnt); 
 
-    printf("Quantize_val\n");
+    cudaError_t error = cudaGetLastError();
+    if(error != cudaSuccess){
+        printf("CUDA error at Quantize_val: %s\n", cudaGetErrorString(error));
+        exit(-1);
+    }
+    // printf("-- Quantize_val\n");
 
     // column-major store for weight compression.
     if (col_major)
     {
+        printf("==> column major\n");
         // allocate output in uint32.
-        auto output = torch::zeros({bit_qnt*STEP32(height), PAD8(width)}, torch::kInt32);
+        auto output = torch::zeros({bit_qnt*STEP32(height), PAD8(width)}, options);
 
         cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, PackFcWeight128, numThreads, 0);
         PackFcWeight128<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(
@@ -68,16 +75,14 @@ torch::Tensor bit_qnt_cuda(
     else // row-major store for input compression.
     {
 
-        printf("non column major\n");
-
-        // allocate output in uint32.
-        auto output = torch::zeros({bit_qnt*PAD8(height), STEP32(width)}, torch::kInt32);
+        printf("==> Non-column major\n");
+        // allocate output in int32 on GPU
+        torch::Tensor output = torch::zeros({bit_qnt*PAD8(height), STEP32(width)}, options);
         // auto output = torch::zeros((2, 3));
 
         cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, QGTC_layer_input, numThreads, 0);
         QGTC_layer_input<<< numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>> \
-                (output.data<int>(), input_qnt.data<int>(),
-                height, width, bit_qnt);
+                (output.data<int>(), input_qnt.data<int>(), height, width, bit_qnt);
 
         cudaError_t error = cudaGetLastError();
         if(error != cudaSuccess){
@@ -88,9 +93,8 @@ torch::Tensor bit_qnt_cuda(
     }
 }
 
-/*
 //
-// bit_X1 and bit_x2 --> float output.
+// bit_X1 and bit_x2 --> [ int32 ] output.
 //
 torch::Tensor mm_v1_cuda(
     torch::Tensor bit_X1,
@@ -103,7 +107,9 @@ torch::Tensor mm_v1_cuda(
     const int output_bit
 )
 {
-    auto bit_X_out = torch::zeros((output_bit*X1_height, STEP32(X2_width)));
+    // allocate the output Tensor on GPU.
+    auto options = torch::TensorOptions().dtype(torch::kInt32).device(torch::kCUDA, 0);
+    auto bit_X_out = torch::zeros((output_bit*X1_height, STEP32(X2_width)), options);
     
     int dev = 0;
     int numThreads = 1024;
@@ -116,7 +122,7 @@ torch::Tensor mm_v1_cuda(
     cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, QGTC_layer_hidden, numThreads, shared_memory);
 
     QGTC_layer_hidden<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads, shared_memory>>>(
-        bit_X_out.data<uint32_t>(), bit_X1.data<uint32_t>(), bit_X2.data<uint32_t>(),
+        bit_X_out.data<int>(), bit_X1.data<int>(), bit_X2.data<int>(),
         X1_height, X1_width, X2_width, bit1, bit2
     );
 
@@ -132,7 +138,7 @@ torch::Tensor mm_v1_cuda(
 
 
 //
-// bit_X1 and bit_x2 --> bit output.
+// bit_X1 and bit_x2 --> [ float ] output.
 //
 torch::Tensor mm_v2_cuda(
     torch::Tensor bit_X1,
@@ -144,7 +150,9 @@ torch::Tensor mm_v2_cuda(
     const int bit2
 )
 {
-    auto float_X_out = torch::zeros((X1_height, X2_width));
+    // allocate the output Tensor on GPU.
+    auto options = torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA, 0);
+    torch::Tensor float_X_out = torch::zeros((X1_height, X2_width), options);
     
     int dev = 0;
     int numThreads = 1024;
@@ -157,7 +165,7 @@ torch::Tensor mm_v2_cuda(
     cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, QGTC_layer_hidden, numThreads, shared_memory);
 
     QGTC_layer_output<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads, shared_memory>>>(
-        float_X_out.data<float>(), bit_X1.data<uint32_t>(), bit_X2.data<uint32_t>(),
+        float_X_out.data<float>(), bit_X1.data<int>(), bit_X2.data<int>(),
         X1_height, X1_width, X2_width, bit1, bit2
     );
 
@@ -166,7 +174,5 @@ torch::Tensor mm_v2_cuda(
         printf("CUDA error at mm_v2_cuda: %s\n", cudaGetErrorString(error));
         exit(-1);
     }
-
     return float_X_out;
 }
-*/
