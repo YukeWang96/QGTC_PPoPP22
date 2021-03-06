@@ -36,9 +36,13 @@ torch.cuda.synchronize()
 print(" => bit-encoding [b]")
 print()
 
+float_output = QGTC.mm_v1(bit_a, bit_b, 2, 3, 1, 3, 3, 3).cpu()
+print("mm_v1")
+print()
 
 float_output = QGTC.mm_v2(bit_a, bit_b, 2, 3, 1, 3, 3).cpu()
 print("mm_v2")
+print()
 
 # for i in range(len(ans)):
 #     for j in range(len(ans[0])):

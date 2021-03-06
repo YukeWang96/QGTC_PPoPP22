@@ -11,11 +11,6 @@
 
 using namespace nvcuda;
 
-__global__ void test_kernel(int * __restrict__ input){
-    int idx = blockIdx.x*blockDim.x + threadIdx.x;
-    printf("%d \n", idx);
-}
-
 //
 // quantize the input float --> uint32 1-bit
 //
