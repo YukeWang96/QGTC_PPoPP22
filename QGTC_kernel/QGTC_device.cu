@@ -34,33 +34,23 @@ torch::Tensor bit_qnt_cuda(
     // note that allocated data must be on CUDA device !!!!
     auto options = torch::TensorOptions().dtype(torch::kInt32).device(torch::kCUDA, 0);
     torch::Tensor input_qnt = torch::zeros({height, width}, options);
-    printf("-- Input_qnt\n");
+    // printf("-- Input_qnt\n");
 
     Quantize_val<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(input_qnt.data<int>(), input.data<float>(), 
                                                                                 height*width, bit_qnt); 
-
-    // for(int i=0;i<height;i++){
-    //     for (int j=0; j<width; j++){
-    //         printf("%d ", input_qnt.data<int>()[i*width + j]);
-    //     }
-    //     printf("\n");
-    // }
-
-    // exit(-1);
 
     cudaError_t error = cudaGetLastError();
     if(error != cudaSuccess){
         printf("CUDA error at Quantize_val: %s\n", cudaGetErrorString(error));
         exit(-1);
     }
-    // printf("-- Quantize_val\n");
 
     // column-major store for weight compression.
     if (col_major)
     {
-        printf("==> column major\n");
+        // printf("==> column major\n");
         // allocate output in uint32.
-        auto output = torch::zeros({bit_qnt*STEP32(height), PAD8(width)}, options);
+        auto output = torch::zeros({bit_qnt*STEP32(height), PAD128(width)}, options);
 
         cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, PackFcWeight128, numThreads, 0);
         PackFcWeight128<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(
@@ -73,16 +63,14 @@ torch::Tensor bit_qnt_cuda(
             printf("CUDA error at mm_v1_cuda: %s\n", cudaGetErrorString(error));
             exit(-1);
         }
-
         return output;
     }
     else // row-major store for input compression.
     {
 
-        printf("==> Non-column major\n");
+        // printf("==> Non-column major\n");
         // allocate output in int32 on GPU
         torch::Tensor output = torch::zeros({bit_qnt*PAD8(height), STEP32(width)}, options);
-        // auto output = torch::zeros((2, 3));
 
         cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, QGTC_layer_input, numThreads, 0);
         QGTC_layer_input<<< numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>> \
@@ -175,7 +163,7 @@ torch::Tensor mm_v2_cuda(
     cudaFuncSetAttribute(QGTC_layer_hidden, cudaFuncAttributeMaxDynamicSharedMemorySize, shared_memory);
     cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, QGTC_layer_hidden, numThreads, shared_memory);
 
-    printf("QGTC_layer_output\n");
+    // printf("QGTC_layer_output\n");
     QGTC_layer_output<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads, shared_memory>>>(
         float_X_out.data<float>(), bit_X1.data<int>(), bit_X2.data<int>(),
         X1_height, X1_width, X2_width, bit1, bit2

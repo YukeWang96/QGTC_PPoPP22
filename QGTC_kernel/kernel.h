@@ -8,15 +8,15 @@
 
 #include "utility.h"
 
-#define max_v 10
-#define min_v -10
+#define max_v 8
+#define min_v 0
 
 using namespace nvcuda;
 
 // * quantization of a single float value
 __device__ __inline__ uin32 quantize(float val, int bitwidth){
     const int max_val = max_v;
-    const int min_val = -min_v;
+    const int min_val = min_v;
     if (val > max_val) val = max_val - 1;
     if (val < min_val) val = min_val + 1;
     uin32 ans = (val - min_val) * (1 << bitwidth) / (max_val - min_val); 
@@ -49,13 +49,14 @@ __global__ void Quantize_val(
         float input_val = clip(input_gpu[tid], min_v, max_v);
         float qnt_float = (input_val - min_v) * (1 << bitwidth) * 1.0f / (max_v - min_v);
         input_qnt_gpu[tid]  = qnt_float;
+        // printf("input_qnt_gpu: %d \n", input_qnt_gpu[tid]);
     }
 }  
 
 
 
 // packing weight for the hidden FC layer. STEP128(A_height)*PAD128(A_width)
-__global__ void PackFcWeight128(const int* __restrict__ A, int* B, 
+__global__ void PackFcWeight128(int* B, const int* __restrict__ A,
                                 const int A_height, const int A_width, const int w_bit)
 {
     GET_LANEID;
@@ -78,11 +79,15 @@ __global__ void PackFcWeight128(const int* __restrict__ A, int* B,
             float f0 = ( (bx*128+lx*32+laneid<A_height) && (by*8+ly<A_width) )? \
                         ((A[(bx*128+lx*32+laneid)*A_width+by*8+ly]>>bIdx) & 0x01):-1.0f;
             unsigned r0 = __brev(__ballot_sync(0xFFFFFFFF, f0 > 0));
-            if (laneid==0) 
+
+            if (laneid==0) {
                 B[bIdx*offset_opt + (by*8+ly)*gdx*4+bx*4 + lx] = r0;
+                // printf("r0-read-after-store: %d\n", B[bIdx*offset_opt + (by*8+ly)*gdx*4+bx*4 + lx]);
+            }
         }
     }
 }
+
 // compress the input from 32-bit to 1-bit
 // store in 1-bit with packed 32-bit unsigned int format.
 __global__  void QGTC_layer_input(
@@ -97,8 +102,8 @@ __global__  void QGTC_layer_input(
     GET_WARPID;
 
     // how many blocks in total. X_height/8 * X_width/128
-    const int gdx = STEP8(height);                     // x size: vertical.
-    const int gdy = STEP128(width);                    // y size: horizontal.
+    const int gdx = STEP8(height);                                      // x size: vertical.
+    const int gdy = STEP128(width);                                     // y size: horizontal.
     const int offset_opt = PAD8(height)*STEP128(width)*128/32;        // layerwise offset of OUTPUT after bit compression.
 
     // 32 warps per block
@@ -117,15 +122,20 @@ __global__  void QGTC_layer_input(
             // int f0 = ( (by*128+ly*32+laneid<(width)) && (bx*8+lx<(height)) )?
             //             T_in[bitIdx*offset + (bx*8+lx)*(width)+by*128+ly*32+laneid]: 0;
 
-            int f0 = 1; //( (by*128+ly*32+laneid<(width)) && (bx*8+lx<(height)) )? ((T_in[(bx*8+lx)*(width)+by*128+ly*32+laneid]>>bitIdx) & 0x01): 0;
+            int f0 = ( (by*128+ly*32+laneid<(width)) && (bx*8+lx<(height)) )? \
+                        ((T_in[(bx*8+lx)*(width)+by*128+ly*32+laneid]>>bitIdx) & 0x01): 0;
+            // printf("f0: %d \n", f0);
 
             // compressed, any thing outside boundry would be set to 0.
             // note that * f0 > 0 * in the 0/1 case. but >= 0 in 1/-1 case
             unsigned r0 = __brev(__ballot_sync(0xFFFFFFFF, f0>0));
+            // printf("r0-unsigned: %u\n", r0);
 
             // output the results
-            if (laneid==0)
+            if (laneid==0){
                 bit_T_out[bitIdx*offset_opt + (bx*8+lx)*gdy*4 + by*4 + ly] = r0;
+                // printf("r0-read-after-store: %d\n", bit_T_out[bitIdx*offset_opt + (bx*8+lx)*gdy*4 + by*4 + ly]);
+            }
         }
 
     }
@@ -205,7 +215,7 @@ __global__ void QGTC_layer_hidden(
         // quantization at the fragment into act_bit (stored in uint32).
         #pragma unroll
         for (int t = 0; t < c_frag.num_elements; t++) {
-            // printf("%d\n", c_frag.x[t]);
+            // printf("%u \n", c_frag.x[t]);
             c_frag.x[t] = quantize(c_frag.x[t], act_bit);
         }
 
