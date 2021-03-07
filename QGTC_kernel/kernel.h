@@ -117,22 +117,21 @@ __global__  void QGTC_layer_input(
             // int f0 = ( (by*128+ly*32+laneid<(width)) && (bx*8+lx<(height)) )?
             //             T_in[bitIdx*offset + (bx*8+lx)*(width)+by*128+ly*32+laneid]: 0;
 
-            int f0 = 0; // ( (by*128+ly*32+laneid<(width)) && (bx*8+lx<(height)) )?
-                            // ((T_in[(bx*8+lx)*(width)+by*128+ly*32+laneid]>>bitIdx) & 0x01): 0;
+            int f0 = 1; //( (by*128+ly*32+laneid<(width)) && (bx*8+lx<(height)) )? ((T_in[(bx*8+lx)*(width)+by*128+ly*32+laneid]>>bitIdx) & 0x01): 0;
 
             // compressed, any thing outside boundry would be set to 0.
             // note that * f0 > 0 * in the 0/1 case. but >= 0 in 1/-1 case
             unsigned r0 = __brev(__ballot_sync(0xFFFFFFFF, f0>0));
 
             // output the results
-            // if (laneid==0)
-            //     bit_T_out[bitIdx*offset_opt + (bx*8+lx)*gdy*4 + by*4 + ly] = r0;
+            if (laneid==0)
+                bit_T_out[bitIdx*offset_opt + (bx*8+lx)*gdy*4 + by*4 + ly] = r0;
         }
 
     }
 }
 
-// (bit_X, bit_W) --> (uint32 bit_X_out)
+// (bit_X, bit_W) --> (int32 bit_X_out)
 __global__ void QGTC_layer_hidden(
     int* bit_X_out, 
     int* __restrict__ bit_X, 
@@ -305,7 +304,9 @@ __global__ void QGTC_layer_output(
             for (int i=0; i<gdk; i++)
             {
                 load_matrix_sync(a_frag, bit_X + b_act*act_offset + bx*8*gdk*4 + i*128/32, gdk*128);
+                // printf("bit_X: %d \n", bit_X);
                 load_matrix_sync(b_frag, bit_W + b_w*w_offset + by*8*gdk*4 + i*128/32, gdk*128);
+                // printf("bit_W: %d \n", bit_W);
                 bmma_sync(tmp_frag, a_frag, b_frag, tmp_frag, bmmaBitOpAND);
             }
 
@@ -314,20 +315,20 @@ __global__ void QGTC_layer_output(
             for (int t = 0; t < tmp_frag.num_elements; t++) 
             {
                 // printf("%d\n", c_frag.x[t]);
-                c_frag.x[t] += (tmp_frag.x[t] << b_opt);
+                c_frag.x[t] += (tmp_frag.x[t]<<b_opt);
             }
             __syncwarp();
         }
 
         store_matrix_sync(&Cs[warpid*64], c_frag, 8, wmma::mem_row_major);
-        // if (laneid == 0 && warpid == 0){
-        //     for (int i=0; i<8; i++){
-        //         for (int j=0; j<8; j++){
-        //             printf("%u ", Cs[warpid*64 + i * 8 + j]);
-        //         }
-        //         printf("\n");
-        //     }
-        // }
+        if (laneid == 0 && warpid == 0){
+            for (int i=0; i<8; i++){
+                for (int j=0; j<8; j++){
+                    printf("%d ", Cs[warpid*64 + i * 8 + j]);
+                }
+                printf("\n");
+            }
+        }
 
         float* output_sub = &(X_out[bx*(W_width)*8+by*8]);
 

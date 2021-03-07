@@ -3,7 +3,8 @@ import torch
 import sys
 import QGTC
 
-a = torch.FloatTensor([[1,2,3],[1,2,3]])
+# a = torch.FloatTensor([[1,2,3],[1,2,3]])
+a = torch.ones((8, 128))
 print(a)
 
 def quantize(val, bitwidth):
@@ -22,15 +23,19 @@ for i in range(len(a)):
     print()
 
 #  -- * --- reference implementation -- * ---
-b = torch.FloatTensor([[1,1],[1,1],[1,1]])
+# b = torch.FloatTensor([[1,1],[1,1],[1,1]])
+b = torch.ones((128, 8))
 out = torch.mm(a, b)
 print(out)
+# print()
 
-print()
+
 bit_a = QGTC.bit_qnt(a.cuda(), 3, False)
 torch.cuda.synchronize()
 print(" => bit encoding [a]")
 print()
+# recover_a = QGTC.bit_recover(bit_a).cpu()
+# print(recover_a)
 
 bit_b = QGTC.bit_qnt(b.cuda(), 3, True)
 torch.cuda.synchronize()
@@ -45,9 +50,8 @@ float_output = QGTC.mm_v2(bit_a, bit_b, 2, 3, 2, 3, 3).cpu()
 print(float_output)
 print("mm_v2")
 print()
-# for i in range(len(float_output)):
-#     for j in range(len(float_output[0])):
-#         tmp =  quantize(float_output[i][j].item(), 3)
-#         print(tmp, end=" ")
-#         # print(a[i][j].data, end="")
-#     print()
+for i in range(len(float_output)):
+    for j in range(len(float_output[0])):
+        tmp = float_output[i][j].item()
+        print(tmp, end=" ")
+    print()

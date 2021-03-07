@@ -34,10 +34,19 @@ torch::Tensor bit_qnt_cuda(
     // note that allocated data must be on CUDA device !!!!
     auto options = torch::TensorOptions().dtype(torch::kInt32).device(torch::kCUDA, 0);
     torch::Tensor input_qnt = torch::zeros({height, width}, options);
-    // printf("-- Input_qnt\n");
+    printf("-- Input_qnt\n");
 
     Quantize_val<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(input_qnt.data<int>(), input.data<float>(), 
                                                                                 height*width, bit_qnt); 
+
+    // for(int i=0;i<height;i++){
+    //     for (int j=0; j<width; j++){
+    //         printf("%d ", input_qnt.data<int>()[i*width + j]);
+    //     }
+    //     printf("\n");
+    // }
+
+    // exit(-1);
 
     cudaError_t error = cudaGetLastError();
     if(error != cudaSuccess){
@@ -166,6 +175,7 @@ torch::Tensor mm_v2_cuda(
     cudaFuncSetAttribute(QGTC_layer_hidden, cudaFuncAttributeMaxDynamicSharedMemorySize, shared_memory);
     cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, QGTC_layer_hidden, numThreads, shared_memory);
 
+    printf("QGTC_layer_output\n");
     QGTC_layer_output<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads, shared_memory>>>(
         float_X_out.data<float>(), bit_X1.data<int>(), bit_X2.data<int>(),
         X1_height, X1_width, X2_width, bit1, bit2
