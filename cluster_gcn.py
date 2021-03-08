@@ -52,9 +52,9 @@ def main(args):
     # there is only one graph in Node Property Prediction datasets
     g, labels = data[0]
     # get split labels
-    train_label = data.labels[split_idx['train']]
-    valid_label = data.labels[split_idx['valid']]
-    test_label = data.labels[split_idx['test']]
+    # train_label = data.labels[split_idx['train']]
+    # valid_label = data.labels[split_idx['valid']]
+    # test_label = data.labels[split_idx['test']]
 
     train_mask = split_idx['train']
     val_mask = split_idx['valid']
@@ -62,6 +62,7 @@ def main(args):
 
     psize = len(train_mask)/args.psize
     train_nid = np.nonzero(train_mask.data.numpy())[0].astype(np.int64)
+    # train_nid = np.nonzero(train_mask['paper'].numpy())[0].astype(np.int64)
 
     # Normalize features
     if args.normalize:
@@ -80,6 +81,7 @@ def main(args):
     # print(g.ndata)
     # print(g.edata)
     in_feats = g.ndata['feat'].shape[1]
+    # print(g.ndata['feat'])
     # sys.exit(0)
 
     n_classes = data.num_classes
