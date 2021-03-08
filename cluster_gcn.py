@@ -26,6 +26,8 @@ from scipy.sparse import coo_matrix
 # import QGTC
 # Load Node Property Prediction datasets in OGB
 from ogb.nodeproppred import DglNodePropPredDataset
+from dgl.data import AMDataset, AmazonCoBuyComputerDataset
+
 
 regular = False
 
@@ -49,20 +51,15 @@ def main(args):
 
     data = DglNodePropPredDataset(name=args.dataset) #'ogbn-proteins'
     split_idx = data.get_idx_split()
-    # there is only one graph in Node Property Prediction datasets
     g, labels = data[0]
-    # get split labels
-    # train_label = data.labels[split_idx['train']]
-    # valid_label = data.labels[split_idx['valid']]
-    # test_label = data.labels[split_idx['test']]
-
     train_mask = split_idx['train']
     val_mask = split_idx['valid']
     test_mask = split_idx['test']
 
     psize = len(train_mask)/args.psize
+    # print(train_mask)
+    # sys.exit(0)
     train_nid = np.nonzero(train_mask.data.numpy())[0].astype(np.int64)
-    # train_nid = np.nonzero(train_mask['paper'].numpy())[0].astype(np.int64)
 
     # Normalize features
     if args.normalize:
@@ -73,17 +70,7 @@ def main(args):
         features = scaler.transform(feats.data.numpy())
         g.ndata['feat'] = torch.FloatTensor(features)
 
-    # print(data[0]['node_feat'])
-    # print(g.ndata.keys())
-    # print(g['edge_feat'])
-    # print(g.node_attr_schemes())
-
-    # print(g.ndata)
-    # print(g.edata)
     in_feats = g.ndata['feat'].shape[1]
-    # print(g.ndata['feat'])
-    # sys.exit(0)
-
     n_classes = data.num_classes
     n_edges = g.number_of_edges()
 
@@ -217,6 +204,7 @@ def main(args):
                 t = time.perf_counter()
                 cluster = cluster.cuda()
                 A = cluster.A.to_dense()
+                print(A.size())
                 X = cluster.X
                 torch.cuda.synchronize()
                 allocation += time.perf_counter() - t
