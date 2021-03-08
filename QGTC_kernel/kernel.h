@@ -20,6 +20,7 @@ __device__ __inline__ uin32 quantize(float val, int bitwidth){
     if (val > max_val) val = max_val - 1;
     if (val < min_val) val = min_val + 1;
     uin32 ans = (val - min_val) * (1 << bitwidth) / (max_val - min_val); 
+    // printf("ans: %u \n", ans);
     return ans;
 }
 
@@ -208,7 +209,7 @@ __global__ void QGTC_layer_hidden(
             // Accumulation.
             #pragma unroll
             for (int t = 0; t < tmp_frag.num_elements; t++) {
-                c_frag.x[t] += tmp_frag.x[t] << b_opt;
+                c_frag.x[t] += tmp_frag.x[t]<<b_opt;
             }
         }
 
@@ -314,9 +315,9 @@ __global__ void QGTC_layer_output(
             for (int i=0; i<gdk; i++)
             {
                 load_matrix_sync(a_frag, bit_X + b_act*act_offset + bx*8*gdk*4 + i*128/32, gdk*128);
-                // printf("bit_X: %d \n", bit_X);
+                // printf("bit_X: %u \n", bit_X);
                 load_matrix_sync(b_frag, bit_W + b_w*w_offset + by*8*gdk*4 + i*128/32, gdk*128);
-                // printf("bit_W: %d \n", bit_W);
+                // printf("bit_W: %u \n", bit_W);
                 bmma_sync(tmp_frag, a_frag, b_frag, tmp_frag, bmmaBitOpAND);
             }
 
@@ -331,14 +332,14 @@ __global__ void QGTC_layer_output(
         }
 
         store_matrix_sync(&Cs[warpid*64], c_frag, 8, wmma::mem_row_major);
-        if (laneid == 0 && warpid == 0){
-            for (int i=0; i<8; i++){
-                for (int j=0; j<8; j++){
-                    printf("%d ", Cs[warpid*64 + i * 8 + j]);
-                }
-                printf("\n");
-            }
-        }
+        // if (laneid == 0 && warpid == 0){
+        //     for (int i=0; i<8; i++){
+        //         for (int j=0; j<8; j++){
+        //             printf("%d ", Cs[warpid*64 + i * 8 + j]);
+        //         }
+        //         printf("\n");
+        //     }
+        // }
 
         float* output_sub = &(X_out[bx*(W_width)*8+by*8]);
 

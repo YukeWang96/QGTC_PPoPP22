@@ -23,6 +23,7 @@ import numpy as np
 from scipy.sparse import coo_matrix
 
 from QGTC_conv import *
+import QGTC
 
 
 regular = False
@@ -152,11 +153,14 @@ def main(args):
     allocation = 0
     running_time = 0
 
-    # W_1 = torch.ones((feat_size*2, hidden_1)).cuda()
+    W_1 = torch.ones((feat_size*2, hidden_1)).cuda()
     # W_2 = torch.ones((hidden_1, output)).cuda()
 
-    model = GCNConv(feat_size*2, hidden_1, output).cuda()
-
+    bw_A = 1
+    bw_W1 = 1
+    bw_X = 1
+    # model = GCNConv(feat_size*2, hidden_1, output).cuda()
+    bit_W1 = QGTC.bit_qnt(W_1.cuda(), bw_W1, True)
 
     for epoch in range(args.n_epochs):
         cnt = 0
@@ -194,8 +198,15 @@ def main(args):
                 
                 torch.cuda.synchronize()
                 t = time.perf_counter()
-                X_out = model(A, X) 
+                
+                bit_A = QGTC.bit_qnt(A.cuda(), bw_A, False)
+                bit_X = QGTC.bit_qnt(X.cuda(), bw_X, True)
+                bit_output = QGTC.mm_v1(bit_A, bit_X, len(A), len(A), len(X[0]), bw_A, bw_X, bw_X)
+                float_output = QGTC.mm_v2(bit_output, bit_W1, len(A), len(X[0]), len(W_1[0]), bw_X, bw_W1)
+
+                # X = torch.mm(A, X)
                 # X_out = torch.mm(X, W_1)
+
                 # X_out = torch.mm(A, X_out)
                 # X_out = torch.mm(X_out, W_2)
                 # X_out = torch.mm(A, X_out)

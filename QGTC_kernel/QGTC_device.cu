@@ -100,8 +100,8 @@ torch::Tensor mm_v1_cuda(
 )
 {
     // allocate the output Tensor on GPU.
-    auto options = torch::TensorOptions().dtype(torch::kInt32).device(torch::kCUDA, 0);
-    auto bit_X_out = torch::zeros({output_bit*X1_height, STEP32(X2_width)}).to(torch::kCUDA);
+    // auto options = torch::TensorOptions().dtype(torch::kInt32).device(torch::kCUDA, 0);
+    auto bit_X_out = torch::zeros({output_bit*X1_height, STEP32(X2_width)}, torch::kInt32).to(torch::kCUDA);
     
     int dev = 0;
     int numThreads = 1024;
@@ -113,6 +113,7 @@ torch::Tensor mm_v1_cuda(
     cudaFuncSetAttribute(QGTC_layer_hidden, cudaFuncAttributeMaxDynamicSharedMemorySize, shared_memory);
     cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, QGTC_layer_hidden, numThreads, shared_memory);
 
+    // exit(-1);
     QGTC_layer_hidden<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads, shared_memory>>>(
         bit_X_out.data<int>(), bit_X1.data<int>(), bit_X2.data<int>(),
         X1_height, X1_width, X2_width, bit1, bit2
@@ -160,8 +161,8 @@ torch::Tensor mm_v2_cuda(
     int shared_memory = 64*sizeof(int)*32;
 
     cudaGetDeviceProperties(&deviceProp, dev);
-    cudaFuncSetAttribute(QGTC_layer_hidden, cudaFuncAttributeMaxDynamicSharedMemorySize, shared_memory);
-    cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, QGTC_layer_hidden, numThreads, shared_memory);
+    cudaFuncSetAttribute(QGTC_layer_output, cudaFuncAttributeMaxDynamicSharedMemorySize, shared_memory);
+    cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, QGTC_layer_output, numThreads, shared_memory);
 
     // printf("QGTC_layer_output\n");
     QGTC_layer_output<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads, shared_memory>>>(

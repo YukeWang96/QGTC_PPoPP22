@@ -29,29 +29,34 @@ out = torch.mm(a, b)
 # print(out)
 # print()
 
+bw_a = 5
+bw_b = 5
 
-bit_a = QGTC.bit_qnt(a.cuda(), 3, False)
+bit_a = QGTC.bit_qnt(a.cuda(), bw_a, False)
 torch.cuda.synchronize()
 print(" => bit encoding [a]")
 print()
 # recover_a = QGTC.bit_recover(bit_a).cpu()
 # print(recover_a)
 
-bit_b = QGTC.bit_qnt(b.cuda(), 3, True)
+bit_b = QGTC.bit_qnt(b.cuda(), bw_b, True)
 torch.cuda.synchronize()
 print(" => bit-encoding [b]")
 print()
 
-# float_output = QGTC.mm_v1(bit_a, bit_b, 2, 3, 1, 3, 3, 3).cpu()
-# print("mm_v1")
-# print()
+print(bit_b)
+print(bit_a)
 
-float_output = QGTC.mm_v2(bit_a, bit_b, 2, 3, 2, 3, 3).cpu()
-print(float_output)
-print("mm_v2")
+int_output = QGTC.mm_v1(bit_a, bit_b, 8, 128, 8, bw_a, bw_b, bw_a).cpu()
+print("mm_v1")
 print()
-for i in range(len(float_output)):
-    for j in range(len(float_output[0])):
-        tmp = float_output[i][j].item()
-        print(tmp, end=" ")
-    print()
+
+# float_output = QGTC.mm_v2(bit_a, bit_b, 8, 128, 8, bw_a, bw_b).cpu()
+# print(float_output)
+# print("mm_v2")
+# print()
+# for i in range(len(float_output)):
+#     for j in range(len(float_output[0])):
+#         tmp = float_output[i][j].item()
+#         print(tmp, end=" ")
+#     print()
