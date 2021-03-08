@@ -22,9 +22,10 @@ import matplotlib.pylab as plt
 import numpy as np
 from scipy.sparse import coo_matrix
 
-from QGTC_conv import *
-import QGTC
-
+# from QGTC_conv import *
+# import QGTC
+# Load Node Property Prediction datasets in OGB
+from ogb.nodeproppred import DglNodePropPredDataset
 
 regular = False
 
@@ -38,13 +39,26 @@ def main(args):
     multitask_data = set(['ppi'])
     multitask = args.dataset in multitask_data
 
-    # load and preprocess dataset
-    data = load_data(args)
-    g = data.g
-    train_mask = g.ndata['train_mask']
-    val_mask = g.ndata['val_mask']
-    test_mask = g.ndata['test_mask']
-    labels = g.ndata['label']
+    # # load and preprocess dataset
+    # data = load_data(args)
+    # g = data.g
+    # train_mask = g.ndata['train_mask']
+    # val_mask = g.ndata['val_mask']
+    # test_mask = g.ndata['test_mask']
+    # labels = g.ndata['label']
+
+    data = DglNodePropPredDataset(name=args.dataset) #'ogbn-proteins'
+    split_idx = data.get_idx_split()
+    # there is only one graph in Node Property Prediction datasets
+    g, labels = data[0]
+    # get split labels
+    train_label = data.labels[split_idx['train']]
+    valid_label = data.labels[split_idx['valid']]
+    test_label = data.labels[split_idx['test']]
+
+    train_mask = split_idx['train']
+    val_mask = split_idx['valid']
+    test_mask = split_idx['test']
 
     psize = len(train_mask)/args.psize
     train_nid = np.nonzero(train_mask.data.numpy())[0].astype(np.int64)
@@ -58,7 +72,16 @@ def main(args):
         features = scaler.transform(feats.data.numpy())
         g.ndata['feat'] = torch.FloatTensor(features)
 
+    # print(data[0]['node_feat'])
+    # print(g.ndata.keys())
+    # print(g['edge_feat'])
+    # print(g.node_attr_schemes())
+
+    # print(g.ndata)
+    # print(g.edata)
     in_feats = g.ndata['feat'].shape[1]
+    # sys.exit(0)
+
     n_classes = data.num_classes
     n_edges = g.number_of_edges()
 
@@ -99,7 +122,7 @@ def main(args):
         test_mask = test_mask.cuda()
         g = g.int().to(args.gpu)
 
-    print('labels shape:', g.ndata['label'].shape)
+    # print('labels shape:', g.ndata['label'].shape)
     print("features shape, ", g.ndata['feat'].shape)
     feat_size  = g.ndata['feat'].shape[1]
 
@@ -153,14 +176,14 @@ def main(args):
     allocation = 0
     running_time = 0
 
-    W_1 = torch.ones((feat_size*2, hidden_1)).cuda()
+    W_1 = torch.ones((feat_size, hidden_1)).cuda()
     # W_2 = torch.ones((hidden_1, output)).cuda()
-
     bw_A = 1
     bw_W1 = 1
     bw_X = 1
+    # bit_W1 = QGTC.bit_qnt(W_1.cuda(), bw_W1, True)
     # model = GCNConv(feat_size*2, hidden_1, output).cuda()
-    bit_W1 = QGTC.bit_qnt(W_1.cuda(), bw_W1, True)
+
 
     for epoch in range(args.n_epochs):
         cnt = 0
@@ -199,13 +222,15 @@ def main(args):
                 torch.cuda.synchronize()
                 t = time.perf_counter()
                 
-                bit_A = QGTC.bit_qnt(A.cuda(), bw_A, False)
-                bit_X = QGTC.bit_qnt(X.cuda(), bw_X, True)
-                bit_output = QGTC.mm_v1(bit_A, bit_X, len(A), len(A), len(X[0]), bw_A, bw_X, bw_X)
-                float_output = QGTC.mm_v2(bit_output, bit_W1, len(A), len(X[0]), len(W_1[0]), bw_X, bw_W1)
+                # bit_A = QGTC.bit_qnt(A.cuda(), bw_A, False)
+                # bit_X = QGTC.bit_qnt(X.cuda(), bw_X, True)
+                # bit_output = QGTC.mm_v1(bit_A, bit_X, len(A), len(A), len(X[0]), bw_A, bw_X, bw_X)
+                # float_output = QGTC.mm_v2(bit_output, bit_W1, len(A), len(X[0]), len(W_1[0]), bw_X, bw_W1)
 
-                # X = torch.mm(A, X)
-                # X_out = torch.mm(X, W_1)
+                X = torch.mm(A, X)
+                # print(X.size())
+                # print(W_1.size())
+                X_out = torch.mm(X, W_1)
 
                 # X_out = torch.mm(A, X_out)
                 # X_out = torch.mm(X_out, W_2)
