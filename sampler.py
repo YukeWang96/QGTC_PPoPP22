@@ -23,7 +23,7 @@ class ClusterIter(object):
     '''The partition sampler given a DGLGraph and partition number.
     The metis is used as the graph partition backend.
     '''
-    def __init__(self, dn, g, psize, batch_size, seed_nid, use_pp=True):
+    def __init__(self, dn, g, psize, batch_size, seed_nid, use_pp=False):
         """Initialize the sampler.
 
         Paramters

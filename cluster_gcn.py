@@ -13,6 +13,7 @@ import torch.nn.functional as F
 import dgl
 from dgl.data import register_data_args
 import collections
+import os.path as osp
 
 from modules import GraphSAGE
 from sampler import ClusterIter
@@ -24,7 +25,7 @@ from scipy.sparse import coo_matrix
 
 # from QGTC_conv import *
 # import QGTC
-# Load Node Property Prediction datasets in OGB
+from dataset import *
 from ogb.nodeproppred import DglNodePropPredDataset
 from dgl.data import AMDataset, AmazonCoBuyComputerDataset
 
@@ -41,20 +42,28 @@ def main(args):
     multitask_data = set(['ppi'])
     multitask = args.dataset in multitask_data
 
-    # # load and preprocess dataset
-    # data = load_data(args)
-    # g = data.g
-    # train_mask = g.ndata['train_mask']
-    # val_mask = g.ndata['val_mask']
-    # test_mask = g.ndata['test_mask']
-    # labels = g.ndata['label']
-
-    data = DglNodePropPredDataset(name=args.dataset) #'ogbn-proteins'
-    split_idx = data.get_idx_split()
-    g, labels = data[0]
-    train_mask = split_idx['train']
-    val_mask = split_idx['valid']
-    test_mask = split_idx['test']
+    # load and preprocess dataset
+    if args.dataset in ['ppi', 'reddit']:
+        data = load_data(args)
+        g = data.g
+        train_mask = g.ndata['train_mask']
+        val_mask = g.ndata['val_mask']
+        test_mask = g.ndata['test_mask']
+        labels = g.ndata['label']
+    elif args.dataset in ['ogbn-arxiv', 'ogbn-products']:
+        data = DglNodePropPredDataset(name=args.dataset) #'ogbn-proteins'
+        split_idx = data.get_idx_split()
+        g, labels = data[0]
+        train_mask = split_idx['train']
+        val_mask = split_idx['valid']
+        test_mask = split_idx['test']
+    else:
+        path = osp.join("/home/yuke/.graphs/orig", args.dataset)
+        data = QGTC_dataset(path, args.dim, args.n_classes)
+        g = data.g
+        train_mask = data.train_mask
+        val_mask = data.val_mask
+        test_mask = data.test_mask
 
     psize = len(train_mask)/args.psize
     # print(train_mask)
@@ -62,18 +71,17 @@ def main(args):
     train_nid = np.nonzero(train_mask.data.numpy())[0].astype(np.int64)
 
     # Normalize features
-    if args.normalize:
-        feats = g.ndata['feat']
-        train_feats = feats[train_mask]
-        scaler = sklearn.preprocessing.StandardScaler()
-        scaler.fit(train_feats.data.numpy())
-        features = scaler.transform(feats.data.numpy())
-        g.ndata['feat'] = torch.FloatTensor(features)
+    # if args.normalize:
+    #     feats = g.ndata['feat']
+    #     train_feats = feats[train_mask]
+    #     scaler = sklearn.preprocessing.StandardScaler()
+    #     scaler.fit(train_feats.data.numpy())
+    #     features = scaler.transform(feats.data.numpy())
+    #     g.ndata['feat'] = torch.FloatTensor(features)
 
     in_feats = g.ndata['feat'].shape[1]
     n_classes = data.num_classes
     n_edges = g.number_of_edges()
-
     n_train_samples = train_mask.int().sum().item()
     n_val_samples = val_mask.int().sum().item()
     n_test_samples = test_mask.int().sum().item()
@@ -90,18 +98,16 @@ def main(args):
             n_test_samples))
 
     # create GCN model
-    if args.self_loop and not args.dataset.startswith('reddit'):
-        g = dgl.remove_self_loop(g)
-        g = dgl.add_self_loop(g)
-        print("adding self-loop edges")
+    # if args.self_loop and not args.dataset.startswith('reddit'):
+        # g = dgl.remove_self_loop(g)
+        # g = dgl.add_self_loop(g)
+        # print("adding self-loop edges")
 
     # metis only support int64 graph
     g = g.long()
-
     # get the subgraph based on the partitioning nodes list.
-    cluster_iterator = ClusterIter(args.dataset, g, args.psize, args.batch_size, train_nid, use_pp=args.use_pp)
+    cluster_iterator = ClusterIter(args.dataset, g, args.psize, args.batch_size, train_nid, use_pp=False)
 
-    # set device for dataset tensors
     if args.gpu < 0:
         cuda = False
     else:
@@ -122,7 +128,6 @@ def main(args):
                       F.relu,
                       args.dropout,
                       args.use_pp)
-
 
     if cuda:
         model.cuda()
@@ -159,17 +164,19 @@ def main(args):
 
     hidden_1 = 128
     # hidden_2 = 2048
-    output = 42
+    output = 10
 
     total_ops = 0
     allocation = 0
     running_time = 0
 
     W_1 = torch.ones((feat_size, hidden_1)).cuda()
-    # W_2 = torch.ones((hidden_1, output)).cuda()
-    bw_A = 1
-    bw_W1 = 1
-    bw_X = 1
+    W_2 = torch.ones((hidden_1, output)).cuda()
+
+
+    # bw_A = 1
+    # bw_W1 = 1
+    # bw_X = 1
     # bit_W1 = QGTC.bit_qnt(W_1.cuda(), bw_W1, True)
     # model = GCNConv(feat_size*2, hidden_1, output).cuda()
 
@@ -179,37 +186,32 @@ def main(args):
         for j, cluster in enumerate(cluster_iterator):
             # sync with upper level training graph      
             if regular:
-
                 torch.cuda.synchronize()
                 t = time.perf_counter()      
-                
                 if cuda:
                     cluster = cluster.to(torch.cuda.current_device())
 
                 torch.cuda.synchronize()
                 allocation += time.perf_counter() - t
                 # model.train()
-
                 torch.cuda.synchronize()
                 t = time.perf_counter()   
-
-                pred = model(cluster)
-                
+                pred = model(cluster)       # model training
                 torch.cuda.synchronize()
                 running_time += time.perf_counter() - t
                 num_nodes = len(cluster.nodes())
 
             else:
-                torch.cuda.synchronize()
+                # torch.cuda.synchronize()
                 t = time.perf_counter()
                 cluster = cluster.cuda()
-                A = cluster.A.to_dense()
-                print(A.size())
+                # unzip adjacent matrix A
+                A = cluster.A.to_dense()            
+                # unzip feature embedding matrix X
                 X = cluster.X
-                torch.cuda.synchronize()
+                # torch.cuda.synchronize()
                 allocation += time.perf_counter() - t
-                
-                torch.cuda.synchronize()
+                # torch.cuda.synchronize()
                 t = time.perf_counter()
                 
                 # bit_A = QGTC.bit_qnt(A.cuda(), bw_A, False)
@@ -217,14 +219,14 @@ def main(args):
                 # bit_output = QGTC.mm_v1(bit_A, bit_X, len(A), len(A), len(X[0]), bw_A, bw_X, bw_X)
                 # float_output = QGTC.mm_v2(bit_output, bit_W1, len(A), len(X[0]), len(W_1[0]), bw_X, bw_W1)
 
+                # 1-layer
                 X = torch.mm(A, X)
-                # print(X.size())
-                # print(W_1.size())
                 X_out = torch.mm(X, W_1)
 
-                # X_out = torch.mm(A, X_out)
-                # X_out = torch.mm(X_out, W_2)
-                # X_out = torch.mm(A, X_out)
+                # 2-layer
+                X_out = torch.mm(A, X_out)
+                X_out = torch.mm(X_out, W_2)
+
                 torch.cuda.synchronize()
                 running_time += time.perf_counter() - t
 
@@ -251,7 +253,6 @@ def main(args):
 
 
     end_time = time.time()
-
     print("allocation: {:.3f} ms, inference: {:.3f} ms".format(allocation/cnt*1e3, running_time/cnt*1e3))
     print("Avg. Epoch: {:.3f} ms".format((end_time - start_time)*1000/cnt))
     print("GFLOPS: {:.3f}".format(total_ops/(end_time - start_time) / 10e9))
@@ -266,6 +267,8 @@ if __name__ == '__main__':
                         help="gpu")
     parser.add_argument("--lr", type=float, default=3e-2,
                         help="learning rate")
+    parser.add_argument("--dim", type=int, default=10,
+                        help="input dimension of each dataset")
     parser.add_argument("--n-epochs", type=int, default=10,
                         help="number of training epochs")
     parser.add_argument("--log-every", type=int, default=100,
@@ -278,6 +281,8 @@ if __name__ == '__main__':
                         help="test batch size")
     parser.add_argument("--n-hidden", type=int, default=16,
                         help="number of hidden gcn units")
+    parser.add_argument("--n-classes", type=int, default=10,
+                        help="number of classes")
     parser.add_argument("--n-layers", type=int, default=1,
                         help="number of hidden gcn layers")
     parser.add_argument("--val-every", type=int, default=1,
