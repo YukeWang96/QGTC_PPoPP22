@@ -14,7 +14,6 @@ def test(M, N, K):
         if val < min_val:  val = min_val + 1
         ans = (val - min_val) * (1 << bitwidth) / (max_val - min_val)
         return int(ans)
-
     # for i in range(len(a)):
     #     for j in range(len(a[0])):
     #         tmp = quantize(a[i][j].item(), 3)
@@ -29,8 +28,8 @@ def test(M, N, K):
     # print(out)
     # print()
 
-    bw_a = 3
-    bw_b = 3
+    bw_a = 1
+    bw_b = 1
 
     bit_a = QGTC.bit_qnt(a.cuda(), bw_a, False, False)
     torch.cuda.synchronize()
@@ -68,7 +67,8 @@ def test(M, N, K):
 
 cases = [
     [8,8,128],
-    [16,16,256]
+    [16,16,256],
+    [128,128,128]
 ]
 
 for m, n, k in cases:

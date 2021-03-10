@@ -8,15 +8,15 @@
 
 #include "utility.h"
 
-#define max_v 8
-#define min_v 0
+// #define max_v 8
+// #define min_v 0
 
 using namespace nvcuda;
 
 // * quantization of a single float value
-__device__ __inline__ uin32 quantize(float val, int bitwidth){
-    const int max_val = max_v;
-    const int min_val = min_v;
+__device__ __inline__ uin32 quantize(float val, int bitwidth, const int max_val, const int min_val){
+    // const int max_val = max_v;
+    // const int min_val = min_v;
     if (val > max_val) val = max_val - 1;
     if (val < min_val) val = min_val + 1;
     uin32 ans = (val - min_val) * (1 << bitwidth) / (max_val - min_val); 
@@ -39,6 +39,8 @@ __global__ void Quantize_val(
     const int bitwidth)
 {
     int start = blockIdx.x*blockDim.x + threadIdx.x;
+    const int min_v = 0;
+    const int max_v = (1 << bitwidth);
 
     for (int tid = start; tid < num_elements; tid += blockDim.x*gridDim.x) {
         /*
@@ -46,7 +48,7 @@ __global__ void Quantize_val(
         *-------------------- = ------------------
         * Actual_val - min_val  max_val - min_val
         */
-        float input_val = clip(input_gpu[tid], min_v, max_v);
+        float input_val = clip(input_gpu[tid], 0, 1<<bitwidth);
         float qnt_float = (input_val - min_v) * (1 << bitwidth) * 1.0f / (max_v - min_v);
         input_qnt_gpu[tid]  = qnt_float;
         // printf("qnt_float: %f, input_qnt_gpu: %d \n", qnt_float, input_qnt_gpu[tid]);
@@ -247,7 +249,7 @@ __global__ void QGTC_layer_hidden(
         #pragma unroll
         for (int t = 0; t < c_frag.num_elements; t++) {
             // printf("%u \n", c_frag.x[t]);
-            c_frag.x[t] = quantize(c_frag.x[t], act_bit);
+            c_frag.x[t] = quantize(c_frag.x[t], act_bit, 1<<act_bit, 0);
         }
 
         // finished one output tile and store to shared memory
