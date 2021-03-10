@@ -29,8 +29,8 @@ out = torch.mm(a, b)
 # print(out)
 # print()
 
-bw_a = 5
-bw_b = 5
+bw_a = 3
+bw_b = 3
 
 bit_a = QGTC.bit_qnt(a.cuda(), bw_a, False)
 torch.cuda.synchronize()
@@ -44,12 +44,13 @@ torch.cuda.synchronize()
 print(" => bit-encoding [b]")
 print()
 
+# print(bit_a)
 print(bit_b)
-print(bit_a)
+print(bit_b.shape)
 
-int_output = QGTC.mm_v1(bit_a, bit_b, 8, 128, 8, bw_a, bw_b, bw_a).cpu()
-print("mm_v1")
-print()
+# int_output = QGTC.mm_v1(bit_a, bit_b, 8, 128, 8, bw_a, bw_b, bw_a).cpu()
+# print("mm_v1")
+# print()
 
 # float_output = QGTC.mm_v2(bit_a, bit_b, 8, 128, 8, bw_a, bw_b).cpu()
 # print(float_output)

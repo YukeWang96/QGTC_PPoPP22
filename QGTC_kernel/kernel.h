@@ -20,7 +20,6 @@ __device__ __inline__ uin32 quantize(float val, int bitwidth){
     if (val > max_val) val = max_val - 1;
     if (val < min_val) val = min_val + 1;
     uin32 ans = (val - min_val) * (1 << bitwidth) / (max_val - min_val); 
-    // printf("ans: %u \n", ans);
     return ans;
 }
 
@@ -50,7 +49,7 @@ __global__ void Quantize_val(
         float input_val = clip(input_gpu[tid], min_v, max_v);
         float qnt_float = (input_val - min_v) * (1 << bitwidth) * 1.0f / (max_v - min_v);
         input_qnt_gpu[tid]  = qnt_float;
-        // printf("input_qnt_gpu: %d \n", input_qnt_gpu[tid]);
+        printf("qnt_float: %f, input_qnt_gpu: %d \n", qnt_float, input_qnt_gpu[tid]);
     }
 }  
 

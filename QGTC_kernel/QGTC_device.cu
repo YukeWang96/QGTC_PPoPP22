@@ -50,7 +50,7 @@ torch::Tensor bit_qnt_cuda(
     {
         // printf("==> column major\n");
         // allocate output in uint32.
-        auto output = torch::zeros({bit_qnt*STEP32(height), PAD128(width)}, options);
+        auto output = torch::zeros({bit_qnt*STEP32(height), PAD8(width)}, options);
 
         cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, PackFcWeight128, numThreads, 0);
         PackFcWeight128<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(
