@@ -49,13 +49,14 @@ __global__ void Quantize_val(
         float input_val = clip(input_gpu[tid], min_v, max_v);
         float qnt_float = (input_val - min_v) * (1 << bitwidth) * 1.0f / (max_v - min_v);
         input_qnt_gpu[tid]  = qnt_float;
-        printf("qnt_float: %f, input_qnt_gpu: %d \n", qnt_float, input_qnt_gpu[tid]);
+        // printf("qnt_float: %f, input_qnt_gpu: %d \n", qnt_float, input_qnt_gpu[tid]);
     }
 }  
 
 
 
-// packing weight for the hidden FC layer. STEP128(A_height)*PAD128(A_width)
+// packing weight for the hidden FC layer. 
+// STEP128(A_height)*PAD128(A_width)
 __global__ void PackFcWeight128(int* B, const int* __restrict__ A,
                                 const int A_height, const int A_width, const int w_bit)
 {
@@ -83,6 +84,37 @@ __global__ void PackFcWeight128(int* B, const int* __restrict__ A,
             if (laneid==0) {
                 B[bIdx*offset_opt + (by*8+ly)*gdx*4+bx*4 + lx] = r0;
                 // printf("r0-read-after-store: %d\n", B[bIdx*offset_opt + (by*8+ly)*gdx*4+bx*4 + lx]);
+            }
+        }
+    }
+}
+
+// packing weight for the output FC layer. STEP128(A_height)*PAD8(A_width)
+__global__ void PackFcWeight128_OUTPUT(int* B, const int* __restrict__ A,
+                                const int A_height, const int A_width, const int w_bit)
+{
+    GET_LANEID;
+    GET_WARPID;
+
+    const int gdx = STEP128(A_height);
+    const int gdy = STEP8(A_width);
+
+    const int lx = (warpid & 0x3); // warp x_index vertically
+    const int ly = (warpid >> 2);  // warp y_index hozerionsally.
+
+    const int offset = A_height*A_width;
+    const int offset_opt = STEP128(A_height)*PAD8(A_width)*128/32;
+
+    for (int bid=blockIdx.x; bid<gdx*gdy; bid+=gridDim.x)
+    {
+        const int bx = bid % gdx;
+        const int by = bid / gdx;
+        
+        for (int bIdx = 0; bIdx < w_bit; bIdx++){
+            float f0 = ( (bx*128+lx*32+laneid<A_height) && (by*8+ly<A_width) )? A[bIdx*offset + (bx*128+lx*32+laneid)*A_width+by*8+ly]:-1.0f;
+            unsigned r0 = __brev(__ballot_sync(0xFFFFFFFF, f0 > 0));
+            if (laneid==0){
+                B[bIdx*offset_opt + (by*8+ly)*gdx*4+ bx*4+lx] = r0;
             }
         }
     }

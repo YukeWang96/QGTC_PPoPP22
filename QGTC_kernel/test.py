@@ -32,29 +32,30 @@ out = torch.mm(a, b)
 bw_a = 3
 bw_b = 3
 
-bit_a = QGTC.bit_qnt(a.cuda(), bw_a, False)
+bit_a = QGTC.bit_qnt(a.cuda(), bw_a, False, False)
 torch.cuda.synchronize()
 print(" => bit encoding [a]")
 print()
 # recover_a = QGTC.bit_recover(bit_a).cpu()
 # print(recover_a)
 
-bit_b = QGTC.bit_qnt(b.cuda(), bw_b, True)
+# bit_b = QGTC.bit_qnt(b.cuda(), bw_b, True)
+bit_b = QGTC.bit_qnt(b.cuda(), bw_b, True, True)
 torch.cuda.synchronize()
 print(" => bit-encoding [b]")
-print()
+# print()
 
-# print(bit_a)
+print(bit_a)
 print(bit_b)
-print(bit_b.shape)
-
+# print(bit_b.shape)
 # int_output = QGTC.mm_v1(bit_a, bit_b, 8, 128, 8, bw_a, bw_b, bw_a).cpu()
 # print("mm_v1")
 # print()
 
-# float_output = QGTC.mm_v2(bit_a, bit_b, 8, 128, 8, bw_a, bw_b).cpu()
-# print(float_output)
-# print("mm_v2")
+float_output = QGTC.mm_v2(bit_a, bit_b, 8, 128, 8, bw_a, bw_b).cpu()
+print(float_output)
+print("mm_v2")
+
 # print()
 # for i in range(len(float_output)):
 #     for j in range(len(float_output[0])):

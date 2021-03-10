@@ -17,7 +17,8 @@ using namespace nvcuda;
 torch::Tensor bit_qnt_cuda(
     torch::Tensor input,
     const int bit_qnt,
-    const bool col_major=false
+    const bool col_major=false,
+    const bool output_layer=false
 ){
     const int height = input.size(0);
     const int width = input.size(1);
@@ -50,24 +51,39 @@ torch::Tensor bit_qnt_cuda(
     {
         // printf("==> column major\n");
         // allocate output in uint32.
-        auto output = torch::zeros({bit_qnt*STEP32(height), PAD8(width)}, options);
+        if (output_layer){
+            auto output = torch::zeros({bit_qnt*STEP32(height), PAD8(width)}, options);         // PAD(8) -- output
 
-        cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, PackFcWeight128, numThreads, 0);
-        PackFcWeight128<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(
-            output.data<int>(), input_qnt.data<int>(),
-            height, width, bit_qnt
-        );
-
-        cudaError_t error = cudaGetLastError();
-        if(error != cudaSuccess){
-            printf("CUDA error at mm_v1_cuda: %s\n", cudaGetErrorString(error));
-            exit(-1);
+            cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, PackFcWeight128_OUTPUT, numThreads, 0);
+            PackFcWeight128_OUTPUT<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(
+                output.data<int>(), input_qnt.data<int>(),
+                height, width, bit_qnt
+            );
+            cudaError_t error = cudaGetLastError();
+            if(error != cudaSuccess){
+                printf("CUDA error at mm_v1_cuda: %s\n", cudaGetErrorString(error));
+                exit(-1);
+            }
+            return output;
         }
-        return output;
+        else{
+            auto output = torch::zeros({bit_qnt*STEP32(height), PAD128(width)}, options);         // PAD(128) -- hidden
+
+            cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, PackFcWeight128, numThreads, 0);
+            PackFcWeight128<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(
+                output.data<int>(), input_qnt.data<int>(),
+                height, width, bit_qnt
+            );
+            cudaError_t error = cudaGetLastError();
+            if(error != cudaSuccess){
+                printf("CUDA error at mm_v1_cuda: %s\n", cudaGetErrorString(error));
+                exit(-1);
+            }
+            return output;
+        }
     }
     else // row-major store for input compression.
     {
-
         // printf("==> Non-column major\n");
         // allocate output in int32 on GPU
         torch::Tensor output = torch::zeros({bit_qnt*PAD8(height), STEP32(width)}, options);
@@ -101,7 +117,7 @@ torch::Tensor mm_v1_cuda(
 {
     // allocate the output Tensor on GPU.
     // auto options = torch::TensorOptions().dtype(torch::kInt32).device(torch::kCUDA, 0);
-    auto bit_X_out = torch::zeros({output_bit*X1_height, STEP32(X2_width)}, torch::kInt32).to(torch::kCUDA);
+    auto bit_X_out = torch::zeros({output_bit*X1_height, STEP32(PAD128(X2_width))}, torch::kInt32).to(torch::kCUDA);
     
     int dev = 0;
     int numThreads = 1024;
@@ -147,7 +163,7 @@ torch::Tensor mm_v2_cuda(
     // auto options = torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA, 0);
     // printf("X1_height: %d, X2_width: %d\n", X1_height, X2_width);
 
-    torch::Tensor float_X_out = torch::zeros({X1_height, X2_width}).to(torch::kCUDA);
+    torch::Tensor float_X_out = torch::zeros({X1_height, PAD8(X2_width)}).to(torch::kCUDA);
     // int out_height = float_X_out.size(0);
     // int out_width = float_X_out.size(1);
     // printf("out_height: %d\n", out_height);

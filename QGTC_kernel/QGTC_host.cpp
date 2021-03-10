@@ -42,7 +42,8 @@ torch::Tensor mm_v2_cuda(
 torch::Tensor bit_qnt_cuda(
     torch::Tensor input,
     const int bit_qnt,
-    const bool col_major=false
+    const bool col_major=false,
+    const bool output_layer=false
 );
 
 
@@ -93,13 +94,14 @@ torch::Tensor mm_v2(
 //
 torch::Tensor bit_qnt(
     torch::Tensor input,
-    const int bit_qnt,
-    const bool col_major=false
+    const int nbits,
+    const bool col_major=false,
+    const bool output_layer=false
 ){
   CHECK_INPUT(input);
   
   // the pointer of the compressed address.
-  return bit_qnt_cuda(input, bit_qnt, col_major); 
+  return bit_qnt_cuda(input, nbits, col_major, output_layer); 
 }
 
 // binding to python
