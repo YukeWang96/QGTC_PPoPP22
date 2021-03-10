@@ -166,7 +166,6 @@ __global__  void QGTC_layer_input(
             // output the results
             if (laneid==0){
                 bit_T_out[bitIdx*offset_opt + (bx*8+lx)*gdy*4 + by*4 + ly] = r0;
-                // printf("r0-read-after-store: %d\n", bit_T_out[bitIdx*offset_opt + (bx*8+lx)*gdy*4 + by*4 + ly]);
             }
         }
 
