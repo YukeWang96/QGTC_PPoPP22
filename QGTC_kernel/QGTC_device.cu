@@ -33,8 +33,7 @@ torch::Tensor bit_qnt_cuda(
     
     // quantization float --> int32
     // note that allocated data must be on CUDA device !!!!
-    auto options = torch::TensorOptions().dtype(torch::kInt32).device(torch::kCUDA, 0);
-    torch::Tensor input_qnt = torch::zeros({height, width}, options);
+    torch::Tensor input_qnt = torch::zeros({height, width}, torch::kInt32).to(torch::kCUDA);
     // printf("-- Input_qnt\n");
 
     Quantize_val<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(input_qnt.data<int>(), input.data<float>(), 
@@ -52,7 +51,7 @@ torch::Tensor bit_qnt_cuda(
         // printf("==> column major\n");
         // allocate output in uint32.
         if (output_layer){
-            auto output = torch::zeros({bit_qnt*STEP32(height), PAD8(width)}, options);         // PAD(8) -- output
+            auto output = torch::zeros({bit_qnt*STEP32(height), PAD8(width)}, torch::kInt32).to(torch::kCUDA);         // PAD(8) -- output
 
             cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, PackFcWeight128_OUTPUT, numThreads, 0);
             PackFcWeight128_OUTPUT<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(
@@ -67,7 +66,7 @@ torch::Tensor bit_qnt_cuda(
             return output;
         }
         else{
-            auto output = torch::zeros({bit_qnt*STEP32(height), PAD128(width)}, options);         // PAD(128) -- hidden
+            auto output = torch::zeros({bit_qnt*STEP32(height), PAD128(width)}, torch::kInt32).to(torch::kCUDA);         // PAD(128) -- hidden
 
             cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, PackFcWeight128, numThreads, 0);
             PackFcWeight128<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(
@@ -86,12 +85,16 @@ torch::Tensor bit_qnt_cuda(
     {
         // printf("==> Non-column major\n");
         // allocate output in int32 on GPU
-        torch::Tensor output = torch::zeros({bit_qnt*PAD8(height), STEP32(width)}, options);
-
+        torch::Tensor output = torch::zeros({bit_qnt*PAD8(height), STEP32(width)}, torch::kInt32).to(torch::kCUDA);
         cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, QGTC_layer_input, numThreads, 0);
+
+        // printf("bit_qnt: %d, height: %d, width: %d\n", bit_qnt, height, width);
+        // printf("numThreads: %d, numBlocksPerSm: %d\n", numThreads, numBlocksPerSm);
+
+        // on the second iterations fails when qnt_bit=1.
         QGTC_layer_input<<< numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>> \
                 (output.data<int>(), input_qnt.data<int>(), height, width, bit_qnt);
-
+   
         cudaError_t error = cudaGetLastError();
         if(error != cudaSuccess){
             printf("CUDA error at mm_v1_cuda: %s\n", cudaGetErrorString(error));
@@ -116,20 +119,19 @@ torch::Tensor mm_v1_cuda(
 )
 {
     // allocate the output Tensor on GPU.
-    // auto options = torch::TensorOptions().dtype(torch::kInt32).device(torch::kCUDA, 0);
     auto bit_X_out = torch::zeros({output_bit*X1_height, STEP32(PAD128(X2_width))}, torch::kInt32).to(torch::kCUDA);
     
     int dev = 0;
-    int numThreads = 1024;
+    int numThreads = 512;
     cudaDeviceProp deviceProp;
     int numBlocksPerSm;
-    int shared_memory = 64*sizeof(int)*32;
+    // int shared_memory = 64*sizeof(int)*32;
+    int shared_memory = 256*sizeof(int)*32;
 
     cudaGetDeviceProperties(&deviceProp, dev);
     cudaFuncSetAttribute(QGTC_layer_hidden, cudaFuncAttributeMaxDynamicSharedMemorySize, shared_memory);
     cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, QGTC_layer_hidden, numThreads, shared_memory);
 
-    // exit(-1);
     QGTC_layer_hidden<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads, shared_memory>>>(
         bit_X_out.data<int>(), bit_X1.data<int>(), bit_X2.data<int>(),
         X1_height, X1_width, X2_width, bit1, bit2
@@ -171,7 +173,7 @@ torch::Tensor mm_v2_cuda(
     // exit(-1);
 
     int dev = 0;
-    int numThreads = 1024;
+    int numThreads = 128;
     cudaDeviceProp deviceProp;
     int numBlocksPerSm;
     int shared_memory = 64*sizeof(int)*32;
@@ -191,5 +193,6 @@ torch::Tensor mm_v2_cuda(
         printf("CUDA error at mm_v2_cuda: %s\n", cudaGetErrorString(error));
         exit(-1);
     }
+
     return float_X_out;
 }

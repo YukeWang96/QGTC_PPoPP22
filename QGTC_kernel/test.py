@@ -5,7 +5,7 @@ import QGTC
 import time
 
 # a = torch.FloatTensor([[1,2,3],[1,2,3]])
-def test(M, N, K):
+def test(M, N, K, bit_b):
     a = torch.ones((M, K))
 
     # def quantize(val, bitwidth):
@@ -32,7 +32,7 @@ def test(M, N, K):
     # print()
 
     bw_a = 1
-    bw_b = 4
+    bw_b = bit_b
 
     bit_a = QGTC.bit_qnt(a.cuda(), bw_a, False, False)
     # torch.cuda.synchronize()
@@ -103,11 +103,13 @@ example = [128,128,1024]
 #         test(m, n, k)
 #     print("-------------------------")
 
-
-test(1024,1024,1024)
-test(2048,2048,1024)
-test(4096,4096,1024)
-test(8192,8192,1024)
+# for j in range(2,3):
+j = 3
+test(1024,1024,1024, j)
+test(2048,2048,1024, j)
+test(4096,4096,1024, j)
+test(8192,8192,1024, j)
+print("-----------------")
 # test(16384,16384,1024)
 
 # for m, n, k in cases:

@@ -1,0 +1,439 @@
+running install
+running bdist_egg
+running egg_info
+creating QGTC.egg-info
+writing QGTC.egg-info/PKG-INFO
+writing dependency_links to QGTC.egg-info/dependency_links.txt
+writing top-level names to QGTC.egg-info/top_level.txt
+writing manifest file 'QGTC.egg-info/SOURCES.txt'
+reading manifest file 'QGTC.egg-info/SOURCES.txt'
+writing manifest file 'QGTC.egg-info/SOURCES.txt'
+installing library code to build/bdist.linux-x86_64/egg
+running install_lib
+running build_ext
+building 'QGTC' extension
+creating /home/yuke/sc21_QGTC/QGTC_kernel/build
+creating /home/yuke/sc21_QGTC/QGTC_kernel/build/temp.linux-x86_64-3.7
+Emitting ninja build file /home/yuke/sc21_QGTC/QGTC_kernel/build/temp.linux-x86_64-3.7/build.ninja...
+Compiling objects...
+Allowing ninja to set a default number of workers... (overridable by setting the environment variable MAX_JOBS=N)
+[1/2] c++ -MMD -MF /home/yuke/sc21_QGTC/QGTC_kernel/build/temp.linux-x86_64-3.7/QGTC_host.o.d -pthread -B /home/yuke/anaconda3/envs/dgl/compiler_compat -Wl,--sysroot=/ -Wsign-compare -DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes -fPIC -I/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include -I/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include -I/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/TH -I/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/THC -I/usr/local/cuda-11.1/include -I/home/yuke/anaconda3/envs/dgl/include/python3.7m -c -c /home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp -o /home/yuke/sc21_QGTC/QGTC_kernel/build/temp.linux-x86_64-3.7/QGTC_host.o -O3 -DTORCH_API_INCLUDE_EXTENSION_H '-DPYBIND11_COMPILER_TYPE="_gcc"' '-DPYBIND11_STDLIB="_libstdcpp"' '-DPYBIND11_BUILD_ABI="_cxxabi1011"' -DTORCH_EXTENSION_NAME=QGTC -D_GLIBCXX_USE_CXX11_ABI=0 -std=c++14
+cc1plus: warning: command line option ‘-Wstrict-prototypes’ is valid for C/ObjC but not for C++
+In file included from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/Parallel.h:149:0,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/utils.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/nn/cloneable.h:5,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/nn.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/all.h:12,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/extension.h:4,
+                 from /home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:1:
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/ParallelOpenMP.h:84:0: warning: ignoring #pragma omp parallel [-Wunknown-pragmas]
+ #pragma omp parallel for if ((end - begin) >= grain_size)
+ 
+In file included from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/core/DeviceType.h:8:0,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/core/Device.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/core/Allocator.h:6,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/ATen.h:7,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/types.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader_options.h:4,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader/base.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader/stateful.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/all.h:8,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/extension.h:4,
+                 from /home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:1:
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp: In function ‘at::Tensor mm_v1(at::Tensor, at::Tensor, int, int, int, int, int, int)’:
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:50:42: warning: ‘at::DeprecatedTypeProperties& at::Tensor::type() const’ is deprecated: Tensor.type() is deprecated. Instead use Tensor.options(), which in many cases (e.g. in a constructor) is a drop-in replacement. If you were using data from type(), that is now available from Tensor itself, so instead of tensor.type().scalar_type(), use tensor.scalar_type() instead and instead of tensor.type().backend() use tensor.device(). [-Wdeprecated-declarations]
+ #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
+                                          ^
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/macros/Macros.h:171:65: note: in definition of macro ‘C10_UNLIKELY’
+ #define C10_UNLIKELY(expr)  (__builtin_expect(static_cast<bool>(expr), 0))
+                                                                 ^~~~
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/util/Exception.h:330:7: note: in expansion of macro ‘C10_UNLIKELY_OR_CONST’
+   if (C10_UNLIKELY_OR_CONST(!(cond))) {                               \
+       ^~~~~~~~~~~~~~~~~~~~~
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/util/Exception.h:318:3: note: in expansion of macro ‘TORCH_CHECK_WITH_MSG’
+   TORCH_CHECK_WITH_MSG(error_t, cond, "", __VA_ARGS__)
+   ^~~~~~~~~~~~~~~~~~~~
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/util/Exception.h:341:32: note: in expansion of macro ‘TORCH_CHECK_WITH’
+ #define TORCH_CHECK(cond, ...) TORCH_CHECK_WITH(Error, cond, __VA_ARGS__)
+                                ^~~~~~~~~~~~~~~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:50:23: note: in expansion of macro ‘TORCH_CHECK’
+ #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
+                       ^~~~~~~~~~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:52:24: note: in expansion of macro ‘CHECK_CUDA’
+ #define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x)
+                        ^~~~~~~~~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:67:3: note: in expansion of macro ‘CHECK_INPUT’
+   CHECK_INPUT(bit_X1);
+   ^
+In file included from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/Tensor.h:3:0,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/Context.h:4,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/ATen.h:9,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/types.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader_options.h:4,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader/base.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader/stateful.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/all.h:8,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/extension.h:4,
+                 from /home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:1:
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:277:30: note: declared here
+   DeprecatedTypeProperties & type() const {
+                              ^~~~
+In file included from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/core/DeviceType.h:8:0,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/core/Device.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/core/Allocator.h:6,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/ATen.h:7,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/types.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader_options.h:4,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader/base.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader/stateful.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/all.h:8,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/extension.h:4,
+                 from /home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:1:
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:50:42: warning: ‘at::DeprecatedTypeProperties& at::Tensor::type() const’ is deprecated: Tensor.type() is deprecated. Instead use Tensor.options(), which in many cases (e.g. in a constructor) is a drop-in replacement. If you were using data from type(), that is now available from Tensor itself, so instead of tensor.type().scalar_type(), use tensor.scalar_type() instead and instead of tensor.type().backend() use tensor.device(). [-Wdeprecated-declarations]
+ #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
+                                          ^
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/macros/Macros.h:171:65: note: in definition of macro ‘C10_UNLIKELY’
+ #define C10_UNLIKELY(expr)  (__builtin_expect(static_cast<bool>(expr), 0))
+                                                                 ^~~~
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/util/Exception.h:330:7: note: in expansion of macro ‘C10_UNLIKELY_OR_CONST’
+   if (C10_UNLIKELY_OR_CONST(!(cond))) {                               \
+       ^~~~~~~~~~~~~~~~~~~~~
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/util/Exception.h:318:3: note: in expansion of macro ‘TORCH_CHECK_WITH_MSG’
+   TORCH_CHECK_WITH_MSG(error_t, cond, "", __VA_ARGS__)
+   ^~~~~~~~~~~~~~~~~~~~
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/util/Exception.h:341:32: note: in expansion of macro ‘TORCH_CHECK_WITH’
+ #define TORCH_CHECK(cond, ...) TORCH_CHECK_WITH(Error, cond, __VA_ARGS__)
+                                ^~~~~~~~~~~~~~~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:50:23: note: in expansion of macro ‘TORCH_CHECK’
+ #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
+                       ^~~~~~~~~~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:52:24: note: in expansion of macro ‘CHECK_CUDA’
+ #define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x)
+                        ^~~~~~~~~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:68:3: note: in expansion of macro ‘CHECK_INPUT’
+   CHECK_INPUT(bit_X2);
+   ^
+In file included from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/Tensor.h:3:0,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/Context.h:4,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/ATen.h:9,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/types.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader_options.h:4,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader/base.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader/stateful.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/all.h:8,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/extension.h:4,
+                 from /home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:1:
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:277:30: note: declared here
+   DeprecatedTypeProperties & type() const {
+                              ^~~~
+In file included from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/core/DeviceType.h:8:0,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/core/Device.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/core/Allocator.h:6,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/ATen.h:7,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/types.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader_options.h:4,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader/base.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader/stateful.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/all.h:8,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/extension.h:4,
+                 from /home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:1:
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp: In function ‘at::Tensor mm_v2(at::Tensor, at::Tensor, int, int, int, int, int)’:
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:50:42: warning: ‘at::DeprecatedTypeProperties& at::Tensor::type() const’ is deprecated: Tensor.type() is deprecated. Instead use Tensor.options(), which in many cases (e.g. in a constructor) is a drop-in replacement. If you were using data from type(), that is now available from Tensor itself, so instead of tensor.type().scalar_type(), use tensor.scalar_type() instead and instead of tensor.type().backend() use tensor.device(). [-Wdeprecated-declarations]
+ #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
+                                          ^
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/macros/Macros.h:171:65: note: in definition of macro ‘C10_UNLIKELY’
+ #define C10_UNLIKELY(expr)  (__builtin_expect(static_cast<bool>(expr), 0))
+                                                                 ^~~~
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/util/Exception.h:330:7: note: in expansion of macro ‘C10_UNLIKELY_OR_CONST’
+   if (C10_UNLIKELY_OR_CONST(!(cond))) {                               \
+       ^~~~~~~~~~~~~~~~~~~~~
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/util/Exception.h:318:3: note: in expansion of macro ‘TORCH_CHECK_WITH_MSG’
+   TORCH_CHECK_WITH_MSG(error_t, cond, "", __VA_ARGS__)
+   ^~~~~~~~~~~~~~~~~~~~
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/util/Exception.h:341:32: note: in expansion of macro ‘TORCH_CHECK_WITH’
+ #define TORCH_CHECK(cond, ...) TORCH_CHECK_WITH(Error, cond, __VA_ARGS__)
+                                ^~~~~~~~~~~~~~~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:50:23: note: in expansion of macro ‘TORCH_CHECK’
+ #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
+                       ^~~~~~~~~~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:52:24: note: in expansion of macro ‘CHECK_CUDA’
+ #define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x)
+                        ^~~~~~~~~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:85:3: note: in expansion of macro ‘CHECK_INPUT’
+   CHECK_INPUT(bit_X1);
+   ^
+In file included from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/Tensor.h:3:0,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/Context.h:4,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/ATen.h:9,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/types.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader_options.h:4,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader/base.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader/stateful.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/all.h:8,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/extension.h:4,
+                 from /home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:1:
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:277:30: note: declared here
+   DeprecatedTypeProperties & type() const {
+                              ^~~~
+In file included from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/core/DeviceType.h:8:0,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/core/Device.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/core/Allocator.h:6,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/ATen.h:7,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/types.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader_options.h:4,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader/base.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader/stateful.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/all.h:8,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/extension.h:4,
+                 from /home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:1:
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:50:42: warning: ‘at::DeprecatedTypeProperties& at::Tensor::type() const’ is deprecated: Tensor.type() is deprecated. Instead use Tensor.options(), which in many cases (e.g. in a constructor) is a drop-in replacement. If you were using data from type(), that is now available from Tensor itself, so instead of tensor.type().scalar_type(), use tensor.scalar_type() instead and instead of tensor.type().backend() use tensor.device(). [-Wdeprecated-declarations]
+ #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
+                                          ^
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/macros/Macros.h:171:65: note: in definition of macro ‘C10_UNLIKELY’
+ #define C10_UNLIKELY(expr)  (__builtin_expect(static_cast<bool>(expr), 0))
+                                                                 ^~~~
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/util/Exception.h:330:7: note: in expansion of macro ‘C10_UNLIKELY_OR_CONST’
+   if (C10_UNLIKELY_OR_CONST(!(cond))) {                               \
+       ^~~~~~~~~~~~~~~~~~~~~
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/util/Exception.h:318:3: note: in expansion of macro ‘TORCH_CHECK_WITH_MSG’
+   TORCH_CHECK_WITH_MSG(error_t, cond, "", __VA_ARGS__)
+   ^~~~~~~~~~~~~~~~~~~~
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/util/Exception.h:341:32: note: in expansion of macro ‘TORCH_CHECK_WITH’
+ #define TORCH_CHECK(cond, ...) TORCH_CHECK_WITH(Error, cond, __VA_ARGS__)
+                                ^~~~~~~~~~~~~~~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:50:23: note: in expansion of macro ‘TORCH_CHECK’
+ #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
+                       ^~~~~~~~~~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:52:24: note: in expansion of macro ‘CHECK_CUDA’
+ #define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x)
+                        ^~~~~~~~~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:86:3: note: in expansion of macro ‘CHECK_INPUT’
+   CHECK_INPUT(bit_X2);
+   ^
+In file included from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/Tensor.h:3:0,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/Context.h:4,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/ATen.h:9,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/types.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader_options.h:4,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader/base.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader/stateful.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/all.h:8,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/extension.h:4,
+                 from /home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:1:
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:277:30: note: declared here
+   DeprecatedTypeProperties & type() const {
+                              ^~~~
+In file included from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/core/DeviceType.h:8:0,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/core/Device.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/core/Allocator.h:6,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/ATen.h:7,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/types.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader_options.h:4,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader/base.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader/stateful.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/all.h:8,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/extension.h:4,
+                 from /home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:1:
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp: In function ‘at::Tensor bit_qnt(at::Tensor, int, bool, bool)’:
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:50:42: warning: ‘at::DeprecatedTypeProperties& at::Tensor::type() const’ is deprecated: Tensor.type() is deprecated. Instead use Tensor.options(), which in many cases (e.g. in a constructor) is a drop-in replacement. If you were using data from type(), that is now available from Tensor itself, so instead of tensor.type().scalar_type(), use tensor.scalar_type() instead and instead of tensor.type().backend() use tensor.device(). [-Wdeprecated-declarations]
+ #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
+                                          ^
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/macros/Macros.h:171:65: note: in definition of macro ‘C10_UNLIKELY’
+ #define C10_UNLIKELY(expr)  (__builtin_expect(static_cast<bool>(expr), 0))
+                                                                 ^~~~
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/util/Exception.h:330:7: note: in expansion of macro ‘C10_UNLIKELY_OR_CONST’
+   if (C10_UNLIKELY_OR_CONST(!(cond))) {                               \
+       ^~~~~~~~~~~~~~~~~~~~~
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/util/Exception.h:318:3: note: in expansion of macro ‘TORCH_CHECK_WITH_MSG’
+   TORCH_CHECK_WITH_MSG(error_t, cond, "", __VA_ARGS__)
+   ^~~~~~~~~~~~~~~~~~~~
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/c10/util/Exception.h:341:32: note: in expansion of macro ‘TORCH_CHECK_WITH’
+ #define TORCH_CHECK(cond, ...) TORCH_CHECK_WITH(Error, cond, __VA_ARGS__)
+                                ^~~~~~~~~~~~~~~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:50:23: note: in expansion of macro ‘TORCH_CHECK’
+ #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
+                       ^~~~~~~~~~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:52:24: note: in expansion of macro ‘CHECK_CUDA’
+ #define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x)
+                        ^~~~~~~~~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:101:3: note: in expansion of macro ‘CHECK_INPUT’
+   CHECK_INPUT(input);
+   ^
+In file included from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/Tensor.h:3:0,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/Context.h:4,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/ATen.h:9,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/types.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader_options.h:4,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader/base.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader/stateful.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data/dataloader.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/data.h:3,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/all.h:8,
+                 from /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/extension.h:4,
+                 from /home/yuke/sc21_QGTC/QGTC_kernel/QGTC_host.cpp:1:
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:277:30: note: declared here
+   DeprecatedTypeProperties & type() const {
+                              ^~~~
+[2/2] /usr/local/cuda-11.1/bin/nvcc -I/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include -I/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/torch/csrc/api/include -I/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/TH -I/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/THC -I/usr/local/cuda-11.1/include -I/home/yuke/anaconda3/envs/dgl/include/python3.7m -c -c /home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu -o /home/yuke/sc21_QGTC/QGTC_kernel/build/temp.linux-x86_64-3.7/QGTC_device.o -D__CUDA_NO_HALF_OPERATORS__ -D__CUDA_NO_HALF_CONVERSIONS__ -D__CUDA_NO_HALF2_OPERATORS__ --expt-relaxed-constexpr --compiler-options ''"'"'-fPIC'"'"'' -arch=sm_86 -DTORCH_API_INCLUDE_EXTENSION_H '-DPYBIND11_COMPILER_TYPE="_gcc"' '-DPYBIND11_STDLIB="_libstdcpp"' '-DPYBIND11_BUILD_ABI="_cxxabi1011"' -DTORCH_EXTENSION_NAME=QGTC -D_GLIBCXX_USE_CXX11_ABI=0 -std=c++14
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/boxing/impl/boxing.h(100): warning: integer conversion resulted in a change of sign
+
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/op_registration/op_whitelist.h(39): warning: integer conversion resulted in a change of sign
+
+/home/yuke/sc21_QGTC/QGTC_kernel/utility.h(230): warning: unrecognized character escape sequence
+
+/home/yuke/sc21_QGTC/QGTC_kernel/utility.h(231): warning: unrecognized character escape sequence
+
+/home/yuke/sc21_QGTC/QGTC_kernel/kernel.h(141): warning: variable "offset_opt" was declared but never referenced
+
+/home/yuke/sc21_QGTC/QGTC_kernel/kernel.h(196): warning: variable "act_offset" was declared but never referenced
+
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/boxing/impl/boxing.h(100): warning: integer conversion resulted in a change of sign
+
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/op_registration/op_whitelist.h(39): warning: integer conversion resulted in a change of sign
+
+/home/yuke/sc21_QGTC/QGTC_kernel/utility.h(230): warning: unrecognized character escape sequence
+
+/home/yuke/sc21_QGTC/QGTC_kernel/utility.h(231): warning: unrecognized character escape sequence
+
+/home/yuke/sc21_QGTC/QGTC_kernel/utility.h: In function ‘void __checkNullPointer(const char*, int, void**)’:
+/home/yuke/sc21_QGTC/QGTC_kernel/utility.h:89:50: warning: format ‘%s’ expects a matching ‘char*’ argument [-Wformat=]
+         fprintf( stderr, "Error: NULL pointer at %s:%i.\n");
+                                                  ^
+/home/yuke/sc21_QGTC/QGTC_kernel/utility.h:89:50: warning: format ‘%i’ expects a matching ‘int’ argument [-Wformat=]
+/home/yuke/sc21_QGTC/QGTC_kernel/utility.h: In function ‘void validate_prediction(float*, unsigned int*, unsigned int, unsigned int)’:
+/home/yuke/sc21_QGTC/QGTC_kernel/utility.h:230:58: warning: unknown conversion type character ‘\x0a’ in format [-Wformat=]
+     printf("Top-1:%f\%\n",float(corrects)/batch*100);
+                                                          ^
+/home/yuke/sc21_QGTC/QGTC_kernel/utility.h:231:63: warning: unknown conversion type character ‘\x0a’ in format [-Wformat=]
+     printf("Top-5:%f\%\n",float(corrects_top5)/batch*100);
+                                                               ^
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu: In function ‘at::Tensor bit_qnt_cuda(at::Tensor, int, bool, bool)’:
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu:39:141: warning: ‘T* at::Tensor::data() const [with T = int]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+     Quantize_val<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(input_qnt.data<int>(), input.data<float>(),
+                                                                                                                                             ^
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
+   T * data() const {
+ ^ ~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu:39:164: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+     Quantize_val<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(input_qnt.data<int>(), input.data<float>(),
+                                                                                                                                                                    ^
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
+   T * data() const {
+ ^ ~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu:57:148: warning: ‘T* at::Tensor::data() const [with T = int]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+             PackFcWeight128_OUTPUT<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(
+                                                                                                                                                    ^
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
+   T * data() const {
+ ^ ~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu:57:173: warning: ‘T* at::Tensor::data() const [with T = int]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+             PackFcWeight128_OUTPUT<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(
+                                                                                                                                                                             ^
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
+   T * data() const {
+ ^ ~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu:72:141: warning: ‘T* at::Tensor::data() const [with T = int]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+             PackFcWeight128<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(
+                                                                                                                                             ^
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
+   T * data() const {
+ ^ ~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu:72:166: warning: ‘T* at::Tensor::data() const [with T = int]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+             PackFcWeight128<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(
+                                                                                                                                                                      ^
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
+   T * data() const {
+ ^ ~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu:94:142: warning: ‘T* at::Tensor::data() const [with T = int]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+         QGTC_layer_input<<< numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>> \
+                                                                                                                                              ^
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
+   T * data() const {
+ ^ ~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu:94:167: warning: ‘T* at::Tensor::data() const [with T = int]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+         QGTC_layer_input<<< numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>> \
+                                                                                                                                                                       ^
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
+   T * data() const {
+ ^ ~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu: In function ‘at::Tensor mm_v1_cuda(at::Tensor, at::Tensor, int, int, int, int, int, int)’:
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu:134:161: warning: ‘T* at::Tensor::data() const [with T = int]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+     QGTC_layer_hidden<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads, shared_memory>>>(
+                                                                                                                                                                 ^
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
+   T * data() const {
+ ^ ~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu:134:183: warning: ‘T* at::Tensor::data() const [with T = int]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+     QGTC_layer_hidden<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads, shared_memory>>>(
+                                                                                                                                                                                       ^
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
+   T * data() const {
+ ^ ~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu:134:205: warning: ‘T* at::Tensor::data() const [with T = int]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+     QGTC_layer_hidden<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads, shared_memory>>>(
+                                                                                                                                                                                                             ^
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
+   T * data() const {
+ ^ ~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu: In function ‘at::Tensor mm_v2_cuda(at::Tensor, at::Tensor, int, int, int, int, int)’:
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu:185:165: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+     QGTC_layer_output<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads, shared_memory>>>(
+                                                                                                                                                                     ^
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
+   T * data() const {
+ ^ ~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu:185:187: warning: ‘T* at::Tensor::data() const [with T = int]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+     QGTC_layer_output<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads, shared_memory>>>(
+                                                                                                                                                                                           ^
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
+   T * data() const {
+ ^ ~~
+/home/yuke/sc21_QGTC/QGTC_kernel/QGTC_device.cu:185:209: warning: ‘T* at::Tensor::data() const [with T = int]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+     QGTC_layer_output<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads, shared_memory>>>(
+                                                                                                                                                                                                                 ^
+/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
+   T * data() const {
+ ^ ~~
+creating build/lib.linux-x86_64-3.7
+g++ -pthread -shared -B /home/yuke/anaconda3/envs/dgl/compiler_compat -L/home/yuke/anaconda3/envs/dgl/lib -Wl,-rpath=/home/yuke/anaconda3/envs/dgl/lib -Wl,--no-as-needed -Wl,--sysroot=/ /home/yuke/sc21_QGTC/QGTC_kernel/build/temp.linux-x86_64-3.7/QGTC_host.o /home/yuke/sc21_QGTC/QGTC_kernel/build/temp.linux-x86_64-3.7/QGTC_device.o -L/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/torch/lib -L/usr/local/cuda-11.1/lib64 -lc10 -ltorch -ltorch_cpu -ltorch_python -lcudart -lc10_cuda -ltorch_cuda -o build/lib.linux-x86_64-3.7/QGTC.cpython-37m-x86_64-linux-gnu.so
+creating build/bdist.linux-x86_64
+creating build/bdist.linux-x86_64/egg
+copying build/lib.linux-x86_64-3.7/QGTC.cpython-37m-x86_64-linux-gnu.so -> build/bdist.linux-x86_64/egg
+creating stub loader for QGTC.cpython-37m-x86_64-linux-gnu.so
+byte-compiling build/bdist.linux-x86_64/egg/QGTC.py to QGTC.cpython-37.pyc
+creating build/bdist.linux-x86_64/egg/EGG-INFO
+copying QGTC.egg-info/PKG-INFO -> build/bdist.linux-x86_64/egg/EGG-INFO
+copying QGTC.egg-info/SOURCES.txt -> build/bdist.linux-x86_64/egg/EGG-INFO
+copying QGTC.egg-info/dependency_links.txt -> build/bdist.linux-x86_64/egg/EGG-INFO
+copying QGTC.egg-info/top_level.txt -> build/bdist.linux-x86_64/egg/EGG-INFO
+writing build/bdist.linux-x86_64/egg/EGG-INFO/native_libs.txt
+creating dist
+creating 'dist/QGTC-0.0.0-py3.7-linux-x86_64.egg' and adding 'build/bdist.linux-x86_64/egg' to it
+removing 'build/bdist.linux-x86_64/egg' (and everything under it)
+Processing QGTC-0.0.0-py3.7-linux-x86_64.egg
+removing '/home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/QGTC-0.0.0-py3.7-linux-x86_64.egg' (and everything under it)
+creating /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/QGTC-0.0.0-py3.7-linux-x86_64.egg
+Extracting QGTC-0.0.0-py3.7-linux-x86_64.egg to /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages
+QGTC 0.0.0 is already the active version in easy-install.pth
+
+Installed /home/yuke/anaconda3/envs/dgl/lib/python3.7/site-packages/QGTC-0.0.0-py3.7-linux-x86_64.egg
+Processing dependencies for QGTC==0.0.0
+Finished processing dependencies for QGTC==0.0.0

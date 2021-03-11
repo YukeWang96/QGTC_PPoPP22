@@ -182,7 +182,6 @@ def main(args):
     W_2 = torch.ones((hidden_1, hidden_1)).cuda()
     W_3 = torch.ones((hidden_1, output)).cuda()
 
-
     bw_A = 1
     bw_X = 3
     bw_W = 3
@@ -190,12 +189,10 @@ def main(args):
     bit_W1 = QGTC.bit_qnt(W_1.cuda(), bw_W, True, False)
     bit_W2 = QGTC.bit_qnt(W_2.cuda(), bw_W, True, False)
     bit_W3 = QGTC.bit_qnt(W_3.cuda(), bw_W, True, True)
-
     # model = GCNConv(feat_size*2, hidden_1, output).cuda()
 
-
+    cnt = 0
     for epoch in range(args.n_epochs):
-        cnt = 0
         for j, cluster in enumerate(cluster_iterator):
             # sync with upper level training graph      
             if regular:
@@ -239,8 +236,12 @@ def main(args):
                 
                 if use_QGTC:
                     # 1-layer
-                    bit_A = QGTC.bit_qnt(A.cuda(), bw_A, False, False)
-                    bit_X = QGTC.bit_qnt(X.cuda(), bw_X, True, False)
+                    # print(A.size())
+                    # sys.exit(0)
+
+                    bit_A = QGTC.bit_qnt(A, bw_A, False, False)
+                    bit_X = QGTC.bit_qnt(X, bw_X, True, False)
+
                     # print("A.size: {}".format(A.size()))
                     # print("bit_A.size: {}".format(bit_A.size()))
 
@@ -250,17 +251,17 @@ def main(args):
                     # sys.exit(0)
 
                     # 1-layer
-                    bit_output = QGTC.mm_v1(bit_A, bit_X, PAD8(A.size(0)), PAD128(A.size(0)), PAD128(X.size(1)), bw_A, bw_X, bw_X)
-                    bit_output = QGTC.mm_v1(bit_output, bit_W1, PAD8(A.size(0)), PAD128(A.size(0)), PAD128(X.size(1)), bw_X, bw_W, bw_X)
+                    bit_output = QGTC.mm_v1(bit_A, bit_X, A.size(0), A.size(0), X.size(1), bw_A, bw_X, bw_X)
+                    # bit_output = QGTC.mm_v1(bit_output, bit_W1, A.size(0), X.size(1), W_1.size(1), bw_X, bw_W, bw_X)
 
-                    # 2-layer
-                    bit_output = QGTC.mm_v1(bit_output, bit_W2, PAD8(A.size(0)), PAD128(A.size(0)), PAD128(W_1.size(1)), bw_A, bw_X, bw_X)
-                    bit_output = QGTC.mm_v1(bit_output, bit_W3, PAD8(A.size(0)), PAD128(X.size(1)), PAD128(W_2.size(1)), bw_X, bw_W, bw_X)
+                    # # 2-layer
+                    # bit_output = QGTC.mm_v1(bit_A, bit_output, A.size(0), A.size(0), W_1.size(1), bw_A, bw_X, bw_X)
+                    # bit_output = QGTC.mm_v1(bit_output, bit_W2, A.size(0), W_1.size(1), W_2.size(1), bw_X, bw_W, bw_X)
 
-                    # 3-layer
-                    bit_output = QGTC.mm_v1(bit_output, bit_W2, PAD8(A.size(0)), PAD128(A.size(0)), PAD128(W_2.size(1)), bw_A, bw_X, bw_X)
-                    float_output = QGTC.mm_v2(bit_output, bit_W3, PAD8(A.size(0)), PAD128(X.size(1)), PAD8(W_3.size(1)), bw_X, bw_W)
-                    
+                    # # 3-layer
+                    # bit_output = QGTC.mm_v1(bit_A, bit_output, A.size(0), A.size(0), W_2.size(1), bw_A, bw_X, bw_X)
+                    # float_output = QGTC.mm_v2(bit_output, bit_W3, A.size(0), W_2.size(1), W_3.size(1), bw_X, bw_W)
+
                 else:
                     # 1-layer
                     X = torch.mm(A, X)
@@ -293,10 +294,10 @@ def main(args):
             #     .format(epoch, args.n_epochs, j, len(cluster_iterator), num_nodes, \
             #         torch.cuda.memory_allocated(device=cluster.device) / 1024 / 1024 / 1024)),
             # print("{}".format(epoch), end=" ")
-            cnt += 1
-            
+        cnt += 1
+        print("Epoch: {}".format(epoch))
         # hand the current tensor back to host Memory
-        # cluster = cluster.cpu()
+        cluster = cluster.cpu()
 
     torch.cuda.synchronize()
     end_time = time.time()
@@ -316,14 +317,14 @@ if __name__ == '__main__':
                         help="learning rate")
     parser.add_argument("--dim", type=int, default=10,
                         help="input dimension of each dataset")
-    parser.add_argument("--n-epochs", type=int, default=1,
-                        help="number of training epochs")
+
+    parser.add_argument("--n-epochs", type=int, default=10, help="number of training epochs")
+    parser.add_argument("--batch-size", type=int, default=20, help="batch size")
+    parser.add_argument("--psize", type=int, default=1500, help="partition number")
+
+
     parser.add_argument("--log-every", type=int, default=100,
                         help="the frequency to save model")
-    parser.add_argument("--batch-size", type=int, default=20,
-                        help="batch size")
-    parser.add_argument("--psize", type=int, default=6000,
-                        help="partition number")
     parser.add_argument("--test-batch-size", type=int, default=1000,
                         help="test batch size")
     parser.add_argument("--n-hidden", type=int, default=64,

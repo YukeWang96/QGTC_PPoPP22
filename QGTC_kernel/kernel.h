@@ -8,15 +8,10 @@
 
 #include "utility.h"
 
-// #define max_v 8
-// #define min_v 0
-
 using namespace nvcuda;
 
 // * quantization of a single float value
 __device__ __inline__ uin32 quantize(float val, int bitwidth, const int max_val, const int min_val){
-    // const int max_val = max_v;
-    // const int min_val = min_v;
     if (val > max_val) val = max_val - 1;
     if (val < min_val) val = min_val + 1;
     uin32 ans = (val - min_val) * (1 << bitwidth) / (max_val - min_val); 
@@ -167,6 +162,7 @@ __global__  void QGTC_layer_input(
 
             // output the results
             if (laneid==0){
+                // bit_T_out[10] = r0;
                 bit_T_out[bitIdx*offset_opt + (bx*8+lx)*gdy*4 + by*4 + ly] = r0;
             }
         }
@@ -214,42 +210,96 @@ __global__ void QGTC_layer_hidden(
         wmma::fragment<wmma::accumulator, 8, 8, 128, int> c_frag;
         wmma::fragment<wmma::accumulator, 8, 8, 128, int> tmp_frag;
 
+        // wmma::fragment<wmma::accumulator, 8, 8, 128, int> tmp_frag_1;
+        // wmma::fragment<wmma::accumulator, 8, 8, 128, int> tmp_frag_2;
+        // wmma::fragment<wmma::accumulator, 8, 8, 128, int> tmp_frag_3;
+
+        // wmma::fragment<wmma::accumulator, 8, 8, 128, int> tmp_frag_4;
+        // wmma::fragment<wmma::accumulator, 8, 8, 128, int> tmp_frag_5;
+        // wmma::fragment<wmma::accumulator, 8, 8, 128, int> tmp_frag_6;
+        // wmma::fragment<wmma::accumulator, 8, 8, 128, int> tmp_frag_7;
+
         wmma::fill_fragment(c_frag, 0);
 
         // rwo major output.
         const int bx = bid / gdy;
         const int by = bid % gdy;
 
-        #define new_order
+
+
+
+        // #define new_order
         #ifdef new_order
+        // accmuluation of the current bit.
+        wmma::fill_fragment(tmp_frag, 0);
+        wmma::fill_fragment(tmp_frag_1, 0);
+
+        // wmma::fill_fragment(tmp_frag_2, 0);
+        // wmma::fill_fragment(tmp_frag_3, 0);
+
+        // wmma::fill_fragment(tmp_frag_4, 0);
+        // wmma::fill_fragment(tmp_frag_5, 0);
+        // wmma::fill_fragment(tmp_frag_6, 0);
+        // wmma::fill_fragment(tmp_frag_7, 0);
+        
         for (int i=0; i<gdk; i++)
         {
             // iterate along the K diemsnion by loading the tile from the 
-            load_matrix_sync(a_frag, bit_X + bx*8*gdk*4 + i*128/32, gdk*128);
+            load_matrix_sync(a_frag, bit_X + 0*act_offset + bx*8*gdk*4 + i*128/32, gdk*128);
             
+            load_matrix_sync(b_frag, bit_W + 0*w_offset + by*8*gdk*4 + i*128/32, gdk*128);
+            bmma_sync(tmp_frag, a_frag, b_frag, tmp_frag, bmmaBitOpAND);
+
+            load_matrix_sync(b_frag, bit_W + 1*w_offset + by*8*gdk*4 + i*128/32, gdk*128);
+            bmma_sync(tmp_frag_1, a_frag, b_frag, tmp_frag_1, bmmaBitOpAND);
+
+            // load_matrix_sync(b_frag, bit_W + 2*w_offset + by*8*gdk*4 + i*128/32, gdk*128);
+            // bmma_sync(tmp_frag_2, a_frag, b_frag, tmp_frag_2, bmmaBitOpAND);
+            // load_matrix_sync(b_frag, bit_W + 3*w_offset + by*8*gdk*4 + i*128/32, gdk*128);
+            // bmma_sync(tmp_frag_3, a_frag, b_frag, tmp_frag_3, bmmaBitOpAND);
+
+            // load_matrix_sync(b_frag, bit_W + 4*w_offset + by*8*gdk*4 + i*128/32, gdk*128);
+            // bmma_sync(tmp_frag_4, a_frag, b_frag, tmp_frag_4, bmmaBitOpAND);
+            // load_matrix_sync(b_frag, bit_W + 5*w_offset + by*8*gdk*4 + i*128/32, gdk*128);
+            // bmma_sync(tmp_frag_5, a_frag, b_frag, tmp_frag_5, bmmaBitOpAND);
+            // load_matrix_sync(b_frag, bit_W + 6*w_offset + by*8*gdk*4 + i*128/32, gdk*128);
+            // bmma_sync(tmp_frag_6, a_frag, b_frag, tmp_frag_6, bmmaBitOpAND);
+            // load_matrix_sync(b_frag, bit_W + 7*w_offset + by*8*gdk*4 + i*128/32, gdk*128);
+            // bmma_sync(tmp_frag_7, a_frag, b_frag, tmp_frag_7, bmmaBitOpAND);
+
             // iterate along different bits.
-            for (int bit = 0; bit < act_bit*w_bit; bit++){
-                printf("act_bit: %d, w_bit: %d\n", act_bit, w_bit);
-                int b_act = bit % act_bit;
-                int b_w = bit / act_bit;
-                int b_opt = b_act + b_w;
+            // for (int bit = 0; bit < act_bit*w_bit; bit++){
+            //     // printf("act_bit: %d, w_bit: %d\n", act_bit, w_bit);
+            //     int b_act = bit % act_bit;
+            //     int b_w = bit / act_bit;
+            //     int b_opt = b_act + b_w;
 
-                // accmuluation of the current bit.
-                wmma::fill_fragment(tmp_frag, 0);
+            //     // iterate along the K columns
+            //     // iterate along the K diemsnion by loading the tile from the 
+            //     // load_matrix_sync(a_frag, bit_X + b_act*act_offset + bx*8*gdk*4 + i*128/32, gdk*128);
+            //     load_matrix_sync(b_frag, bit_W + b_w*w_offset + by*8*gdk*4 + i*128/32, gdk*128);
+            //     if (b_w == 0)
+            //         bmma_sync(tmp_frag, a_frag, b_frag, tmp_frag, bmmaBitOpAND);
+            //     else if (b_w == 1)
+            //         bmma_sync(tmp_frag_1, a_frag, b_frag, tmp_frag_1, bmmaBitOpAND);
+            //     else if (b_w == 2)
+            //         bmma_sync(tmp_frag_2, a_frag, b_frag, tmp_frag_2, bmmaBitOpAND);
+            //     else if (b_w == 3)
+            //         bmma_sync(tmp_frag_3, a_frag, b_frag, tmp_frag_3, bmmaBitOpAND);
+            // }
+        }
+        #pragma unroll
+        for (int t = 0; t < tmp_frag.num_elements; t++) {
+            c_frag.x[t] += tmp_frag.x[t]<<0;
+            c_frag.x[t] += tmp_frag_1.x[t]<<1;
 
-                // iterate along the K columns
-    
-                // iterate along the K diemsnion by loading the tile from the 
-                // load_matrix_sync(a_frag, bit_X + b_act*act_offset + bx*8*gdk*4 + i*128/32, gdk*128);
-                load_matrix_sync(b_frag, bit_W + b_w*w_offset + by*8*gdk*4 + i*128/32, gdk*128);
-                bmma_sync(tmp_frag, a_frag, b_frag, tmp_frag, bmmaBitOpAND);
+            // c_frag.x[t] += tmp_frag_2.x[t]<<2;
+            // c_frag.x[t] += tmp_frag_3.x[t]<<3;
 
-                // Accumulation.
-                #pragma unroll
-                for (int t = 0; t < tmp_frag.num_elements; t++) {
-                    c_frag.x[t] += tmp_frag.x[t]<<b_opt;
-                }
-            }
+            // c_frag.x[t] += tmp_frag_4.x[t]<<4;
+            // c_frag.x[t] += tmp_frag_5.x[t]<<5;
+            // c_frag.x[t] += tmp_frag_6.x[t]<<6;
+            // c_frag.x[t] += tmp_frag_7.x[t]<<7;
         }
         #else            
             // iterate along different bits.
@@ -269,6 +319,7 @@ __global__ void QGTC_layer_hidden(
                     load_matrix_sync(b_frag, bit_W + b_w*w_offset + by*8*gdk*4 + i*128/32, gdk*128);
                     bmma_sync(tmp_frag, a_frag, b_frag, tmp_frag, bmmaBitOpAND);
                 }
+
                 // Accumulation.
                 #pragma unroll
                 for (int t = 0; t < tmp_frag.num_elements; t++) {
@@ -321,9 +372,8 @@ __global__ void QGTC_layer_hidden(
                 Cb[(bx*8+laneid)*gdm*16+FLIPBITS(by,2)] = p0.elements[3-laneid]; 
                 Cb[(bx*8+4+laneid)*gdm*16+FLIPBITS(by,2)] = p1.elements[3-laneid]; 
             }
-        }
-        //end
-    }
+        } // END act_bit iteration.
+    }   // END bid iteration.
 }
 
 //
