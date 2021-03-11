@@ -135,6 +135,8 @@ def main(args):
                       args.dropout,
                       args.use_pp)
 
+    # print(model)
+    # exit(0)
     if cuda:
         model.cuda()
 
@@ -182,8 +184,8 @@ def main(args):
 
 
     bw_A = 1
-    bw_X = 1
-    bw_W = 1
+    bw_X = 3
+    bw_W = 3
 
     bit_W1 = QGTC.bit_qnt(W_1.cuda(), bw_W, True, False)
     bit_W2 = QGTC.bit_qnt(W_2.cuda(), bw_W, True, False)
@@ -213,15 +215,25 @@ def main(args):
                 num_nodes = len(cluster.nodes())
 
             else:
-                # torch.cuda.synchronize()
+                torch.cuda.synchronize()
                 t = time.perf_counter()
+
+                # version-1
                 cluster = cluster.cuda()
                 # unzip adjacent matrix A
                 A = cluster.A.to_dense()            
                 # unzip feature embedding matrix X
                 X = cluster.X
-                # torch.cuda.synchronize()
+
+                # # version-2
+                # # unzip adjacent matrix A
+                # A = cluster.A.to_dense().cuda()            
+                # # unzip feature embedding matrix X
+                # X = cluster.X.cuda()
+
+                torch.cuda.synchronize()
                 allocation += time.perf_counter() - t
+
                 # torch.cuda.synchronize()
                 t = time.perf_counter()
                 
@@ -275,16 +287,18 @@ def main(args):
             # optimizer.zero_grad()
             # loss.backward()
             # optimizer.step()
-            if j % args.log_every == 0:
-                print("epoch:{}/{}, Iteration {}/{}, #N: {}, {:.3f} GB"\
-                .format(epoch, args.n_epochs, j, len(cluster_iterator), num_nodes, \
-                    torch.cuda.memory_allocated(device=A.device) / 1024 / 1024 / 1024)),
+
+            # if j % args.log_every == 0:
+            #     print("epoch:{}/{}, Iteration {}/{}, #N: {}, {:.3f} GB"\
+            #     .format(epoch, args.n_epochs, j, len(cluster_iterator), num_nodes, \
+            #         torch.cuda.memory_allocated(device=cluster.device) / 1024 / 1024 / 1024)),
+            # print("{}".format(epoch), end=" ")
             cnt += 1
             
         # hand the current tensor back to host Memory
         # cluster = cluster.cpu()
 
-
+    torch.cuda.synchronize()
     end_time = time.time()
     print("allocation: {:.3f} ms, inference: {:.3f} ms".format(allocation/cnt*1e3, running_time/cnt*1e3))
     print("Avg. Epoch: {:.3f} ms".format((end_time - start_time)*1000/cnt))
@@ -302,7 +316,7 @@ if __name__ == '__main__':
                         help="learning rate")
     parser.add_argument("--dim", type=int, default=10,
                         help="input dimension of each dataset")
-    parser.add_argument("--n-epochs", type=int, default=10,
+    parser.add_argument("--n-epochs", type=int, default=1,
                         help="number of training epochs")
     parser.add_argument("--log-every", type=int, default=100,
                         help="the frequency to save model")
