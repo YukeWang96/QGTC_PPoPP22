@@ -30,7 +30,7 @@ from ogb.nodeproppred import DglNodePropPredDataset
 from dgl.data import AMDataset, AmazonCoBuyComputerDataset
 
 regular = False
-use_QGTC = True
+use_QGTC = False
 
 def PAD8(input):
     return int((input + 7)//8)
@@ -159,13 +159,14 @@ def main(args):
                                  weight_decay=args.weight_decay)
 
 
-    print("\n\n==> subgraph-size: {}\n".format(psize))
+    print("\n\n==> subgraph-size: {:.2f}".format(psize))
+
     # set train_nids to cuda tensor
     if cuda:
         train_nid = torch.from_numpy(train_nid).cuda()
-        print("current memory after model before training",
-              torch.cuda.memory_allocated(device=train_nid.device) / 1024 / 1024)
-        print("---------------------------------\n\n")
+        # print("current memory after model before training",
+        #       torch.cuda.memory_allocated(device=train_nid.device) / 1024 / 1024)
+        # print("---------------------------------\n\n")
 
     start_time = time.time()
     best_f1 = -1
@@ -238,13 +239,11 @@ def main(args):
                     # 1-layer
                     # print(A.size())
                     # sys.exit(0)
-
                     bit_A = QGTC.bit_qnt(A, bw_A, False, False)
                     bit_X = QGTC.bit_qnt(X, bw_X, True, False)
 
                     # print("A.size: {}".format(A.size()))
                     # print("bit_A.size: {}".format(bit_A.size()))
-
                     # print("X.size: {}".format(X.size()))
                     # print("bit_X.size: {}".format(bit_X.size()))
                     # print('-----------------------------------')
@@ -252,16 +251,22 @@ def main(args):
 
                     # 1-layer
                     bit_output = QGTC.mm_v1(bit_A, bit_X, A.size(0), A.size(0), X.size(1), bw_A, bw_X, bw_X)
-                    # bit_output = QGTC.mm_v1(bit_output, bit_W1, A.size(0), X.size(1), W_1.size(1), bw_X, bw_W, bw_X)
+                    bit_output = QGTC.mm_v1(bit_output, bit_W1, A.size(0), X.size(1), W_1.size(1), bw_X, bw_W, bw_X)
 
-                    # # 2-layer
-                    # bit_output = QGTC.mm_v1(bit_A, bit_output, A.size(0), A.size(0), W_1.size(1), bw_A, bw_X, bw_X)
-                    # bit_output = QGTC.mm_v1(bit_output, bit_W2, A.size(0), W_1.size(1), W_2.size(1), bw_X, bw_W, bw_X)
+                    # 2-layer
+                    bit_output = QGTC.mm_v1(bit_A, bit_output, A.size(0), A.size(0), W_1.size(1), bw_A, bw_X, bw_X)
+                    bit_output = QGTC.mm_v1(bit_output, bit_W2, A.size(0), W_1.size(1), W_2.size(1), bw_X, bw_W, bw_X)
 
-                    # # 3-layer
-                    # bit_output = QGTC.mm_v1(bit_A, bit_output, A.size(0), A.size(0), W_2.size(1), bw_A, bw_X, bw_X)
-                    # float_output = QGTC.mm_v2(bit_output, bit_W3, A.size(0), W_2.size(1), W_3.size(1), bw_X, bw_W)
+                    # 3-layer
+                    bit_output = QGTC.mm_v1(bit_A, bit_output, A.size(0), A.size(0), W_2.size(1), bw_A, bw_X, bw_X)
+                    float_output = QGTC.mm_v2(bit_output, bit_W3, A.size(0), W_2.size(1), W_3.size(1), bw_X, bw_W)
 
+                    del bit_A
+                    del bit_X
+                    del bit_output
+                    del float_output
+                    torch.cuda.empty_cache()
+                    print("helllo")
                 else:
                     # 1-layer
                     X = torch.mm(A, X)
@@ -318,7 +323,7 @@ if __name__ == '__main__':
     parser.add_argument("--dim", type=int, default=10,
                         help="input dimension of each dataset")
 
-    parser.add_argument("--n-epochs", type=int, default=10, help="number of training epochs")
+    parser.add_argument("--n-epochs", type=int, default=100, help="number of training epochs")
     parser.add_argument("--batch-size", type=int, default=20, help="batch size")
     parser.add_argument("--psize", type=int, default=1500, help="partition number")
 

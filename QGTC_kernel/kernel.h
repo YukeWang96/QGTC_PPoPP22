@@ -224,10 +224,7 @@ __global__ void QGTC_layer_hidden(
         // rwo major output.
         const int bx = bid / gdy;
         const int by = bid % gdy;
-
-
-
-
+        
         // #define new_order
         #ifdef new_order
         // accmuluation of the current bit.
@@ -315,7 +312,7 @@ __global__ void QGTC_layer_hidden(
                 for (int i=0; i<gdk; i++)
                 {
                     // iterate along the K diemsnion by loading the tile from the 
-                    load_matrix_sync(a_frag, bit_X + bx*8*gdk*4 + i*128/32, gdk*128);
+                    load_matrix_sync(a_frag, bit_X + b_act*act_offset + bx*8*gdk*4 + i*128/32, gdk*128);
                     load_matrix_sync(b_frag, bit_W + b_w*w_offset + by*8*gdk*4 + i*128/32, gdk*128);
                     bmma_sync(tmp_frag, a_frag, b_frag, tmp_frag, bmmaBitOpAND);
                 }

@@ -9,6 +9,8 @@
 #include "utility.h"
 #include "kernel.h"
 
+#define  numThreads 1024
+
 using namespace nvcuda;
 
 //
@@ -24,7 +26,6 @@ torch::Tensor bit_qnt_cuda(
     const int width = input.size(1);
 
     const int dev = 0;
-    const int numThreads = 1024;
     int numBlocksPerSm;
 
     cudaDeviceProp deviceProp;
@@ -122,7 +123,7 @@ torch::Tensor mm_v1_cuda(
     auto bit_X_out = torch::zeros({output_bit*X1_height, STEP32(PAD128(X2_width))}, torch::kInt32).to(torch::kCUDA);
     
     int dev = 0;
-    int numThreads = 512;
+    // int numThreads = 128;
     cudaDeviceProp deviceProp;
     int numBlocksPerSm;
     // int shared_memory = 64*sizeof(int)*32;
@@ -173,10 +174,10 @@ torch::Tensor mm_v2_cuda(
     // exit(-1);
 
     int dev = 0;
-    int numThreads = 128;
+    // int numThreads = 128;
     cudaDeviceProp deviceProp;
     int numBlocksPerSm;
-    int shared_memory = 64*sizeof(int)*32;
+    int shared_memory = 256*sizeof(int)*32;
 
     cudaGetDeviceProperties(&deviceProp, dev);
     cudaFuncSetAttribute(QGTC_layer_output, cudaFuncAttributeMaxDynamicSharedMemorySize, shared_memory);

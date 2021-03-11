@@ -18,23 +18,24 @@ dataset = [
 		# ('ppi'	            	, 50	    , 121 ),   
 		
 		# ('PROTEINS_full'             , 29       , 2) ,   
-
-		('OVCAR-8H'                  , 66       , 2) , 
+		# ('OVCAR-8H'                  , 66       , 2) , 
 		# ('Yeast'                     , 74       , 2) ,
 		# ('DD'                        , 89       , 2) ,
 		# ('SW-620H'                   , 66       , 2) ,
+
+		# ( 'web-BerkStan'             , 100	  , 12),
 
 		# ( 'amazon0505'               , 96	  , 22),
 		# ( 'artist'                   , 100	  , 12),
 		# ( 'com-amazon'               , 96	  , 22),
 		# ( 'soc-BlogCatalog'	         , 128	  , 39),      
 		# ( 'amazon0601'  	         , 96	  , 22), 
-        # ('YeastH'                    , 75       , 2) ,   
+        # ('YeastH'                    , 75       , 2) ,
+		#    
+		# ( 'wiki-topcats'             , 300	  , 12),
 
-		# ( 'web-BerkStan'             , 100	  , 12),
 	    # ( 'reddit'                   , 602    , 41),
 		# ( 'COLLAB'                   , 100      , 3) ,
-		# ( 'wiki-topcats'             , 300	  , 12),
 		# ( 'Reddit'                   , 602      , 41),
 		# ( 'enwiki-2013'	           , 100	  , 12),      
 		# ( 'amazon_also_bought'       , 96       , 22),
