@@ -24,15 +24,16 @@ def test(M, N, K):
     #  -- * --- reference implementation -- * ---
     # b = torch.FloatTensor([[1,1],[1,1],[1,1]])
     b = torch.ones((K, N))
+    w = torch.ones((N, 100))
     # out = torch.mm(a, b)
     # print(out)
     # print()
 
-    bw_a = 1
-    bw_b = 1
+    bw_a = 2
+    bw_b = 2
 
     bit_a = QGTC.bit_qnt(a.cuda(), bw_a, False, False)
-    torch.cuda.synchronize()
+    # torch.cuda.synchronize()
     print(" => bit encoding [a]")
     # print()
     # recover_a = QGTC.bit_recover(bit_a).cpu()
@@ -40,22 +41,30 @@ def test(M, N, K):
 
     # bit_b = QGTC.bit_qnt(b.cuda(), bw_b, True)
     bit_b = QGTC.bit_qnt(b.cuda(), bw_b, True, False)
-    torch.cuda.synchronize()
+    # torch.cuda.synchronize()
     print(" => bit-encoding [b]")
+
+    bit_w = QGTC.bit_qnt(w.cuda(), bw_b, True, True)
+    # torch.cuda.synchronize()
+    print(" => bit-encoding [w]")
     # print()
     # print(bit_a)
     # print(bit_b)
-    int_output = QGTC.mm_v1(bit_a, bit_b, M, K, N, bw_a, bw_b, bw_a).cpu()
+    int_output = QGTC.mm_v1(bit_a, bit_b, M, K, N, bw_a, bw_b, bw_a)
     print("mm_v1")
     # print()
 
-
-    bit_b = QGTC.bit_qnt(b.cuda(), bw_b, True, True)
-    torch.cuda.synchronize()
-    print(" => bit-encoding [b]")
-    float_output = QGTC.mm_v2(bit_a, bit_b, M, K, N, bw_a, bw_b).cpu()
+    float_output = QGTC.mm_v2(int_output, bit_w, M, N, 100, bw_a, bw_b).cpu()
     print(float_output)
     print("mm_v2")
+
+
+    # bit_b = QGTC.bit_qnt(b.cuda(), bw_b, True, True)
+    # torch.cuda.synchronize()
+    # print(" => bit-encoding [b]")
+    # float_output = QGTC.mm_v2(bit_a, bit_b, M, K, N, bw_a, bw_b).cpu()
+    # print(float_output)
+    # print("mm_v2")
 
     # print()
     # for i in range(len(float_output)):
@@ -66,9 +75,13 @@ def test(M, N, K):
 
 
 cases = [
-    [8,8,128],
-    [16,16,256],
-    [128,128,128]
+    # [8,8,128],
+    # [16,16,256],
+    # [128,128,128]
+    # [25200, 66, 25200]
+    # [599,50,599],
+    # [2058,602,2058]
+    [2058,602,2058]
 ]
 
 for m, n, k in cases:

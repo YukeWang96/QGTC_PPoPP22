@@ -2,9 +2,8 @@
 import os
 
 
-hidden = [16] #[16, 32, 64, 128, 256]  # , 512, 1024, 2048] # [16]
+hidden = [16] #[16, 32, 64, 128, 256]
 num_layers = [2]
-model = 'gcn'
 data_dir = '/home/yuke/.graphs/orig/'
 
 dataset = [

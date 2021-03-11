@@ -24,13 +24,19 @@ import numpy as np
 from scipy.sparse import coo_matrix
 
 # from QGTC_conv import *
-# import QGTC
+import QGTC
 from dataset import *
 from ogb.nodeproppred import DglNodePropPredDataset
 from dgl.data import AMDataset, AmazonCoBuyComputerDataset
 
-
 regular = False
+use_QGTC = True
+
+def PAD8(input):
+    return int((input + 7)//8)
+
+def PAD128(input):
+    return int((input + 127)//128)
 
 def main(args):
     torch.manual_seed(args.rnd_seed)
@@ -171,13 +177,18 @@ def main(args):
     running_time = 0
 
     W_1 = torch.ones((feat_size, hidden_1)).cuda()
-    W_2 = torch.ones((hidden_1, output)).cuda()
+    W_2 = torch.ones((hidden_1, hidden_1)).cuda()
+    W_3 = torch.ones((hidden_1, output)).cuda()
 
 
-    # bw_A = 1
-    # bw_W1 = 1
-    # bw_X = 1
-    # bit_W1 = QGTC.bit_qnt(W_1.cuda(), bw_W1, True)
+    bw_A = 1
+    bw_X = 1
+    bw_W = 1
+
+    bit_W1 = QGTC.bit_qnt(W_1.cuda(), bw_W, True, False)
+    bit_W2 = QGTC.bit_qnt(W_2.cuda(), bw_W, True, False)
+    bit_W3 = QGTC.bit_qnt(W_3.cuda(), bw_W, True, True)
+
     # model = GCNConv(feat_size*2, hidden_1, output).cuda()
 
 
@@ -214,18 +225,40 @@ def main(args):
                 # torch.cuda.synchronize()
                 t = time.perf_counter()
                 
-                # bit_A = QGTC.bit_qnt(A.cuda(), bw_A, False)
-                # bit_X = QGTC.bit_qnt(X.cuda(), bw_X, True)
-                # bit_output = QGTC.mm_v1(bit_A, bit_X, len(A), len(A), len(X[0]), bw_A, bw_X, bw_X)
-                # float_output = QGTC.mm_v2(bit_output, bit_W1, len(A), len(X[0]), len(W_1[0]), bw_X, bw_W1)
+                if use_QGTC:
+                    # 1-layer
+                    bit_A = QGTC.bit_qnt(A.cuda(), bw_A, False, False)
+                    bit_X = QGTC.bit_qnt(X.cuda(), bw_X, True, False)
+                    # print("A.size: {}".format(A.size()))
+                    # print("bit_A.size: {}".format(bit_A.size()))
 
-                # 1-layer
-                X = torch.mm(A, X)
-                X_out = torch.mm(X, W_1)
+                    # print("X.size: {}".format(X.size()))
+                    # print("bit_X.size: {}".format(bit_X.size()))
+                    # print('-----------------------------------')
+                    # sys.exit(0)
 
-                # 2-layer
-                X_out = torch.mm(A, X_out)
-                X_out = torch.mm(X_out, W_2)
+                    # 1-layer
+                    bit_output = QGTC.mm_v1(bit_A, bit_X, PAD8(A.size(0)), PAD128(A.size(0)), PAD128(X.size(1)), bw_A, bw_X, bw_X)
+                    bit_output = QGTC.mm_v1(bit_output, bit_W1, PAD8(A.size(0)), PAD128(A.size(0)), PAD128(X.size(1)), bw_X, bw_W, bw_X)
+
+                    # 2-layer
+                    bit_output = QGTC.mm_v1(bit_output, bit_W2, PAD8(A.size(0)), PAD128(A.size(0)), PAD128(W_1.size(1)), bw_A, bw_X, bw_X)
+                    bit_output = QGTC.mm_v1(bit_output, bit_W3, PAD8(A.size(0)), PAD128(X.size(1)), PAD128(W_2.size(1)), bw_X, bw_W, bw_X)
+
+                    # 3-layer
+                    bit_output = QGTC.mm_v1(bit_output, bit_W2, PAD8(A.size(0)), PAD128(A.size(0)), PAD128(W_2.size(1)), bw_A, bw_X, bw_X)
+                    float_output = QGTC.mm_v2(bit_output, bit_W3, PAD8(A.size(0)), PAD128(X.size(1)), PAD8(W_3.size(1)), bw_X, bw_W)
+                    
+                else:
+                    # 1-layer
+                    X = torch.mm(A, X)
+                    X_out = torch.mm(X, W_1)
+                    # 2-layer
+                    X_out = torch.mm(A, X_out)
+                    X_out = torch.mm(X_out, W_2)
+                    # 3-layer
+                    X_out = torch.mm(A, X_out)
+                    X_out = torch.mm(X_out, W_3)
 
                 torch.cuda.synchronize()
                 running_time += time.perf_counter() - t
@@ -249,7 +282,7 @@ def main(args):
             cnt += 1
             
         # hand the current tensor back to host Memory
-        cluster = cluster.cpu()
+        # cluster = cluster.cpu()
 
 
     end_time = time.time()
@@ -275,11 +308,11 @@ if __name__ == '__main__':
                         help="the frequency to save model")
     parser.add_argument("--batch-size", type=int, default=20,
                         help="batch size")
-    parser.add_argument("--psize", type=int, default=1500,
+    parser.add_argument("--psize", type=int, default=6000,
                         help="partition number")
     parser.add_argument("--test-batch-size", type=int, default=1000,
                         help="test batch size")
-    parser.add_argument("--n-hidden", type=int, default=16,
+    parser.add_argument("--n-hidden", type=int, default=64,
                         help="number of hidden gcn units")
     parser.add_argument("--n-classes", type=int, default=10,
                         help="number of classes")
