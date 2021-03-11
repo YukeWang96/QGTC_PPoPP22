@@ -182,8 +182,8 @@ __global__ void QGTC_layer_hidden(
     const int X_height,
     const int X_width,
     const int W_width,
-    const int w_bit,
-    const int act_bit
+    const int act_bit,
+    const int w_bit
 )
 {
     using namespace nvcuda;
@@ -220,30 +220,63 @@ __global__ void QGTC_layer_hidden(
         const int bx = bid / gdy;
         const int by = bid % gdy;
 
-        // iterate along different bits.
-        for (int bit = 0; bit < act_bit*w_bit; bit++){
-            int b_act = bit % act_bit;
-            int b_w = bit / act_bit;
-            int b_opt = b_act + b_w;
+        #define new_order
+        #ifdef new_order
+        for (int i=0; i<gdk; i++)
+        {
+            // iterate along the K diemsnion by loading the tile from the 
+            load_matrix_sync(a_frag, bit_X + bx*8*gdk*4 + i*128/32, gdk*128);
+            
+            // iterate along different bits.
+            for (int bit = 0; bit < act_bit*w_bit; bit++){
+                printf("act_bit: %d, w_bit: %d\n", act_bit, w_bit);
+                int b_act = bit % act_bit;
+                int b_w = bit / act_bit;
+                int b_opt = b_act + b_w;
 
-            // accmuluation of the current bit.
-            wmma::fill_fragment(tmp_frag, 0);
+                // accmuluation of the current bit.
+                wmma::fill_fragment(tmp_frag, 0);
 
-            // iterate along the K columns
-            for (int i=0; i<gdk; i++)
-            {
+                // iterate along the K columns
+    
                 // iterate along the K diemsnion by loading the tile from the 
-                load_matrix_sync(a_frag, bit_X + b_act*act_offset + bx*8*gdk*4 + i*128/32, gdk*128);
+                // load_matrix_sync(a_frag, bit_X + b_act*act_offset + bx*8*gdk*4 + i*128/32, gdk*128);
                 load_matrix_sync(b_frag, bit_W + b_w*w_offset + by*8*gdk*4 + i*128/32, gdk*128);
                 bmma_sync(tmp_frag, a_frag, b_frag, tmp_frag, bmmaBitOpAND);
-            }
 
-            // Accumulation.
-            #pragma unroll
-            for (int t = 0; t < tmp_frag.num_elements; t++) {
-                c_frag.x[t] += tmp_frag.x[t]<<b_opt;
+                // Accumulation.
+                #pragma unroll
+                for (int t = 0; t < tmp_frag.num_elements; t++) {
+                    c_frag.x[t] += tmp_frag.x[t]<<b_opt;
+                }
             }
         }
+        #else            
+            // iterate along different bits.
+            for (int bit = 0; bit < act_bit*w_bit; bit++){
+                int b_act = bit % act_bit;
+                int b_w = bit / act_bit;
+                int b_opt = b_act + b_w;
+
+                // accmuluation of the current bit.
+                wmma::fill_fragment(tmp_frag, 0);
+
+                // iterate along the K columns
+                for (int i=0; i<gdk; i++)
+                {
+                    // iterate along the K diemsnion by loading the tile from the 
+                    load_matrix_sync(a_frag, bit_X + bx*8*gdk*4 + i*128/32, gdk*128);
+                    load_matrix_sync(b_frag, bit_W + b_w*w_offset + by*8*gdk*4 + i*128/32, gdk*128);
+                    bmma_sync(tmp_frag, a_frag, b_frag, tmp_frag, bmmaBitOpAND);
+                }
+                // Accumulation.
+                #pragma unroll
+                for (int t = 0; t < tmp_frag.num_elements; t++) {
+                    c_frag.x[t] += tmp_frag.x[t]<<b_opt;
+                }
+            }
+        #endif
+
 
         // quantization at the fragment into act_bit (stored in uint32).
         #pragma unroll
@@ -303,8 +336,8 @@ __global__ void QGTC_layer_output(
     const int X_height,
     const int X_width,
     const int W_width,
-    const int w_bit,
-    const int act_bit
+    const int act_bit,
+    const int w_bit
 )
 {
     using namespace nvcuda;
