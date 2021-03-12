@@ -311,10 +311,28 @@ __global__ void QGTC_layer_hidden(
                 // iterate along the K columns
                 for (int i=0; i<gdk; i++)
                 {
-                    // iterate along the K diemsnion by loading the tile from the 
-                    load_matrix_sync(a_frag, bit_X + b_act*act_offset + bx*8*gdk*4 + i*128/32, gdk*128);
-                    load_matrix_sync(b_frag, bit_W + b_w*w_offset + by*8*gdk*4 + i*128/32, gdk*128);
-                    bmma_sync(tmp_frag, a_frag, b_frag, tmp_frag, bmmaBitOpAND);
+
+                    // load_matrix_sync(a_frag, bit_X + b_act*act_offset + bx*8*gdk*4 + i*128/32, gdk*128);
+                    // load_matrix_sync(b_frag, bit_W + b_w*w_offset + by*8*gdk*4 + i*128/32, gdk*128);
+                    // bmma_sync(tmp_frag, a_frag, b_frag, tmp_frag, bmmaBitOpAND);
+
+                    // int4 tmp;
+                    typedef union {unsigned x[4];} uint4;
+                    uint4 tmp;
+                    unsigned val = 0;
+                    unsigned cmp = 0;
+
+                    if (laneid < 8){
+                        tmp = * (uint4*) (bit_X + b_act*act_offset + bx*8*gdk*4 + i*128/32 + laneid*gdk*128);
+                        val = tmp.x[0] & tmp.x[1] & tmp.x[2] & tmp.x[3];
+                    }
+                    cmp = __ballot_sync(0x000000FF, val > 0);
+                    if (cmp > 0){
+                        printf("hello here\n");
+                        load_matrix_sync(a_frag, bit_X + b_act*act_offset + bx*8*gdk*4 + i*128/32, gdk*128);
+                        load_matrix_sync(b_frag, bit_W + b_w*w_offset + by*8*gdk*4 + i*128/32, gdk*128);
+                        bmma_sync(tmp_frag, a_frag, b_frag, tmp_frag, bmmaBitOpAND);
+                    }   
                 }
 
                 // Accumulation.
