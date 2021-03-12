@@ -18,7 +18,7 @@ from dgl.data import register_data_args
 import collections
 import os.path as osp
 
-from modules import GraphSAGE
+from modules import *
 from sampler import ClusterIter
 from utils import Logger, evaluate, save_log_dir, load_data
 
@@ -129,13 +129,13 @@ def main(args):
     # print("features shape, ", g.ndata['feat'].shape)
     feat_size  = g.ndata['feat'].shape[1]
 
-    model = GraphSAGE(in_feats,
-                      args.n_hidden,
-                      n_classes,
-                      args.n_layers,
-                      F.relu,
-                      args.dropout,
-                      args.use_pp)
+    if use_PyG:
+        model = SAGE_PyG(in_feats, args.n_hidden, 
+                            n_classes, num_layers=args.n_layers+2)
+    else:
+        model = GraphSAGE(in_feats, args.n_hidden,
+                        n_classes, args.n_layers, F.relu,
+                        args.dropout, args.use_pp)
     # print(model)
     if cuda:
         model.cuda()
@@ -175,7 +175,7 @@ def main(args):
     # hidden_2 = 2048
     output = args.n_classes
 
-    total_ops = 0
+    # total_ops = 0
     allocation = 0
     running_time = 0
 
@@ -207,7 +207,16 @@ def main(args):
                 # model.train()
                 torch.cuda.synchronize()
                 t = time.perf_counter()   
-                pred = model(cluster)       # model training
+                
+                if use_PyG:
+                    # print(cluster.edges())
+                    edge_idx = torch.stack([cluster.edges()[0],cluster.edges()[1]], dim=0).long()
+                    # print(edge_idx.size())
+                    # print(cluster.ndata['feat'].size())
+                    model(cluster.ndata['feat'], edge_idx)
+                else:
+                    pred = model(cluster)       # model training
+
                 torch.cuda.synchronize()
                 running_time += time.perf_counter() - t
                 num_nodes = len(cluster.nodes())

@@ -3,6 +3,8 @@ import math
 import dgl.function as fn
 import torch
 import torch.nn as nn
+from torch_geometric.nn import SAGEConv, BatchNorm
+import torch.nn.functional as F
 
 class GraphSAGELayer(nn.Module):
     def __init__(self,
@@ -94,3 +96,25 @@ class GraphSAGE(nn.Module):
         for layer in self.layers:
             h = layer(g, h)
         return h
+
+
+
+class SAGE_PyG(torch.nn.Module):
+    def __init__(self, in_channels, hidden_channels, out_channels, num_layers):
+        super(SAGE_PyG, self).__init__()
+        self.convs = torch.nn.ModuleList()
+        self.batch_norms = torch.nn.ModuleList()
+        self.convs.append(SAGEConv(in_channels, hidden_channels))
+        self.batch_norms.append(BatchNorm(hidden_channels))
+        for _ in range(num_layers - 2):
+            self.convs.append(SAGEConv(hidden_channels, hidden_channels))
+            self.batch_norms.append(BatchNorm(hidden_channels))
+        self.convs.append(SAGEConv(hidden_channels, out_channels))
+
+    def forward(self, x, edge_index):
+        for conv, batch_norm in zip(self.convs[:-1], self.batch_norms):
+            x = conv(x, edge_index)
+            x = batch_norm(x)
+            x = F.relu(x)
+            x = F.dropout(x, p=0.2, training=self.training)
+        return self.convs[-1](x, edge_index)
