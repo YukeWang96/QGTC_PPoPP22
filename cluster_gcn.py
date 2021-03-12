@@ -184,18 +184,16 @@ def main(args):
     W_3 = torch.ones((hidden_1, output)).cuda()
 
     bw_A = 1
-    bw_X = 3
-    bw_W = 3
+    bw_X = 32
+    bw_W = 32
 
     bit_W1 = QGTC.bit_qnt(W_1.cuda(), bw_W, True, False)
     bit_W2 = QGTC.bit_qnt(W_2.cuda(), bw_W, True, False)
     bit_W3 = QGTC.bit_qnt(W_3.cuda(), bw_W, True, True)
-    # model = GCNConv(feat_size*2, hidden_1, output).cuda()
 
     cnt = 0
     for epoch in range(args.n_epochs):
         for j, cluster in enumerate(cluster_iterator):
-            # sync with upper level training graph      
             if regular:
                 torch.cuda.synchronize()
                 t = time.perf_counter()      
@@ -209,10 +207,7 @@ def main(args):
                 t = time.perf_counter()   
                 
                 if use_PyG:
-                    # print(cluster.edges())
                     edge_idx = torch.stack([cluster.edges()[0],cluster.edges()[1]], dim=0).long()
-                    # print(edge_idx.size())
-                    # print(cluster.ndata['feat'].size())
                     model(cluster.ndata['feat'], edge_idx)
                 else:
                     pred = model(cluster)       # model training
@@ -284,8 +279,6 @@ def main(args):
 
                 # torch.cuda.synchronize()
                 running_time += time.perf_counter() - t
-
-                # num_nodes = A.size(0)
                 # total_ops += 2*num_nodes*num_nodes*hidden_1 +  2*num_nodes*feat_size*hidden_1 \
                 #             + 2*num_nodes*num_nodes*output + 2*num_nodes*hidden_1*output
 
@@ -306,7 +299,7 @@ def main(args):
         cnt += 1
         print("Epoch: {}".format(epoch))
         # hand the current tensor back to host Memory
-        # cluster = cluster.cpu()
+        cluster = cluster.cpu()
 
     # torch.cuda.synchronize()
     end_time = time.time()

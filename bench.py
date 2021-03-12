@@ -23,8 +23,8 @@ dataset = [
 		# ('SW-620H'                   , 66       , 2) ,
 
 
-		('PROTEINS_full'             , 29     , 2) ,   
-		# ( 'artist'                 	 , 100	  , 12),
+		# ('PROTEINS_full'             , 29     , 2) ,   
+		( 'artist'                 	 , 100	  , 12),
 		# ( 'soc-BlogCatalog'	     	 , 128	  , 39),      
 
 
