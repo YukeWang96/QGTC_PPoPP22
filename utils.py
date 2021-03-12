@@ -7,7 +7,6 @@ import torch
 from dgl.data import PPIDataset
 from dgl.data import load_data as _load_data
 from sklearn.metrics import f1_score
-# from ogb_dataset import *
 
 
 class Logger(object):

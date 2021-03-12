@@ -2,10 +2,10 @@
 import os
 
 
-hidden = [16] #[16, 32, 64, 128, 256]
+hidden = [128] #[16, 32, 64, 128, 256]
 num_layers = [1]
 data_dir = '/home/yuke/.graphs/orig/'
-partitions = [1500] # , 3000, 4500, 6000, 7500, 9000]
+partitions = [9000] # 1500, 3000, 4500, 6000, 7500, 9000]
 
 dataset = [
 		# ('toy'	        , 3	    , 2   ),  
@@ -21,7 +21,8 @@ dataset = [
 		# ('OVCAR-8H'                  , 66       , 2) , 
 		# ('Yeast'                     , 74       , 2) ,
 		# ('DD'                        , 89       , 2) ,
-		# ('SW-620H'                   , 66       , 2) ,
+		('SW-620H'                   , 66       , 2) ,
+
 
 		# ( 'web-BerkStan'             , 100	  , 12),
 
@@ -30,8 +31,8 @@ dataset = [
 		# ( 'com-amazon'               , 96	  , 22),
 		# ( 'soc-BlogCatalog'	         , 128	  , 39),      
 		# ( 'amazon0601'  	         , 96	  , 22), 
-        # ('YeastH'                    , 75       , 2) ,
-		#    
+        
+		# ('YeastH'                    , 75       , 2) ,   
 		# ( 'wiki-topcats'             , 300	  , 12),
 
 	    # ( 'reddit'                   , 602    , 41),
@@ -46,8 +47,8 @@ for n_Layer in num_layers:
 		for data, d, c in dataset:
 			print("=> {}, hiddn: {}".format(data, hid))
 			for p in partitions:
-				command = "python cluster_gcn.py --gpu 0 --dataset {} --dim {} --n-hidden {} --n-classes {} --psize {}".\
-							format(data, d, hid, c, p)		
+				command = "python cluster_gcn.py --gpu 0 --dataset {} --dim {} --n-classes {} --psize {}".\
+							format(data, d, c, p)		
 				# command = "sudo ncu --csv --set full python main_gcn.py --dataset {0} --dim {1} --hidden {2} --classes {3} --num_layers {4} --model {5} | tee prof_{0}.csv".format(data, d, hid, c, n_Layer, model)		
 				os.system(command)
 				print()

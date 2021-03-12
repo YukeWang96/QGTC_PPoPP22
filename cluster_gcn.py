@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings("ignore")
+
 import argparse
 import os
 import time
@@ -29,8 +32,7 @@ from dataset import *
 from ogb.nodeproppred import DglNodePropPredDataset
 from dgl.data import AMDataset, AmazonCoBuyComputerDataset
 
-regular = False
-use_QGTC = False
+from config import *
 
 def PAD8(input):
     return int((input + 7)//8)
@@ -92,16 +94,16 @@ def main(args):
     n_val_samples = val_mask.int().sum().item()
     n_test_samples = test_mask.int().sum().item()
 
-    print("""----Data statistics------'
-    #Edges %d
-    #Classes %d
-    #Train samples %d
-    #Val samples %d
-    #Test samples %d""" %
-            (n_edges, n_classes,
-            n_train_samples,
-            n_val_samples,
-            n_test_samples))
+    # print("""----Data statistics------'
+    # #Edges %d
+    # #Classes %d
+    # #Train samples %d
+    # #Val samples %d
+    # #Test samples %d""" %
+    #         (n_edges, n_classes,
+    #         n_train_samples,
+    #         n_val_samples,
+    #         n_test_samples))
 
     # create GCN model
     # if args.self_loop and not args.dataset.startswith('reddit'):
@@ -124,7 +126,7 @@ def main(args):
         g = g.int().to(args.gpu)
 
     # print('labels shape:', g.ndata['label'].shape)
-    print("features shape, ", g.ndata['feat'].shape)
+    # print("features shape, ", g.ndata['feat'].shape)
     feat_size  = g.ndata['feat'].shape[1]
 
     model = GraphSAGE(in_feats,
@@ -134,23 +136,21 @@ def main(args):
                       F.relu,
                       args.dropout,
                       args.use_pp)
-
     # print(model)
-    # exit(0)
     if cuda:
         model.cuda()
 
     # logger and so on
-    log_dir = save_log_dir(args)
-    logger = Logger(os.path.join(log_dir, 'loggings'))
-    logger.write(args)
+    # log_dir = save_log_dir(args)
+    # logger = Logger(os.path.join(log_dir, 'loggings'))
+    # logger.write(args)
 
     # Loss function
     if multitask:
-        print('Using multi-label loss')
+        # print('Using multi-label loss')
         loss_f = nn.BCEWithLogitsLoss()
     else:
-        print('Using multi-class loss')
+        # print('Using multi-class loss')
         loss_f = nn.CrossEntropyLoss()
 
     # use optimizer
@@ -159,7 +159,7 @@ def main(args):
                                  weight_decay=args.weight_decay)
 
 
-    print("\n\n==> subgraph-size: {:.2f}".format(psize))
+    # print("\n\n==> subgraph-size: {:.2f}".format(psize))
 
     # set train_nids to cuda tensor
     if cuda:
@@ -173,7 +173,7 @@ def main(args):
 
     hidden_1 = 128
     # hidden_2 = 2048
-    output = 10
+    output = args.n_classes
 
     total_ops = 0
     allocation = 0
@@ -213,14 +213,12 @@ def main(args):
                 num_nodes = len(cluster.nodes())
 
             else:
-                torch.cuda.synchronize()
+                # torch.cuda.synchronize()
                 t = time.perf_counter()
 
                 # version-1
                 cluster = cluster.cuda()
-                # unzip adjacent matrix A
                 A = cluster.A.to_dense()            
-                # unzip feature embedding matrix X
                 X = cluster.X
 
                 # # version-2
@@ -229,7 +227,7 @@ def main(args):
                 # # unzip feature embedding matrix X
                 # X = cluster.X.cuda()
 
-                torch.cuda.synchronize()
+                # torch.cuda.synchronize()
                 allocation += time.perf_counter() - t
 
                 # torch.cuda.synchronize()
@@ -237,36 +235,33 @@ def main(args):
                 
                 if use_QGTC:
                     # 1-layer
-                    # print(A.size())
-                    # sys.exit(0)
                     bit_A = QGTC.bit_qnt(A, bw_A, False, False)
                     bit_X = QGTC.bit_qnt(X, bw_X, True, False)
 
-                    # print("A.size: {}".format(A.size()))
-                    # print("bit_A.size: {}".format(bit_A.size()))
-                    # print("X.size: {}".format(X.size()))
-                    # print("bit_X.size: {}".format(bit_X.size()))
-                    # print('-----------------------------------')
-                    # sys.exit(0)
+                    if epoch == 0 and j == 0:
+                        print("A.size: {}".format(A.size()))
 
                     # 1-layer
                     bit_output = QGTC.mm_v1(bit_A, bit_X, A.size(0), A.size(0), X.size(1), bw_A, bw_X, bw_X)
-                    bit_output = QGTC.mm_v1(bit_output, bit_W1, A.size(0), X.size(1), W_1.size(1), bw_X, bw_W, bw_X)
+                    bit_output_1 = QGTC.mm_v1(bit_output, bit_W1, A.size(0), X.size(1), W_1.size(1), bw_X, bw_W, bw_X)
 
                     # 2-layer
-                    bit_output = QGTC.mm_v1(bit_A, bit_output, A.size(0), A.size(0), W_1.size(1), bw_A, bw_X, bw_X)
-                    bit_output = QGTC.mm_v1(bit_output, bit_W2, A.size(0), W_1.size(1), W_2.size(1), bw_X, bw_W, bw_X)
+                    bit_output_2 = QGTC.mm_v1(bit_A, bit_output_1, A.size(0), A.size(0), W_1.size(1), bw_A, bw_X, bw_X)
+                    bit_output_3 = QGTC.mm_v1(bit_output_2, bit_W2, A.size(0), W_1.size(1), W_2.size(1), bw_X, bw_W, bw_X)
 
                     # 3-layer
-                    bit_output = QGTC.mm_v1(bit_A, bit_output, A.size(0), A.size(0), W_2.size(1), bw_A, bw_X, bw_X)
-                    float_output = QGTC.mm_v2(bit_output, bit_W3, A.size(0), W_2.size(1), W_3.size(1), bw_X, bw_W)
+                    bit_output_4 = QGTC.mm_v1(bit_A, bit_output_3, A.size(0), A.size(0), W_2.size(1), bw_A, bw_X, bw_X)
+                    float_output = QGTC.mm_v2(bit_output_4, bit_W3, A.size(0), W_2.size(1), W_3.size(1), bw_X, bw_W)
 
                     del bit_A
                     del bit_X
                     del bit_output
+                    del bit_output_1
+                    del bit_output_2
+                    del bit_output_3
+                    del bit_output_4
                     del float_output
                     torch.cuda.empty_cache()
-                    print("helllo")
                 else:
                     # 1-layer
                     X = torch.mm(A, X)
@@ -278,12 +273,12 @@ def main(args):
                     X_out = torch.mm(A, X_out)
                     X_out = torch.mm(X_out, W_3)
 
-                torch.cuda.synchronize()
+                # torch.cuda.synchronize()
                 running_time += time.perf_counter() - t
 
-                num_nodes = A.size(0)
-                total_ops += 2*num_nodes*num_nodes*hidden_1 +  2*num_nodes*feat_size*hidden_1 \
-                            + 2*num_nodes*num_nodes*output + 2*num_nodes*hidden_1*output
+                # num_nodes = A.size(0)
+                # total_ops += 2*num_nodes*num_nodes*hidden_1 +  2*num_nodes*feat_size*hidden_1 \
+                #             + 2*num_nodes*num_nodes*output + 2*num_nodes*hidden_1*output
 
             # batch_labels = cluster.ndata['label']
             # batch_train_mask = cluster.ndata['train_mask']
@@ -302,13 +297,13 @@ def main(args):
         cnt += 1
         print("Epoch: {}".format(epoch))
         # hand the current tensor back to host Memory
-        cluster = cluster.cpu()
+        # cluster = cluster.cpu()
 
-    torch.cuda.synchronize()
+    # torch.cuda.synchronize()
     end_time = time.time()
     print("allocation: {:.3f} ms, inference: {:.3f} ms".format(allocation/cnt*1e3, running_time/cnt*1e3))
     print("Avg. Epoch: {:.3f} ms".format((end_time - start_time)*1000/cnt))
-    print("GFLOPS: {:.3f}".format(total_ops/(end_time - start_time) / 10e9))
+    # print("GFLOPS: {:.3f}".format(total_ops/(end_time - start_time) / 10e9))
 
 
 if __name__ == '__main__':
@@ -323,19 +318,19 @@ if __name__ == '__main__':
     parser.add_argument("--dim", type=int, default=10,
                         help="input dimension of each dataset")
 
-    parser.add_argument("--n-epochs", type=int, default=100, help="number of training epochs")
+    parser.add_argument("--n-epochs", type=int, default=3, help="number of training epochs")
     parser.add_argument("--batch-size", type=int, default=20, help="batch size")
     parser.add_argument("--psize", type=int, default=1500, help="partition number")
 
-
+    parser.add_argument("--n-hidden", type=int, default=128,
+                        help="number of hidden gcn units")
     parser.add_argument("--log-every", type=int, default=100,
                         help="the frequency to save model")
     parser.add_argument("--test-batch-size", type=int, default=1000,
                         help="test batch size")
-    parser.add_argument("--n-hidden", type=int, default=64,
-                        help="number of hidden gcn units")
     parser.add_argument("--n-classes", type=int, default=10,
                         help="number of classes")
+
     parser.add_argument("--n-layers", type=int, default=1,
                         help="number of hidden gcn layers")
     parser.add_argument("--val-every", type=int, default=1,
@@ -356,7 +351,5 @@ if __name__ == '__main__':
                         help="note for log dir")
 
     args = parser.parse_args()
-
-    print(args)
-
+    # print(args)
     main(args)

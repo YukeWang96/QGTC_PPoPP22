@@ -53,7 +53,6 @@ torch::Tensor bit_qnt_cuda(
         // allocate output in uint32.
         if (output_layer){
             auto output = torch::zeros({bit_qnt*STEP32(height), PAD8(width)}, torch::kInt32).to(torch::kCUDA);         // PAD(8) -- output
-
             cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, PackFcWeight128_OUTPUT, numThreads, 0);
             PackFcWeight128_OUTPUT<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(
                 output.data<int>(), input_qnt.data<int>(),
@@ -66,7 +65,7 @@ torch::Tensor bit_qnt_cuda(
             }
             return output;
         }
-        else{
+        else{ // else if non-output layer
             auto output = torch::zeros({bit_qnt*STEP32(height), PAD128(width)}, torch::kInt32).to(torch::kCUDA);         // PAD(128) -- hidden
 
             cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, PackFcWeight128, numThreads, 0);
@@ -88,11 +87,8 @@ torch::Tensor bit_qnt_cuda(
         // allocate output in int32 on GPU
         torch::Tensor output = torch::zeros({bit_qnt*PAD8(height), STEP32(width)}, torch::kInt32).to(torch::kCUDA);
         cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, QGTC_layer_input, numThreads, 0);
-
         // printf("bit_qnt: %d, height: %d, width: %d\n", bit_qnt, height, width);
         // printf("numThreads: %d, numBlocksPerSm: %d\n", numThreads, numBlocksPerSm);
-
-        // on the second iterations fails when qnt_bit=1.
         QGTC_layer_input<<< numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>> \
                 (output.data<int>(), input_qnt.data<int>(), height, width, bit_qnt);
    

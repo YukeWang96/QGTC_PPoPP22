@@ -8,7 +8,7 @@ from partition_utils import *
 import sys
 from scipy.sparse import coo_matrix
 
-regular=False
+from config import *
 
 class ClusterTensor(torch.nn.Module):
     def __init__(self, A, X):
