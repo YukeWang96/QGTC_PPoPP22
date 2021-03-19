@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from os.path import abspath
 import torch
 import sys
 import QGTC
@@ -6,7 +7,7 @@ import time
 
 # a = torch.FloatTensor([[1,2,3],[1,2,3]])
 def test(M, N, K, bit_b):
-    a = torch.ones((M, K))
+    a = torch.zeros((M, K))
 
     # def quantize(val, bitwidth):
     #     max_val = 8
@@ -24,7 +25,7 @@ def test(M, N, K, bit_b):
 
     #  -- * --- reference implementation -- * ---
     # b = torch.FloatTensor([[1,1],[1,1],[1,1]])
-    b = torch.ones((K, N))
+    b = torch.zeros((K, N))
 
     # w = torch.ones((N, 100))
     # out = torch.mm(a, b)
@@ -114,3 +115,28 @@ print("-----------------")
 
 # for m, n, k in cases:
     # test(m, n, k)
+
+def profile(path="", feat_size=1024, bitwidth=2):
+    import os
+    import pickle
+
+    files = os.listdir(path)
+    for fname in files:
+        abs_path = os.path.join(path, fname)
+        A = pickle.load(abs_path)
+        N = A.size(0)
+        feat = torch.ones(N, feat_size)
+
+        bit_a = QGTC.bit_qnt(feat.cuda(), 1, False, False)
+        bit_b = QGTC.bit_qnt(feat.cuda(), bitwidth, False, False)
+
+        num_prof = 100
+        start = time.perf_counter()
+        torch.cuda.synchronize()
+        for i in range(num_prof):
+            QGTC.mm_v1(bit_a, bit_b, N, N, feat_size, 1, bitwidth, bitwidth)
+
+        # print("mm_v1")
+        torch.cuda.synchronize()
+        end = time.perf_counter()
+        print("TFLOPs: {:.3f}".format(2 * N * N * feat_size * num_prof / (end - start)/1e12))

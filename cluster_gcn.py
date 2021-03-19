@@ -40,6 +40,7 @@ def PAD8(input):
 def PAD128(input):
     return int((input + 127)//128)
 
+
 def main(args):
     torch.manual_seed(args.rnd_seed)
     np.random.seed(args.rnd_seed)
@@ -136,6 +137,8 @@ def main(args):
         model = GraphSAGE(in_feats, args.n_hidden,
                         n_classes, args.n_layers, F.relu,
                         args.dropout, args.use_pp)
+        # model = GIN(in_feats, args.n_hidden, n_classes)
+
     # print(model)
     if cuda:
         model.cuda()
@@ -158,21 +161,14 @@ def main(args):
                                  lr=args.lr,
                                  weight_decay=args.weight_decay)
 
-
-    # print("\n\n==> subgraph-size: {:.2f}".format(psize))
-
     # set train_nids to cuda tensor
     if cuda:
         train_nid = torch.from_numpy(train_nid).cuda()
-        # print("current memory after model before training",
-        #       torch.cuda.memory_allocated(device=train_nid.device) / 1024 / 1024)
-        # print("---------------------------------\n\n")
 
     start_time = time.time()
     best_f1 = -1
 
-    hidden_1 = 128
-    # hidden_2 = 2048
+    hidden_1 = args.n_hidden
     output = args.n_classes
 
     # total_ops = 0
@@ -185,11 +181,15 @@ def main(args):
 
     bw_A = 1
     bw_X = 32
-    bw_W = 32
+    bw_W = bw_X
 
     bit_W1 = QGTC.bit_qnt(W_1.cuda(), bw_W, True, False)
     bit_W2 = QGTC.bit_qnt(W_2.cuda(), bw_W, True, False)
     bit_W3 = QGTC.bit_qnt(W_3.cuda(), bw_W, True, True)
+
+    layer1_t = 0
+    layer2_t = 0
+    layer3_t = 0
 
     cnt = 0
     for epoch in range(args.n_epochs):
@@ -215,47 +215,82 @@ def main(args):
                 torch.cuda.synchronize()
                 running_time += time.perf_counter() - t
                 num_nodes = len(cluster.nodes())
-
+                
+                sys.exit(0)
             else:
-                # torch.cuda.synchronize()
+                torch.cuda.synchronize()
                 t = time.perf_counter()
 
-                # version-1
+                ## version-1 seperate, dense edge, dense node embedding
+                # A = cluster.A.to_dense().cuda()            
+                # X = cluster.X.cuda()
+
+                # # # version-2 seperate, sparse edge, dense node embedding.
+                # A = cluster.A.cuda().to_dense()            
+                # X = cluster.X.cuda()
+
+                # #@ version-3 packed, sparse edge, dense node embedding.
                 cluster = cluster.cuda()
                 A = cluster.A.to_dense()            
                 X = cluster.X
 
-                # # version-2
-                # # unzip adjacent matrix A
-                # A = cluster.A.to_dense().cuda()            
-                # # unzip feature embedding matrix X
-                # X = cluster.X.cuda()
-
-                # torch.cuda.synchronize()
+                torch.cuda.synchronize()
                 allocation += time.perf_counter() - t
 
-                # torch.cuda.synchronize()
+                torch.cuda.synchronize()
                 t = time.perf_counter()
                 
                 if use_QGTC:
-                    # 1-layer
-                    bit_A = QGTC.bit_qnt(A, bw_A, False, False)
-                    bit_X = QGTC.bit_qnt(X, bw_X, True, False)
 
-                    if epoch == 0 and j == 0:
-                        print("A.size: {}".format(A.size()))
+                    # if epoch == 0 and j == 0:
+                    #     print("A.size: {}".format(A.size()))
 
-                    # 1-layer
-                    bit_output = QGTC.mm_v1(bit_A, bit_X, A.size(0), A.size(0), X.size(1), bw_A, bw_X, bw_X)
-                    bit_output_1 = QGTC.mm_v1(bit_output, bit_W1, A.size(0), X.size(1), W_1.size(1), bw_X, bw_W, bw_X)
+                    run_GIN = False
+                    if run_GIN:
+                        # torch.cuda.synchronize()
+                        # t = time.perf_counter()
+                        # 1-layer [in_feat, hidden]
+                        # print("A.size: {}".format(A.size()))
+                        # print("X.size: {}".format(X.size()))
 
-                    # 2-layer
-                    bit_output_2 = QGTC.mm_v1(bit_A, bit_output_1, A.size(0), A.size(0), W_1.size(1), bw_A, bw_X, bw_X)
-                    bit_output_3 = QGTC.mm_v1(bit_output_2, bit_W2, A.size(0), W_1.size(1), W_2.size(1), bw_X, bw_W, bw_X)
+                        bit_A = QGTC.bit_qnt(A, bw_A, False, False)
+                        bit_X = QGTC.bit_qnt(X, bw_X, True, False)
+                        bit_output = QGTC.mm_v1(bit_A, bit_X, A.size(0), A.size(0), X.size(1), bw_A, bw_X, bw_X)
+                        bit_output_1 = QGTC.mm_v1(bit_output, bit_W1, A.size(0), X.size(1), W_1.size(1), bw_X, bw_W, bw_X)
+                        # torch.cuda.synchronize()
+                        # layer1_t += time.perf_counter() - t
 
-                    # 3-layer
-                    bit_output_4 = QGTC.mm_v1(bit_A, bit_output_3, A.size(0), A.size(0), W_2.size(1), bw_A, bw_X, bw_X)
-                    float_output = QGTC.mm_v2(bit_output_4, bit_W3, A.size(0), W_2.size(1), W_3.size(1), bw_X, bw_W)
+                        # 2-layer  [hidden, hidden]
+                        # torch.cuda.synchronize()
+                        # t = time.perf_counter()
+                        bit_output_2 = QGTC.mm_v1(bit_A, bit_output_1, A.size(0), A.size(0), W_1.size(1), bw_A, bw_X, bw_X)
+                        bit_output_3 = QGTC.mm_v1(bit_output_2, bit_W2, A.size(0), W_1.size(1), W_2.size(1), bw_X, bw_W, bw_X)
+                        # torch.cuda.synchronize()
+                        # layer2_t += time.perf_counter() - t
+
+                        # 3-layer  [hidden, output]
+                        # torch.cuda.synchronize()
+                        # t = time.perf_counter()
+                        bit_output_4 = QGTC.mm_v1(bit_A, bit_output_3, A.size(0), A.size(0), W_2.size(1), bw_A, bw_X, bw_X)
+                        float_output = QGTC.mm_v2(bit_output_4, bit_W3, A.size(0), W_2.size(1), W_3.size(1), bw_X, bw_W)
+                        # torch.cuda.synchronize()
+                        # layer3_t += time.perf_counter() - t
+                    
+                    else: # GCN
+                        bit_A = QGTC.bit_qnt(A, bw_A, False, False)
+                        bit_X = QGTC.bit_qnt(X, bw_X, True, False)
+
+                        # 1-layer [in_feat, hidden]
+                        bit_output = QGTC.mm_v1(bit_X, bit_W1, X.size(0), X.size(1), W_1.size(1), bw_X, bw_W, bw_X)
+                        bit_output_1 = QGTC.mm_v1(bit_A, bit_output, A.size(0), A.size(1), W_1.size(1), bw_A, bw_X, bw_X)
+
+                        # 2-layer  [hidden, hidden]
+                        bit_output_2 = QGTC.mm_v1(bit_output_1, bit_W2, A.size(0), W_1.size(1), W_2.size(1), bw_X, bw_W, bw_X)
+                        bit_output_3 = QGTC.mm_v1(bit_A, bit_output_2, A.size(0), A.size(0), W_2.size(1), bw_A, bw_X, bw_X)
+
+                        # 3-layer  [hidden, output]
+                        bit_output_4 = QGTC.mm_v1(bit_output_3, bit_W3, A.size(0), W_2.size(1), W_3.size(1), bw_X, bw_W, bw_X)
+                        float_output = QGTC.mm_v2(bit_A, bit_output_4, A.size(0), A.size(0), W_2.size(1), bw_A, bw_X)
 
                     del bit_A
                     del bit_X
@@ -266,6 +301,8 @@ def main(args):
                     del bit_output_4
                     del float_output
                     torch.cuda.empty_cache()
+                    
+                    sys.exit(0)
                 else:
                     # 1-layer
                     X = torch.mm(A, X)
@@ -277,7 +314,7 @@ def main(args):
                     X_out = torch.mm(A, X_out)
                     X_out = torch.mm(X_out, W_3)
 
-                # torch.cuda.synchronize()
+                torch.cuda.synchronize()
                 running_time += time.perf_counter() - t
                 # total_ops += 2*num_nodes*num_nodes*hidden_1 +  2*num_nodes*feat_size*hidden_1 \
                 #             + 2*num_nodes*num_nodes*output + 2*num_nodes*hidden_1*output
@@ -303,7 +340,8 @@ def main(args):
 
     # torch.cuda.synchronize()
     end_time = time.time()
-    print("allocation: {:.3f} ms, inference: {:.3f} ms".format(allocation/cnt*1e3, running_time/cnt*1e3))
+    print("Trans (ms): {:.3f}, Compute (ms): {:.3f}".format(allocation/cnt*1e3, running_time/cnt*1e3))
+    # print("{:.3f}, {:.3f}, {:.3f}".format(layer1_t/cnt*1e3, layer2_t/cnt*1e3, layer3_t/cnt*1e3))
     print("Avg. Epoch: {:.3f} ms".format((end_time - start_time)*1000/cnt))
     # print("GFLOPS: {:.3f}".format(total_ops/(end_time - start_time) / 10e9))
 
@@ -321,10 +359,10 @@ if __name__ == '__main__':
                         help="input dimension of each dataset")
 
     parser.add_argument("--n-epochs", type=int, default=3, help="number of training epochs")
-    parser.add_argument("--batch-size", type=int, default=20, help="batch size")
+    parser.add_argument("--batch-size", type=int, default=30, help="batch size")
     parser.add_argument("--psize", type=int, default=1500, help="partition number")
 
-    parser.add_argument("--n-hidden", type=int, default=128,
+    parser.add_argument("--n-hidden", type=int, default=16,
                         help="number of hidden gcn units")
     parser.add_argument("--log-every", type=int, default=100,
                         help="the frequency to save model")

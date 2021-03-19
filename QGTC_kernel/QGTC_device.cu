@@ -9,7 +9,7 @@
 #include "utility.h"
 #include "kernel.h"
 
-#define  numThreads 1024
+#define numThreads 128
 
 using namespace nvcuda;
 
@@ -35,8 +35,6 @@ torch::Tensor bit_qnt_cuda(
     // quantization float --> int32
     // note that allocated data must be on CUDA device !!!!
     torch::Tensor input_qnt = torch::zeros({height, width}, torch::kInt32).to(torch::kCUDA);
-    // printf("-- Input_qnt\n");
-
     Quantize_val<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads>>>(input_qnt.data<int>(), input.data<float>(), 
                                                                                 height*width, bit_qnt); 
 
@@ -140,7 +138,10 @@ torch::Tensor mm_v1_cuda(
         printf("CUDA error at mm_v1_cuda: %s\n", cudaGetErrorString(error));
         exit(-1);
     }
-
+    
+    // print_counter<<<1,1>>>();
+    
+    // printf("counter: %d\n", counter);
     return bit_X_out;
 }
 
