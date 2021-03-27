@@ -1,4 +1,4 @@
-Cluster-GCN: An Efficient Algorithm for Training Deep and Large Graph Convolutional Networks
+QGTC: Accelerating Quantized GNN via GPU Tensor Core
 ============
 
 

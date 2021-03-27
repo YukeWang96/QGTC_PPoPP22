@@ -1,0 +1,7 @@
+QGTC_device.cu
+QGTC_host.cpp
+setup.py
+QGTC.egg-info/PKG-INFO
+QGTC.egg-info/SOURCES.txt
+QGTC.egg-info/dependency_links.txt
+QGTC.egg-info/top_level.txt

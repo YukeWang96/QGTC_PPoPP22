@@ -183,9 +183,9 @@ def main(args):
     bw_X = 32
     bw_W = bw_X
 
-    bit_W1 = QGTC.bit_qnt(W_1.cuda(), bw_W, True, False)
-    bit_W2 = QGTC.bit_qnt(W_2.cuda(), bw_W, True, False)
-    bit_W3 = QGTC.bit_qnt(W_3.cuda(), bw_W, True, True)
+    bit_W1 = QGTC.val2bit(W_1.cuda(), bw_W, True, False)
+    bit_W2 = QGTC.val2bit(W_2.cuda(), bw_W, True, False)
+    bit_W3 = QGTC.val2bit(W_3.cuda(), bw_W, True, True)
 
     layer1_t = 0
     layer2_t = 0
@@ -253,44 +253,44 @@ def main(args):
                         # print("A.size: {}".format(A.size()))
                         # print("X.size: {}".format(X.size()))
 
-                        bit_A = QGTC.bit_qnt(A, bw_A, False, False)
-                        bit_X = QGTC.bit_qnt(X, bw_X, True, False)
-                        bit_output = QGTC.mm_v1(bit_A, bit_X, A.size(0), A.size(0), X.size(1), bw_A, bw_X, bw_X)
-                        bit_output_1 = QGTC.mm_v1(bit_output, bit_W1, A.size(0), X.size(1), W_1.size(1), bw_X, bw_W, bw_X)
+                        bit_A = QGTC.val2bit(A, bw_A, False, False)
+                        bit_X = QGTC.val2bit(X, bw_X, True, False)
+                        bit_output = QGTC.bitMM2Bit(bit_A, bit_X, A.size(0), A.size(0), X.size(1), bw_A, bw_X, bw_X)
+                        bit_output_1 = QGTC.bitMM2Bit(bit_output, bit_W1, A.size(0), X.size(1), W_1.size(1), bw_X, bw_W, bw_X)
                         # torch.cuda.synchronize()
                         # layer1_t += time.perf_counter() - t
 
                         # 2-layer  [hidden, hidden]
                         # torch.cuda.synchronize()
                         # t = time.perf_counter()
-                        bit_output_2 = QGTC.mm_v1(bit_A, bit_output_1, A.size(0), A.size(0), W_1.size(1), bw_A, bw_X, bw_X)
-                        bit_output_3 = QGTC.mm_v1(bit_output_2, bit_W2, A.size(0), W_1.size(1), W_2.size(1), bw_X, bw_W, bw_X)
+                        bit_output_2 = QGTC.bitMM2Bit(bit_A, bit_output_1, A.size(0), A.size(0), W_1.size(1), bw_A, bw_X, bw_X)
+                        bit_output_3 = QGTC.bitMM2Bit(bit_output_2, bit_W2, A.size(0), W_1.size(1), W_2.size(1), bw_X, bw_W, bw_X)
                         # torch.cuda.synchronize()
                         # layer2_t += time.perf_counter() - t
 
                         # 3-layer  [hidden, output]
                         # torch.cuda.synchronize()
                         # t = time.perf_counter()
-                        bit_output_4 = QGTC.mm_v1(bit_A, bit_output_3, A.size(0), A.size(0), W_2.size(1), bw_A, bw_X, bw_X)
-                        float_output = QGTC.mm_v2(bit_output_4, bit_W3, A.size(0), W_2.size(1), W_3.size(1), bw_X, bw_W)
+                        bit_output_4 = QGTC.bitMM2Bit(bit_A, bit_output_3, A.size(0), A.size(0), W_2.size(1), bw_A, bw_X, bw_X)
+                        float_output = QGTC.bitMM2Int(bit_output_4, bit_W3, A.size(0), W_2.size(1), W_3.size(1), bw_X, bw_W)
                         # torch.cuda.synchronize()
                         # layer3_t += time.perf_counter() - t
                     
                     else: # GCN
-                        bit_A = QGTC.bit_qnt(A, bw_A, False, False)
-                        bit_X = QGTC.bit_qnt(X, bw_X, True, False)
+                        bit_A = QGTC.val2bit(A, bw_A, False, False)
+                        bit_X = QGTC.val2bit(X, bw_X, True, False)
 
                         # 1-layer [in_feat, hidden]
-                        bit_output = QGTC.mm_v1(bit_X, bit_W1, X.size(0), X.size(1), W_1.size(1), bw_X, bw_W, bw_X)
-                        bit_output_1 = QGTC.mm_v1(bit_A, bit_output, A.size(0), A.size(1), W_1.size(1), bw_A, bw_X, bw_X)
+                        bit_output = QGTC.bitMM2Bit(bit_X, bit_W1, X.size(0), X.size(1), W_1.size(1), bw_X, bw_W, bw_X)
+                        bit_output_1 = QGTC.bitMM2Bit(bit_A, bit_output, A.size(0), A.size(1), W_1.size(1), bw_A, bw_X, bw_X)
 
                         # 2-layer  [hidden, hidden]
-                        bit_output_2 = QGTC.mm_v1(bit_output_1, bit_W2, A.size(0), W_1.size(1), W_2.size(1), bw_X, bw_W, bw_X)
-                        bit_output_3 = QGTC.mm_v1(bit_A, bit_output_2, A.size(0), A.size(0), W_2.size(1), bw_A, bw_X, bw_X)
+                        bit_output_2 = QGTC.bitMM2Bit(bit_output_1, bit_W2, A.size(0), W_1.size(1), W_2.size(1), bw_X, bw_W, bw_X)
+                        bit_output_3 = QGTC.bitMM2Bit(bit_A, bit_output_2, A.size(0), A.size(0), W_2.size(1), bw_A, bw_X, bw_X)
 
                         # 3-layer  [hidden, output]
-                        bit_output_4 = QGTC.mm_v1(bit_output_3, bit_W3, A.size(0), W_2.size(1), W_3.size(1), bw_X, bw_W, bw_X)
-                        float_output = QGTC.mm_v2(bit_A, bit_output_4, A.size(0), A.size(0), W_2.size(1), bw_A, bw_X)
+                        bit_output_4 = QGTC.bitMM2Bit(bit_output_3, bit_W3, A.size(0), W_2.size(1), W_3.size(1), bw_X, bw_W, bw_X)
+                        float_output = QGTC.bitMM2Int(bit_A, bit_output_4, A.size(0), A.size(0), W_2.size(1), bw_A, bw_X)
 
                     del bit_A
                     del bit_X

@@ -14,13 +14,13 @@ class Aggregation_Qnt(torch.autograd.Function):
         assert input+hidden+output == 1
 
         if input or hidden:
-            bit_out = QGTC.mm_v1(bit_X, bit_W, act_bit, w_bit)
-            bit_out = QGTC.mm_v1(bit_A, bit_out, 1, act_bit)
+            bit_out = QGTC.bitMM2Bit(bit_X, bit_W, act_bit, w_bit)
+            bit_out = QGTC.bitMM2Bit(bit_A, bit_out, 1, act_bit)
             return bit_out
         
         if output:
-            bit_out = QGTC.mm_v1(bit_X, bit_W, act_bit, w_bit)
-            out = QGTC.mm_v2(bit_A, bit_out, 1, act_bit)
+            bit_out = QGTC.bitMM2Bit(bit_X, bit_W, act_bit, w_bit)
+            out = QGTC.bitMM2Int(bit_A, bit_out, 1, act_bit)
             return out
 
     @staticmethod
@@ -56,14 +56,14 @@ class GCNConv_Qnt(torch.nn.Module):
         self.bit_A = None
 
     def weight_Qnt(self):
-        self.bit_W_in = QGTC.bit_qnt(self.W_in, self.w_bit)
-        self.bit_W_out = QGTC.bit_qnt(self.W_out, self.w_bit)
+        self.bit_W_in = QGTC.val2bit(self.W_in, self.w_bit)
+        self.bit_W_out = QGTC.val2bit(self.W_out, self.w_bit)
 
     def A_Qnt(self, A):
-        return QGTC.bit_qnt(A, 1)
+        return QGTC.val2bit(A, 1)
     
     def X_Qnt(self, X):
-        return QGTC.bit_qnt(X, self.act_bit)
+        return QGTC.val2bit(X, self.act_bit)
 
     def forward(self, A, X):
         '''
