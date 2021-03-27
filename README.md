@@ -1,29 +1,20 @@
 Cluster-GCN: An Efficient Algorithm for Training Deep and Large Graph Convolutional Networks
 ============
-- Paper link: [Cluster-GCN: An Efficient Algorithm for Training Deep and Large Graph Convolutional Networks](https://arxiv.org/abs/1905.07953)
-- Author's code repo: [https://github.com/google-research/google-research/blob/master/cluster_gcn/](https://github.com/google-research/google-research/blob/master/cluster_gcn/). 
 
-This repo reproduce the reported speed and performance maximally on Reddit and PPI. However, the diag enhancement is not covered, as the GraphSage aggregator already achieves satisfying F1 score.
 
 Dependencies
 ------------
-- Python 3.7+(for string formatting features)
-- PyTorch 1.5.0+
-- sklearn
-
-
-## Run Experiments.
-* For reddit data, you may run the following scripts
-
+- Python 3.7+.
+- PyTorch 1.5.0+.
+- Deep Graph Library.
+- Install QGTC. Go to `QGTC_kernel/`, then run 
 ```
-./run_reddit.sh
+TORCH_CUDA_ARCH_LIST="8.6" python setup.py  clean --all install 
 ```
-You should be able to see the final test F1 is around `Test F1-mic0.9612, Test F1-mac0.9399`.
-Note that the first run of provided script is considerably slow than reported in the paper, which is presumably due to dataloader used. After caching the partition allocation, the overall speed would be in a normal scale. On a 1080Ti and Intel(R) Xeon(R) Bronze 3104 CPU @ 1.70GHz machine I am able to train it within 45s. After the first epoch the F1-mic on Validation dataset should be around `0.93`.
 
-* For PPI data, you may run the following scripts
-
-```
-./run_ppi.sh
-```
-You should be able to see the final test F1 is around `Test F1-mic0.9924, Test F1-mac0.9917`. The training finished in 10 mins.
+Running Experiments
+------------
++ `./bench.py` for running `proteins`, `artist` and `soc-Blogcatalog` dataset.
++ `./run_ppi.sh` for running `PPI` dataset.
++ `./run_ogb.sh` for running `ogbn-arxiv` and `ogbn-products` dataset.
++ `./run_all` for running all the above three experiments together by following the order of `bench.py`, `run_ppi.sh` and `run_ogb.sh`

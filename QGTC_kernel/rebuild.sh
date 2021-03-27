@@ -1,2 +1,2 @@
 rm -rf build dist QGTC.egg-info
-python setup.py install
+python setup.py clean --all install
