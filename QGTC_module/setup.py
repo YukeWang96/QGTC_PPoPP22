@@ -9,7 +9,6 @@ setup(
             'QGTC_host.cpp',
             'QGTC_device.cu'
             ],
-            extra_compile_args={'cxx': ['-O3'], 'nvcc': ['-arch=sm_86']}
          ) 
     ],
     cmdclass={

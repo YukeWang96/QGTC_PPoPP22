@@ -14,20 +14,23 @@ __device__ unsigned long long int counter = 0; // initialise before running kern
 __device__ unsigned long long int counter_global = 0; // initialise before running kernel
 
 
-__global__ void print_counter(){
+__global__ 
+void print_counter(){
     printf("counter: %d\n", counter);
     printf("counter_global: %d\n", counter_global);
 }
 
 // * quantization of a single float value
-__device__ __inline__ uin32 quantize(float val, int bitwidth, const int max_val, const int min_val){
+__device__ __inline__ 
+int quantize(float val, int bitwidth, const int max_val, const int min_val){
     if (val > max_val) val = max_val - 1;
     if (val < min_val) val = min_val + 1;
-    uin32 ans = (val - min_val) * (1 << bitwidth) / (max_val - min_val); 
+    int ans = (val - min_val) * (1 << bitwidth) / (max_val - min_val); 
     return ans;
 }
 
-__inline__ __device__ float clip(float x, float lb, float ub){
+__inline__ __device__ 
+float clip(float x, float lb, float ub){
     if (x < lb) return lb+1;
     if (x > ub) return ub-1;
     return x;
@@ -36,7 +39,8 @@ __inline__ __device__ float clip(float x, float lb, float ub){
 //
 // input_gpu (float 32-bit) -->  input_qnt_gpu (uint 32-bit)
 //
-__global__ void Quantize_val(
+__global__ 
+void Quantize_val(
     int* input_qnt_gpu, 
     float* __restrict__ input_gpu, 
     const int num_elements, 
@@ -59,12 +63,11 @@ __global__ void Quantize_val(
     }
 }  
 
-
-
 // packing weight for the hidden FC layer. 
 // STEP128(A_height)*PAD128(A_width)
-__global__ void PackFcWeight128(int* B, const int* __restrict__ A,
-                                const int A_height, const int A_width, const int w_bit)
+__global__ 
+void PackFcWeight128(int* B, const int* __restrict__ A,
+                    const int A_height, const int A_width, const int w_bit)
 {
     GET_LANEID;
     GET_WARPID;
@@ -95,9 +98,11 @@ __global__ void PackFcWeight128(int* B, const int* __restrict__ A,
     }
 }
 
+
 // packing weight for the output FC layer. STEP128(A_height)*PAD8(A_width)
-__global__ void PackFcWeight128_OUTPUT(int* B, const int* __restrict__ A,
-                                const int A_height, const int A_width, const int w_bit)
+__global__ 
+void PackFcWeight128_OUTPUT(int* B, const int* __restrict__ A,
+                            const int A_height, const int A_width, const int w_bit)
 {
     GET_LANEID;
     GET_WARPID;
@@ -120,7 +125,116 @@ __global__ void PackFcWeight128_OUTPUT(int* B, const int* __restrict__ A,
             float f0 = ( (bx*128+lx*32+laneid<A_height) && (by*8+ly<A_width) )? A[bIdx*offset + (bx*128+lx*32+laneid)*A_width+by*8+ly]:-1.0f;
             unsigned r0 = __brev(__ballot_sync(0xFFFFFFFF, f0 > 0));
             if (laneid==0){
-                B[bIdx*offset_opt + (by*8+ly)*gdx*4+ bx*4+lx] = r0;
+                // format for new kernel.
+                // x-axis (by*8+ly)*gdx*4 --> w_bit*(by*8+ly)*gdx*4 + bIdx*gdx*4
+                // y-axis bx*4+lx
+                // B[bIdx*offset_opt + (by*8+ly)*gdx*4+ bx*4+lx] = r0;
+                int pos = w_bit*(by*8+ly)*gdx*4 + bIdx*gdx*4 + bx*4+lx;
+                B[pos] = r0;
+            }
+        }
+    }
+}
+
+
+
+// from compressed bit feature map (bit, M/32, N) --> (M, N) in uin32
+__global__ 
+void UnPackFcWeight128(int* B, const int* __restrict__ A, 
+                        const int A_height, const int A_width, const int bitwidth)
+{
+    GET_LANEID;
+    GET_WARPID;
+
+    const int gdx = STEP128(A_height);
+    const int gdy = STEP8(A_width);
+
+    const int lx = (warpid & 0x3); // warp x_index vertical
+    const int ly = (warpid >> 2);  // warp y_index horizontal
+
+    const int offset_input = STEP128(A_height)*PAD128(A_width)*128/32;   // offset of input.
+
+    for (int bid=blockIdx.x; bid<gdx*gdy; bid+=gridDim.x)
+    {
+        const int bx = bid % gdx;
+        const int by = bid / gdx;
+
+        for (int bIdx = 0; bIdx < bitwidth; bIdx++){
+            unsigned r0 = A[bIdx*offset_input + (by*8+ly)*gdx*4 + bx*4 + lx];
+            // unsigned r0 = A[(bx*8+lx)*gdy*4+by*4+ly];
+            if ((bx*128+lx*32+laneid<A_height) && (by*8+ly<A_width)){
+                // B[bIdx * offset + (bx*8+lx)*A_width+by*128+ly*32+laneid] = 2*(int)((r0>>(31-laneid)) & 0x1) - 1; 
+                B[(bx*128+lx*32+laneid)*A_width + by*8 + ly] += (int)((r0>>(31-laneid)) & 0x1) << bIdx;
+            }
+        }
+    }
+}
+
+
+// from compressed bit feature map (bit, M/32, N) --> (M, N) in uin32
+__global__ 
+void UnPackFcWeight128_OUTPUT(int* B, const int* __restrict__ A,
+                                const int A_height, const int A_width, const int bitwidth)
+{
+    GET_LANEID;
+    GET_WARPID;
+
+    const int gdx = STEP128(A_height);
+    const int gdy = STEP8(A_width);
+
+    const int lx = (warpid & 0x3); // warp x_index vertical
+    const int ly = (warpid >> 2);  // warp y_index horizontal
+
+    const int offset_input = STEP128(A_height)*PAD8(A_width)*128/32;   // offset of input.
+
+    for (int bid=blockIdx.x; bid<gdx*gdy; bid+=gridDim.x)
+    {
+        const int bx = bid % gdx;
+        const int by = bid / gdx;
+
+        for (int bIdx = 0; bIdx < bitwidth; bIdx++){
+            unsigned r0 = A[bIdx*offset_input + (by*8+ly)*gdx*4 + bx*4 + lx];
+            // unsigned r0 = A[(bx*8+lx)*gdy*4+by*4+ly];
+            if ((bx*128+lx*32+laneid<A_height) && (by*8+ly<A_width)){
+                // B[bIdx * offset + (bx*8+lx)*A_width+by*128+ly*32+laneid] = 2*(int)((r0>>(31-laneid)) & 0x1) - 1; 
+                B[(bx*128+lx*32+laneid)*A_width + by*8 + ly] += (int)((r0>>(31-laneid)) & 0x1) << bIdx;
+            }
+        }
+    }
+}
+
+// from compressed bit feature map (bit, M, N/32) --> (M, N) in uin32
+__global__ 
+void UnPackFcOutput128(int* B, const int* __restrict__ A, 
+                        const int A_height, const int A_width, const int bitwidth)
+{
+    GET_LANEID;
+    GET_WARPID;
+
+    const int gdx = STEP8(A_height);
+    const int gdy = STEP128(A_width);
+    const int lx = (warpid >> 2);
+    const int ly = (warpid & 0x3);
+
+    const int offset_input = PAD8(A_height)*STEP128(A_width)*128/32;   // offset of input.
+
+    for (int bid=blockIdx.x; bid<gdx*gdy; bid+=gridDim.x)
+    {
+        const int bx = bid / gdy;
+        const int by = bid % gdy;
+
+        for (int bIdx = 0; bIdx < bitwidth; bIdx++){
+            unsigned r0 = A[bIdx*offset_input + (bx*8+lx)*gdy*4 + by*4 + ly];
+            // bitIdx * offset_opt + (bx*8+lx)*gdy*4+by*4+ly
+            // unsigned r0 = A[(bx*8+lx)*gdy*4+by*4+ly];
+
+            // (by*128+ly*32+laneid<(p->input_width)) 
+            //         &&   (bx*8+lx<(p->input_height))
+            if ((bx*8+lx<A_height) && (by*128+ly*32+laneid<A_width)){
+                // B[bIdx * offset + (bx*8+lx)*A_width+by*128+ly*32+laneid] = 2*(int)((r0>>(31-laneid)) & 0x1) - 1; 
+                B[(bx*8+lx)*A_width+by*128+ly*32+laneid] += (int)((r0>>(31-laneid)) & 0x1) << bIdx;
+                // printf("r0: %u\n", r0);
+                // printf("B[bIdx * offset + (bx*8+lx)*A_width+by*128+ly*32+laneid]: %u\n", B[bIdx * offset + (bx*8+lx)*A_width+by*128+ly*32+laneid]);
             }
         }
     }
@@ -128,13 +242,9 @@ __global__ void PackFcWeight128_OUTPUT(int* B, const int* __restrict__ A,
 
 // compress the input from 32-bit to 1-bit
 // store in 1-bit with packed 32-bit unsigned int format.
-__global__  void QGTC_layer_input(
-    int* bit_T_out, 
-    int* __restrict__ T_in, 
-    const int height,
-    const int width,
-    const int bitWidth
-)
+__global__  
+void QGTC_layer_input(int* bit_T_out,  int* __restrict__ T_in, 
+                    const int height, const int width, const int bitWidth)
 {
     GET_LANEID;
     GET_WARPID;
@@ -180,7 +290,8 @@ __global__  void QGTC_layer_input(
 }
 
 // (bit_X, bit_W) --> (int32 bit_X_out)
-__global__ void QGTC_layer_hidden(
+__global__ 
+void QGTC_layer_hidden(
     int* bit_X_out, 
     int* __restrict__ bit_X, 
     int* __restrict__ bit_W,
@@ -329,7 +440,8 @@ __global__ void QGTC_layer_hidden(
 //
 // (bit_X, bit_W) --> (float X_out)
 //
-__global__ void QGTC_layer_output(
+__global__ 
+void QGTC_layer_output(
     float* X_out, 
     int* __restrict__ bit_X, 
     int* __restrict__ bit_W,

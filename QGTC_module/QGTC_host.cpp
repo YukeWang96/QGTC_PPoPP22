@@ -7,7 +7,6 @@
 // #include <thrust/execution_policy.h>
 // #define min(x, y) (((x) < (y))? (x) : (y))
 
-
 torch::Tensor val2bit_cuda(
     torch::Tensor input,
     const int nbits,
@@ -18,10 +17,11 @@ torch::Tensor val2bit_cuda(
 torch::Tensor bit2val_cuda(
     torch::Tensor input,
     const int nbits,
+    const int height,
+    const int width,
     const bool col_major=false,
     const bool output_layer=false
 );
-
 
 //
 // bit_X1 and bit_x2 --> bit output.
@@ -113,12 +113,14 @@ torch::Tensor val2bit(
 torch::Tensor bit2val(
     torch::Tensor input,
     const int nbits,
+    const int height,
+    const int width,
     const bool col_major=false,
     const bool output_layer=false
 ){
   CHECK_INPUT(input);
 
-  return bit2val_cuda(input, nbits, col_major, output_layer); 
+  return bit2val_cuda(input, nbits, height, width, col_major, output_layer); 
 }
 
 // Pytorch Binding.
