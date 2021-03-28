@@ -7,8 +7,7 @@
 // #include <thrust/execution_policy.h>
 // #define min(x, y) (((x) < (y))? (x) : (y))
 
-// GPU kernel for quantization
-// and bit decomposition
+
 torch::Tensor val2bit_cuda(
     torch::Tensor input,
     const int nbits,
@@ -16,10 +15,7 @@ torch::Tensor val2bit_cuda(
     const bool output_layer=false
 );
 
-
-// GPU kernel for de-quantization
-// and bit decomposition
-torch::Tensor val2bit_cuda(
+torch::Tensor bit2val_cuda(
     torch::Tensor input,
     const int nbits,
     const bool col_major=false,
