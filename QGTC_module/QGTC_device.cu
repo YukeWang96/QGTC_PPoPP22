@@ -9,8 +9,6 @@
 #include "utility.h"
 #include "kernel.h"
 
-#define numThreads 1024     // for bit-encoding and decoding
-
 using namespace nvcuda;
 
 void print_IntTensor_cpu(torch::Tensor input){
@@ -221,25 +219,21 @@ torch::Tensor bitMM2Bit_cuda(
 )
 {
     // allocate the output Tensor on GPU.
-    auto bit_X_out = torch::zeros({output_bit*X1_height, STEP32(PAD128(X2_width))}, torch::kInt32).to(torch::kCUDA);
+    auto bit_X_out = torch::zeros({output_bit*PAD8(X1_height), STEP128(X2_width)*4}, torch::kInt32).to(torch::kCUDA);
     
     int dev = 0;
-    // int numThreads = 128;
     cudaDeviceProp deviceProp;
     int numBlocksPerSm;
-    // int shared_memory = 64*sizeof(int)*32;
-    // int shared_memory = 256*sizeof(int)*32;
-    int shared_memory = 64 * 1e3; // 64KB
+    int shared_memory = 64*1e3; // 64KB
 
     cudaGetDeviceProperties(&deviceProp, dev);
     cudaFuncSetAttribute(QGTC_layer_hidden, cudaFuncAttributeMaxDynamicSharedMemorySize, shared_memory);
-    cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, QGTC_layer_hidden, numThreads, shared_memory);
+    cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, QGTC_layer_hidden, numThreads_1, shared_memory);
 
-    QGTC_layer_hidden<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads, shared_memory>>>(
+    QGTC_layer_hidden<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads_1, shared_memory>>>(
         bit_X_out.data<int>(), bit_X1.data<int>(), bit_X2.data<int>(),
-        X1_height, X1_width, X2_width, bit1, bit2);
+        X1_height, X1_width, X2_width, bit1, bit2, output_bit);
 
-    // check for error
     cudaError_t error = cudaGetLastError();
     if(error != cudaSuccess){
         printf("CUDA error at bitMM2Bit_cuda: %s\n", cudaGetErrorString(error));
@@ -268,8 +262,7 @@ torch::Tensor bitMM2Int_cuda(
     // allocate the output Tensor on GPU.
     // auto options = torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA, 0);
     // printf("X1_height: %d, X2_width: %d\n", X1_height, X2_width);
-
-    torch::Tensor float_X_out = torch::zeros({X1_height, PAD8(X2_width)}).to(torch::kCUDA);
+    torch::Tensor float_X_out = torch::zeros({X1_height, X2_width}).to(torch::kCUDA);
     // int out_height = float_X_out.size(0);
     // int out_width = float_X_out.size(1);
     // printf("out_height: %d\n", out_height);
@@ -277,17 +270,15 @@ torch::Tensor bitMM2Int_cuda(
     // exit(-1);
 
     int dev = 0;
-    // int numThreads = 128;
     cudaDeviceProp deviceProp;
     int numBlocksPerSm;
-    int shared_memory = 256*sizeof(int)*32;
+    int shared_memory = 64*1e3; // 64KB
 
     cudaGetDeviceProperties(&deviceProp, dev);
     cudaFuncSetAttribute(QGTC_layer_output, cudaFuncAttributeMaxDynamicSharedMemorySize, shared_memory);
-    cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, QGTC_layer_output, numThreads, shared_memory);
+    cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, QGTC_layer_output, numThreads_1, shared_memory);
 
-    // printf("QGTC_layer_output\n");
-    QGTC_layer_output<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads, shared_memory>>>(
+    QGTC_layer_output<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads_1, shared_memory>>>(
         float_X_out.data<float>(), bit_X1.data<int>(), bit_X2.data<int>(),
         X1_height, X1_width, X2_width, bit1, bit2
     );

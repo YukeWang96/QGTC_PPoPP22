@@ -63,7 +63,9 @@ torch::Tensor bitMM2Bit(
   CHECK_INPUT(bit_X1);
   CHECK_INPUT(bit_X2);
 
-  return bitMM2Bit_cuda(bit_X1, bit_X2, X1_height, X1_width, X2_width, bit1, bit2, output_bit);
+  return bitMM2Bit_cuda(bit_X1, bit_X2, \
+                        X1_height, X1_width, X2_width, \
+                        bit1, bit2, output_bit);
 }
 
 //
@@ -81,7 +83,9 @@ torch::Tensor bitMM2Int(
   CHECK_INPUT(bit_X1);
   CHECK_INPUT(bit_X2);
 
-  return bitMM2Int_cuda(bit_X1, bit_X2, X1_height, X1_width, X2_width, bit1, bit2);
+  return bitMM2Int_cuda(bit_X1, bit_X2, \
+                        X1_height, X1_width, X2_width, \
+                        bit1, bit2);
 }
 
 //

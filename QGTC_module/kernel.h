@@ -5,8 +5,8 @@
 #include <mma.h>
 #include <cuda_runtime.h>
 
-// #define base
 #include "utility.h"
+#include "config.h"
 
 using namespace nvcuda;
 
@@ -21,7 +21,7 @@ void print_counter(){
 }
 
 // * quantization of a single float value
-__device__ __inline__ 
+__inline__  __device__ 
 int quantize(float val, int bitwidth, const int max_val, const int min_val){
     if (val > max_val) val = max_val - 1;
     if (val < min_val) val = min_val + 1;
@@ -242,7 +242,8 @@ void QGTC_layer_hidden(
     const int X_width,
     const int W_width,
     const int act_bit,
-    const int w_bit
+    const int w_bit,
+    const int out_bit
 )
 {
     using namespace nvcuda;
@@ -259,14 +260,14 @@ void QGTC_layer_hidden(
     // M x N x K
     extern __shared__ int Cs[];
     const int gdx = STEP8(X_height);     // vertical     --> M
-    const int gdy = STEP8(W_width);     // horizontal   --> N
+    const int gdy = STEP8(W_width);      // horizontal   --> N
     const int gdk = STEP128(X_width);    // iterations   --> K
-    const int gdm = STEP128(W_width);   // output width ---> N
+    const int gdm = STEP128(W_width);    // output width --> N
 
     // each grid with gridim.x blocks, 
     // each block with 32 warps.
     // each warp processes each 8x8 tile
-    for (int bid=blockIdx.x*32+warpid; bid<gdx*gdy; bid+=gridDim.x*32)
+    for (int bid=blockIdx.x*warpPerBlock+warpid; bid<gdx*gdy; bid+=gridDim.x*warpPerBlock)
     {
         wmma::fragment<wmma::matrix_a, 8, 8, 128, precision::b1, wmma::row_major> a_frag;
         wmma::fragment<wmma::matrix_b, 8, 8, 128, precision::b1, wmma::col_major> b_frag;
@@ -326,25 +327,24 @@ void QGTC_layer_hidden(
             // Accumulation.
             #pragma unroll
             for (int t = 0; t < tmp_frag.num_elements; t++) {
-                c_frag.x[t] += tmp_frag.x[t]<<b_opt;
+                c_frag.x[t] += tmp_frag.x[t] << b_opt;
             }
         }
         // printf("counter: %d\n", counter);
         // printf("counter_global: %d\n", counter_global);
 
-
         // quantization at the fragment into act_bit (stored in uint32).
         #pragma unroll
         for (int t = 0; t < c_frag.num_elements; t++) {
             // printf("%u \n", c_frag.x[t]);
-            c_frag.x[t] = quantize(c_frag.x[t], act_bit, 1<<act_bit, 0);
+            c_frag.x[t] = quantize(c_frag.x[t], out_bit, 1<<out_bit, 0);
         }
 
         // finished one output tile and store to shared memory
         store_matrix_sync(&Cs[warpid*64], c_frag, 8, wmma::mem_row_major);
 
 
-        for (int bIdx = 0; bIdx < act_bit; bIdx++){
+        for (int bIdx = 0; bIdx < out_bit; bIdx++){
             
             // change to 8-bit address
             uin8* Cb = (uin8*)(&(bit_X_out[bIdx*opt_offset])); 
@@ -411,7 +411,7 @@ void QGTC_layer_output(
 
     // printf("act_bit: %d, w_bit: %d, act_offset: %d, w_offset: %d, gdx: %d, gdy: %d, gdk: %d\n", act_bit, w_bit, act_offset, w_offset, gdx, gdy, gdk);
 
-    for (int bid=blockIdx.x*32+warpid; bid<gdx*gdy; bid+=gridDim.x*32)
+    for (int bid=blockIdx.x*warpPerBlock+warpid; bid<gdx*gdy; bid+=gridDim.x*warpPerBlock)
     {
         wmma::fragment<wmma::matrix_a, 8, 8, 128, precision::b1, wmma::row_major> a_frag;
         wmma::fragment<wmma::matrix_b, 8, 8, 128, precision::b1, wmma::col_major> b_frag;
@@ -497,7 +497,7 @@ void QGTC_layer_output(
                     }
                 }
             }
-        } //end
+        } //end if laneid < 8
     }
 }
 #endif
