@@ -1,17 +1,10 @@
 #include <torch/extension.h>
-// #include <vector>
-// #include <string.h>
-// #include <cstdlib>
-// #include <map>
-// #include <thrust/sort.h>
-// #include <thrust/execution_policy.h>
-// #define min(x, y) (((x) < (y))? (x) : (y))
 
 torch::Tensor val2bit_cuda(
     torch::Tensor input,
     const int nbits,
     const bool col_major=false,
-    const bool output_layer=false
+    const bool output_layer=false // True: PAD8(width), False: PAD128(width)
 );
 
 torch::Tensor bit2val_cuda(

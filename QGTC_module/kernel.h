@@ -57,8 +57,8 @@ void Quantize_val(
         * Actual_val - min_val  max_val - min_val
         */
         float input_val = clip(input_gpu[tid], 0, 1<<bitwidth);
-        float qnt_float = (input_val - min_v) * (1 << bitwidth) * 1.0f / (max_v - min_v);
-        input_qnt_gpu[tid]  = qnt_float;
+        // float qnt_float = (input_val - min_v) * (1 << bitwidth) * 1.0f / (max_v - min_v);
+        input_qnt_gpu[tid]  = __float2int_rn(input_val);
         // printf("qnt_float: %f, input_qnt_gpu: %d \n", qnt_float, input_qnt_gpu[tid]);
     }
 }  
@@ -98,46 +98,6 @@ void PackFcWeight128(int* B, const int* __restrict__ A,
     }
 }
 
-
-// packing weight for the output FC layer. STEP128(A_height)*PAD8(A_width)
-__global__ 
-void PackFcWeight128_OUTPUT(int* B, const int* __restrict__ A,
-                            const int A_height, const int A_width, const int w_bit)
-{
-    GET_LANEID;
-    GET_WARPID;
-
-    const int gdx = STEP128(A_height);
-    const int gdy = STEP8(A_width);
-
-    const int lx = (warpid & 0x3); // warp x_index vertically
-    const int ly = (warpid >> 2);  // warp y_index hozerionsally.
-
-    const int offset = A_height*A_width;
-    const int offset_opt = STEP128(A_height)*PAD8(A_width)*128/32;
-
-    for (int bid=blockIdx.x; bid<gdx*gdy; bid+=gridDim.x)
-    {
-        const int bx = bid % gdx;
-        const int by = bid / gdx;
-        
-        for (int bIdx = 0; bIdx < w_bit; bIdx++){
-            float f0 = ( (bx*128+lx*32+laneid<A_height) && (by*8+ly<A_width) )? A[bIdx*offset + (bx*128+lx*32+laneid)*A_width+by*8+ly]:-1.0f;
-            unsigned r0 = __brev(__ballot_sync(0xFFFFFFFF, f0 > 0));
-            if (laneid==0){
-                // format for new kernel.
-                // x-axis (by*8+ly)*gdx*4 --> w_bit*(by*8+ly)*gdx*4 + bIdx*gdx*4
-                // y-axis bx*4+lx
-                // B[bIdx*offset_opt + (by*8+ly)*gdx*4+ bx*4+lx] = r0;
-                int pos = w_bit*(by*8+ly)*gdx*4 + bIdx*gdx*4 + bx*4+lx;
-                B[pos] = r0;
-            }
-        }
-    }
-}
-
-
-
 // from compressed bit feature map (bit, M/32, N) --> (M, N) in uin32
 __global__ 
 void UnPackFcWeight128(int* B, const int* __restrict__ A, 
@@ -161,49 +121,46 @@ void UnPackFcWeight128(int* B, const int* __restrict__ A,
 
         for (int bIdx = 0; bIdx < bitwidth; bIdx++){
             unsigned r0 = A[bIdx*offset_input + (by*8+ly)*gdx*4 + bx*4 + lx];
-            // unsigned r0 = A[(bx*8+lx)*gdy*4+by*4+ly];
+
             if ((bx*128+lx*32+laneid<A_height) && (by*8+ly<A_width)){
-                // B[bIdx * offset + (bx*8+lx)*A_width+by*128+ly*32+laneid] = 2*(int)((r0>>(31-laneid)) & 0x1) - 1; 
                 B[(bx*128+lx*32+laneid)*A_width + by*8 + ly] += (int)((r0>>(31-laneid)) & 0x1) << bIdx;
             }
         }
     }
 }
 
+// // from compressed bit feature map (bit, STEP128(M)*4, N) --> (M, N) in uin32
+// __global__ 
+// void UnPackFcWeight128_OUTPUT(int* B, const int* __restrict__ A,
+//                                 const int A_height, const int A_width, const int bitwidth)
+// {
+//     GET_LANEID;
+//     GET_WARPID;
 
-// from compressed bit feature map (bit, M/32, N) --> (M, N) in uin32
-__global__ 
-void UnPackFcWeight128_OUTPUT(int* B, const int* __restrict__ A,
-                                const int A_height, const int A_width, const int bitwidth)
-{
-    GET_LANEID;
-    GET_WARPID;
+//     const int gdx = STEP128(A_height);
+//     const int gdy = STEP8(A_width);
 
-    const int gdx = STEP128(A_height);
-    const int gdy = STEP8(A_width);
+//     const int lx = (warpid & 0x3); // warp x_index vertical: last 2-bit.
+//     const int ly = (warpid >> 2);  // warp y_index horizontal: high 3-bit.
 
-    const int lx = (warpid & 0x3); // warp x_index vertical
-    const int ly = (warpid >> 2);  // warp y_index horizontal
+//     const int offset_input = STEP128(A_height)*PAD8(A_width)*128/32;   // offset of input.
 
-    const int offset_input = STEP128(A_height)*PAD8(A_width)*128/32;   // offset of input.
+//     for (int bid=blockIdx.x; bid<gdx*gdy; bid+=gridDim.x)
+//     {
+//         const int bx = bid % gdx;
+//         const int by = bid / gdx;
 
-    for (int bid=blockIdx.x; bid<gdx*gdy; bid+=gridDim.x)
-    {
-        const int bx = bid % gdx;
-        const int by = bid / gdx;
+//         for (int bIdx = 0; bIdx < bitwidth; bIdx++){
+//             unsigned r0 = A[bIdx*offset_input + (by*8+ly)*gdx*4 + bx*4 + lx];
 
-        for (int bIdx = 0; bIdx < bitwidth; bIdx++){
-            unsigned r0 = A[bIdx*offset_input + (by*8+ly)*gdx*4 + bx*4 + lx];
-            // unsigned r0 = A[(bx*8+lx)*gdy*4+by*4+ly];
-            if ((bx*128+lx*32+laneid<A_height) && (by*8+ly<A_width)){
-                // B[bIdx * offset + (bx*8+lx)*A_width+by*128+ly*32+laneid] = 2*(int)((r0>>(31-laneid)) & 0x1) - 1; 
-                B[(bx*128+lx*32+laneid)*A_width + by*8 + ly] += (int)((r0>>(31-laneid)) & 0x1) << bIdx;
-            }
-        }
-    }
-}
+//             if ((bx*128+lx*32+laneid<A_height) && (by*8+ly<A_width)){
+//                 B[(bx*128+lx*32+laneid)*A_width + by*8 + ly] += (int)((r0>>(31-laneid)) & 0x1) << bIdx;
+//             }
+//         }
+//     }
+// }
 
-// from compressed bit feature map (bit, M, N/32) --> (M, N) in uin32
+// from compressed bit feature map (bit, M, STEP128(N)*4) --> (M, N) in uin32
 __global__ 
 void UnPackFcOutput128(int* B, const int* __restrict__ A, 
                         const int A_height, const int A_width, const int bitwidth)
@@ -225,23 +182,16 @@ void UnPackFcOutput128(int* B, const int* __restrict__ A,
 
         for (int bIdx = 0; bIdx < bitwidth; bIdx++){
             unsigned r0 = A[bIdx*offset_input + (bx*8+lx)*gdy*4 + by*4 + ly];
-            // bitIdx * offset_opt + (bx*8+lx)*gdy*4+by*4+ly
-            // unsigned r0 = A[(bx*8+lx)*gdy*4+by*4+ly];
 
-            // (by*128+ly*32+laneid<(p->input_width)) 
-            //         &&   (bx*8+lx<(p->input_height))
             if ((bx*8+lx<A_height) && (by*128+ly*32+laneid<A_width)){
-                // B[bIdx * offset + (bx*8+lx)*A_width+by*128+ly*32+laneid] = 2*(int)((r0>>(31-laneid)) & 0x1) - 1; 
                 B[(bx*8+lx)*A_width+by*128+ly*32+laneid] += (int)((r0>>(31-laneid)) & 0x1) << bIdx;
-                // printf("r0: %u\n", r0);
-                // printf("B[bIdx * offset + (bx*8+lx)*A_width+by*128+ly*32+laneid]: %u\n", B[bIdx * offset + (bx*8+lx)*A_width+by*128+ly*32+laneid]);
             }
+
         }
     }
 }
 
-// compress the input from 32-bit to 1-bit
-// store in 1-bit with packed 32-bit unsigned int format.
+// from value feature map (M, N) --> (nbits*M, STEP128(N)*4)
 __global__  
 void QGTC_layer_input(int* bit_T_out,  int* __restrict__ T_in, 
                     const int height, const int width, const int bitWidth)
@@ -249,7 +199,7 @@ void QGTC_layer_input(int* bit_T_out,  int* __restrict__ T_in,
     GET_LANEID;
     GET_WARPID;
 
-    // how many blocks in total. X_height/8 * X_width/128
+    // grid: (X_height/8, X_width/128)
     const int gdx = STEP8(height);                                      // x size: vertical.
     const int gdy = STEP128(width);                                     // y size: horizontal.
     const int offset_opt = PAD8(height)*STEP128(width)*128/32;        // layerwise offset of OUTPUT after bit compression.
@@ -260,16 +210,12 @@ void QGTC_layer_input(int* bit_T_out,  int* __restrict__ T_in,
 
     for (int bid=blockIdx.x; bid<gdx*gdy; bid+=gridDim.x)
     {
-
         const int bx = bid / gdy; // x index of the current block
         const int by = bid % gdy; // y index of the current block
 
         // iterate through all bits
         for (int bitIdx = 0; bitIdx < bitWidth; bitIdx++){
-            // boundry check whether inside, otherwise set to -1
-            // int f0 = ( (by*128+ly*32+laneid<(width)) && (bx*8+lx<(height)) )?
-            //             T_in[bitIdx*offset + (bx*8+lx)*(width)+by*128+ly*32+laneid]: 0;
-
+            // boundry check whether inside, otherwise set to 0
             int f0 = ( (by*128+ly*32+laneid<(width)) && (bx*8+lx<(height)) )? \
                         ((T_in[(bx*8+lx)*(width)+by*128+ly*32+laneid]>>bitIdx) & 0x01): 0;
             // printf("f0: %d \n", f0);
@@ -277,11 +223,8 @@ void QGTC_layer_input(int* bit_T_out,  int* __restrict__ T_in,
             // compressed, any thing outside boundry would be set to 0.
             // note that * f0 > 0 * in the 0/1 case. but >= 0 in 1/-1 case
             unsigned r0 = __brev(__ballot_sync(0xFFFFFFFF, f0>0));
-            // printf("r0-unsigned: %u\n", r0);
 
-            // output the results
             if (laneid==0){
-                // bit_T_out[10] = r0;
                 bit_T_out[bitIdx*offset_opt + (bx*8+lx)*gdy*4 + by*4 + ly] = r0;
             }
         }

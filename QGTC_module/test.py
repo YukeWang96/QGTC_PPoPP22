@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
-from os.path import abspath
 import torch
-import sys
 import QGTC
 import time
 
-# a = torch.FloatTensor([[1,2,3],[1,2,3]])
 def test(M, N, K, bit_b):
     a = torch.zeros((M, K))
 
@@ -95,7 +92,7 @@ cases = [
     [128,128,100]
 ]
 # scale = [1,2,3]
-example = [128,128,1024]
+# example = [128,128,1024]
 
 # for d in range(4, 11):
 #     for i in range(7, 16):
@@ -105,12 +102,12 @@ example = [128,128,1024]
 #     print("-------------------------")
 
 # for j in range(2,3):
-j = 1
-test(1024,1024,1024, j)
-test(2048,2048,1024, j)
-test(4096,4096,1024, j)
-test(8192,8192,1024, j)
-print("-----------------")
+# j = 1
+# test(1024,1024,1024, j)
+# test(2048,2048,1024, j)
+# test(4096,4096,1024, j)
+# test(8192,8192,1024, j)
+# print("-----------------")
 # test(16384,16384,1024)
 
 # for m, n, k in cases:
@@ -140,3 +137,6 @@ def profile(path="", feat_size=1024, bitwidth=2):
         torch.cuda.synchronize()
         end = time.perf_counter()
         print("TFLOPs: {:.3f}".format(2 * N * N * feat_size * num_prof / (end - start)/1e12))
+
+
+    
