@@ -113,6 +113,7 @@ void UnPackFcWeight128(int* B, const int* __restrict__ A,
     const int ly = (warpid >> 2);  // warp y_index horizontal
 
     const int offset_input = STEP128(A_height)*PAD128(A_width)*128/32;   // offset of input.
+    // printf("Decode_col--offset_input: %d\n", offset_input);
 
     for (int bid=blockIdx.x; bid<gdx*gdy; bid+=gridDim.x)
     {
@@ -120,9 +121,10 @@ void UnPackFcWeight128(int* B, const int* __restrict__ A,
         const int by = bid / gdx;
 
         for (int bIdx = 0; bIdx < bitwidth; bIdx++){
-            unsigned r0 = A[bIdx*offset_input + (by*8+ly)*gdx*4 + bx*4 + lx];
+            int r0 = A[bIdx*offset_input + (by*8+ly)*gdx*4 + bx*4 + lx];
 
             if ((bx*128+lx*32+laneid<A_height) && (by*8+ly<A_width)){
+                // printf("r0: %d\n", r0);
                 B[(bx*128+lx*32+laneid)*A_width + by*8 + ly] += (int)((r0>>(31-laneid)) & 0x1) << bIdx;
             }
         }
@@ -181,7 +183,7 @@ void UnPackFcOutput128(int* B, const int* __restrict__ A,
         const int by = bid % gdy;
 
         for (int bIdx = 0; bIdx < bitwidth; bIdx++){
-            unsigned r0 = A[bIdx*offset_input + (bx*8+lx)*gdy*4 + by*4 + ly];
+            int r0 = A[bIdx*offset_input + (bx*8+lx)*gdy*4 + by*4 + ly];
 
             if ((bx*8+lx<A_height) && (by*128+ly*32+laneid<A_width)){
                 B[(bx*8+lx)*A_width+by*128+ly*32+laneid] += (int)((r0>>(31-laneid)) & 0x1) << bIdx;
@@ -366,8 +368,8 @@ void QGTC_layer_hidden(
             // pack into 32 1-bit.
             p0.data = __brev(__ballot_sync(0xFFFFFFFF, v0 > 0));
             p1.data = __brev(__ballot_sync(0xFFFFFFFF, v1 > 0));
-
             // printf("p0.data: %u, p1.data: %u\n", p0.data, p1.data); // ok, all 1s.
+
             __syncthreads();
 
             // output to binary after compression.
@@ -379,6 +381,170 @@ void QGTC_layer_hidden(
         } // END act_bit iteration.
     } // END bid iteration.
 }
+
+
+// (bit_X, bit_W) --> (int32 bit_X_out)
+__global__ 
+void QGTC_layer_hidden_col(
+    int* bit_X_out, 
+    int* __restrict__ bit_X, 
+    int* __restrict__ bit_W,
+    const int X_height,
+    const int X_width,
+    const int W_width,
+    const int act_bit,
+    const int w_bit,
+    const int out_bit
+)
+{
+    using namespace nvcuda;
+    using namespace nvcuda::wmma::experimental;
+
+    GET_LANEID;
+    GET_WARPID;
+    
+    // layerwise offset measured in int
+    const int act_offset = PAD8(X_height)*STEP128(X_width)*128/32;
+    const int w_offset = STEP128(X_width)*PAD128(W_width)*128/32;
+
+    // refer this nbits*STEP128(height)*4, PAD128(width) for Weights.
+    const int opt_offset = STEP128(X_height)*PAD128(W_width)*128/32;
+    // printf("MM_col--opt_offset: %d\n", opt_offset);
+
+    // M x N x K
+    extern __shared__ int Cs[];
+    const int gdx = STEP8(X_height);     // vertical     --> M
+    const int gdy = STEP8(W_width);      // horizontal   --> N
+    const int gdk = STEP128(X_width);    // iterations   --> K
+
+    const int gdh = STEP128(X_height);   // output height --> M
+    const int gdm = STEP128(W_width);    // output width --> N
+
+    // each grid with gridim.x blocks, 
+    // each block with 32 warps.
+    // each warp processes each 8x8 tile
+    for (int bid=blockIdx.x*warpPerBlock+warpid; bid<gdx*gdy; bid+=gridDim.x*warpPerBlock)
+    {
+        wmma::fragment<wmma::matrix_a, 8, 8, 128, precision::b1, wmma::row_major> a_frag;
+        wmma::fragment<wmma::matrix_b, 8, 8, 128, precision::b1, wmma::col_major> b_frag;
+        wmma::fragment<wmma::accumulator, 8, 8, 128, int> c_frag;
+        wmma::fragment<wmma::accumulator, 8, 8, 128, int> tmp_frag;
+
+        wmma::fill_fragment(c_frag, 0);
+
+        // rwo major output.
+        const int bx = bid / gdy;       // vertical index.
+        const int by = bid % gdy;       // horizeonal index.
+        
+        // iterate along different bits.
+        for (int bit = 0; bit < act_bit*w_bit; bit++){
+            int b_act = bit % act_bit;
+            int b_w = bit / act_bit;
+            int b_opt = b_act + b_w;
+
+            // accmuluation of the current bit.
+            wmma::fill_fragment(tmp_frag, 0);
+
+            // iterate along the K columns
+            for (int i=0; i<gdk; i++)
+            {
+                // atomicAdd(&counter_global, 1);
+                #define base
+                #ifdef base
+                load_matrix_sync(a_frag, bit_X + b_act*act_offset + bx*8*gdk*4 + i*128/32, gdk*128);
+                load_matrix_sync(b_frag, bit_W + b_w*w_offset + by*8*gdk*4 + i*128/32, gdk*128);
+                bmma_sync(tmp_frag, a_frag, b_frag, tmp_frag, bmmaBitOpAND);
+                #else 
+                // int4 tmp;
+                typedef union {unsigned x[4];} uint4;
+                uint4 tmp;
+                unsigned val = 0;
+                unsigned cmp = 0;
+
+                if (laneid < 8){
+                    tmp = * (uint4*) (bit_X + b_act*act_offset + bx*8*gdk*4 + i*128/32 + laneid*gdk*128);
+                    val = tmp.x[0] | tmp.x[1] | tmp.x[2] | tmp.x[3];
+                }
+                cmp = __ballot_sync(0x000000FF, val > 0);
+                // printf("cmp: %u \n", cmp);
+
+                if (cmp > 0){
+                    // printf("hello there\n");
+                    atomicAdd(&counter, 1);
+                    load_matrix_sync(a_frag, bit_X + b_act*act_offset + bx*8*gdk*4 + i*128/32, gdk*128);
+                    load_matrix_sync(b_frag, bit_W + b_w*w_offset + by*8*gdk*4 + i*128/32, gdk*128);
+                    bmma_sync(tmp_frag, a_frag, b_frag, tmp_frag, bmmaBitOpAND);
+                } 
+                else{
+                    // printf("hello there\n");
+                }
+                #endif  
+            }
+
+            // Accumulation.
+            #pragma unroll
+            for (int t = 0; t < tmp_frag.num_elements; t++) {
+                c_frag.x[t] += tmp_frag.x[t] << b_opt;
+            }
+        }
+
+        // quantization at the fragment into act_bit (stored in uint32).
+        #pragma unroll
+        for (int t = 0; t < c_frag.num_elements; t++) {
+            // printf("%u\n", c_frag.x[t]);
+            c_frag.x[t] = quantize(c_frag.x[t], out_bit, 1<<out_bit, 0);
+        }
+
+        // finished one output tile and store to shared memory
+        // * using column major here for shared output.
+        store_matrix_sync(&Cs[warpid*64], c_frag, 8, wmma::mem_col_major);
+
+
+        for (int bIdx = 0; bIdx < out_bit; bIdx++){
+            
+            // change to 8-bit address
+            uin8* Cb = (uin8*)(&(bit_X_out[bIdx*opt_offset])); 
+
+            // 2D index of a warp
+            const int gy = (laneid%8);
+            const int gx = (laneid/8);
+
+            // checking position constraints.
+            bool v0_in = ((by*8+gy)<(W_width)) && ((bx*8+gx)<(X_height));
+            bool v1_in = ((by*8+gy)<(W_width)) && ((bx*8+gx+4)<(X_height)); 
+
+            // get the corresponding decomposed bit value.
+            bool v0 = v0_in && (((Cs[warpid*64+laneid]>>bIdx) & 0x1) > 0);
+            bool v1 = v1_in && (((Cs[warpid*64+4+laneid]>>bIdx) & 0x1) > 0);
+
+            union{ int data; uin8 elements[4];} p0, p1;
+
+            // pack into 32 1-bit.
+            p0.data = __brev(__ballot_sync(0xFFFFFFFF, v0 > 0));
+            p1.data = __brev(__ballot_sync(0xFFFFFFFF, v1 > 0));
+            // printf("p0.data: %d, p1.data: %d\n", p0.data, p1.data);
+
+            __syncthreads();
+
+            // output to binary after compression.
+            if (laneid < 4)
+            {
+                // * row major output. every 4 x (8x8) combined as int 32 along the y-axis. fixed y-axis.
+                // Cb[(bx*8+laneid)*gdm*16+FLIPBITS(by,2)] = p0.elements[3-laneid]; 
+                // Cb[(bx*8+4+laneid)*gdm*16+FLIPBITS(by,2)] = p1.elements[3-laneid]; 
+
+                // printf("bx: %d, by: %d\n", bx, by);
+                // * col major output. every 4 x (8x8) combined as int 32 along the y-axis. fixed y-axis.
+                // printf("laneid: %d,\t FLIPBITS(by,2)*8+laneid)*gdx + bx: %d,\tFLIPBITS(by,2)*8+4+laneid)*gdx + bx: %d\n", laneid, (by*8+laneid)*gdx + bx, (by*8+4+laneid)*gdx + bx);
+
+                Cb[(by*8+laneid)*gdh*16 + FLIPBITS(bx,2)] = p0.elements[3-laneid]; 
+                Cb[(by*8+4+laneid)*gdh*16 + FLIPBITS(bx,2)] = p1.elements[3-laneid]; 
+
+            }
+        } // END act_bit iteration.
+    } // END bid iteration.
+}
+
 
 //
 // (bit_X, bit_W) --> (float X_out)

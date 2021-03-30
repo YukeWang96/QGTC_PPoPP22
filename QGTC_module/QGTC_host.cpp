@@ -30,6 +30,22 @@ torch::Tensor bitMM2Bit_cuda(
     const int output_bit
 );
 
+
+//
+// bit_X1 and bit_x2 --> bit output.
+//
+torch::Tensor bitMM2Bit_col_cuda(
+    torch::Tensor bit_X1,
+    torch::Tensor bit_X2,
+    const int X1_height,
+    const int X1_width,
+    const int X2_width,
+    const int bit1,
+    const int bit2,
+    const int output_bit
+);
+
+
 //
 // bit_X1 and bit_x2 --> float output.
 //
@@ -67,6 +83,29 @@ torch::Tensor bitMM2Bit(
                         X1_height, X1_width, X2_width, \
                         bit1, bit2, output_bit);
 }
+
+
+//
+// bit_X1 and bit_x2 --> [ bit ] output.
+//
+torch::Tensor bitMM2Bit_col(
+    torch::Tensor bit_X1,
+    torch::Tensor bit_X2,
+    const int X1_height,
+    const int X1_width,
+    const int X2_width,
+    const int bit1,
+    const int bit2,
+    const int output_bit
+) {
+  CHECK_INPUT(bit_X1);
+  CHECK_INPUT(bit_X2);
+
+  return bitMM2Bit_col_cuda(bit_X1, bit_X2, \
+                            X1_height, X1_width, X2_width, \
+                            bit1, bit2, output_bit);
+}
+
 
 //
 // bit_X1 and bit_X2 --> [ float ] output.
@@ -117,7 +156,8 @@ torch::Tensor bit2val(
 ){
   CHECK_INPUT(input);
 
-  return bit2val_cuda(input, nbits, height, width, col_major, output_layer); 
+  return bit2val_cuda(input, nbits, \
+                      height, width, col_major, output_layer); 
 }
 
 // Pytorch Binding.
@@ -126,5 +166,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   m.def("bit2val", &bit2val, "quantize a [ bit --> int32 ] tensor (CUDA)");
 
   m.def("bitMM2Bit", &bitMM2Bit, "QGTC [ bit_A x bit_B --> bit_C ] forward (CUDA)");
+  m.def("bitMM2Bit_col", &bitMM2Bit_col, "QGTC [ bit_A x bit_B --> bit_C (column major) ] forward (CUDA)");
+
   m.def("bitMM2Int", &bitMM2Int, "QGTC [ bit_A x bit_B --> int32_C ] forward (CUDA)");
 }
