@@ -23,8 +23,6 @@ from dataset import *
 from ogb.nodeproppred import DglNodePropPredDataset
 from dgl.data import AMDataset, AmazonCoBuyComputerDataset
 
-from config import *
-
 parser = argparse.ArgumentParser()
 register_data_args(parser)
 parser.add_argument("--dropout", type=float, default=0.5, help="dropout probability")
@@ -92,7 +90,7 @@ def main(args):
     # print("features shape, ", g.ndata['feat'].shape)
     feat_size  = g.ndata['feat'].shape[1]
 
-    if use_PyG:
+    if args.use_PyG:
         model = SAGE_PyG(in_feats, args.n_hidden, 
                             n_classes, num_layers=args.n_layers+2)
     else:
@@ -132,7 +130,7 @@ def main(args):
     cnt = 0
     for epoch in range(args.n_epochs):
         for j, cluster in enumerate(cluster_iterator):
-            if regular:
+            if args.regular:
                 torch.cuda.synchronize()
                 t = time.perf_counter()      
         
@@ -140,21 +138,19 @@ def main(args):
        
                 torch.cuda.synchronize()
                 transfering += time.perf_counter() - t
-                # model.train()
+
+
                 torch.cuda.synchronize()
                 t = time.perf_counter()   
                 
-                if use_PyG:
-                    edge_idx = torch.stack([cluster.edges()[0],cluster.edges()[1]], dim=0).long()
+                if args.use_PyG:
+                    edge_idx = torch.stack([cluster.edges()[0], cluster.edges()[1]], dim=0).long()
                     model(cluster.ndata['feat'], edge_idx)
                 else:
-                    pred = model(cluster)    
+                    model(cluster)    
 
                 torch.cuda.synchronize()
                 running_time += time.perf_counter() - t
-                num_nodes = len(cluster.nodes())
-                
-                sys.exit(0)
             else:
                 torch.cuda.synchronize()
                 t = time.perf_counter()
