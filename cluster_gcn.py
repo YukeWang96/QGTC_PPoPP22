@@ -37,8 +37,14 @@ parser.add_argument("--n-hidden", type=int, default=16, help="number of hidden g
 parser.add_argument("--n-classes", type=int, default=10, help="number of classes")
 parser.add_argument("--n-layers", type=int, default=1, help="number of hidden gcn layers")
 parser.add_argument("--use-pp", action='store_true',help="whether to use precomputation")
+parser.add_argument("--regular", action='store_true',help="whether to use PyG or DGL")
+parser.add_argument("--use_PyG", action='store_true',help="whether to use PyG")
+parser.add_argument("--run_GIN", action='store_true',help="whether to run GIN model")
+parser.add_argument("--use_QGTC", action='store_true',help="whether to use QGTC")
+
 args = parser.parse_args()
 print(args)
+
 
 def main(args):
     torch.manual_seed(args.rnd_seed)
@@ -129,9 +135,9 @@ def main(args):
             if regular:
                 torch.cuda.synchronize()
                 t = time.perf_counter()      
-                if cuda:
-                    cluster = cluster.to(torch.cuda.current_device())
-
+        
+                cluster = cluster.to(torch.cuda.current_device())
+       
                 torch.cuda.synchronize()
                 transfering += time.perf_counter() - t
                 # model.train()
@@ -142,7 +148,7 @@ def main(args):
                     edge_idx = torch.stack([cluster.edges()[0],cluster.edges()[1]], dim=0).long()
                     model(cluster.ndata['feat'], edge_idx)
                 else:
-                    pred = model(cluster)       # model training
+                    pred = model(cluster)    
 
                 torch.cuda.synchronize()
                 running_time += time.perf_counter() - t
@@ -172,12 +178,11 @@ def main(args):
                 torch.cuda.synchronize()
                 t = time.perf_counter()
                 
-                if use_QGTC:
+                if args.use_QGTC:
 
                     # if epoch == 0 and j == 0:
                     #     print("A.size: {}".format(A.size()))
-                    run_GIN = False
-                    if run_GIN:
+                    if args.run_GIN:
                         # torch.cuda.synchronize()
                         # t = time.perf_counter()
                         # 1-layer [in_feat, hidden]
@@ -233,7 +238,7 @@ def main(args):
                     del float_output
                     torch.cuda.empty_cache()
                     
-                    sys.exit(0)
+                    # sys.exit(0)
                 else:
                     # 1-layer
                     X = torch.mm(A, X)
@@ -247,9 +252,6 @@ def main(args):
 
                 torch.cuda.synchronize()
                 running_time += time.perf_counter() - t
-
-            # batch_labels = cluster.ndata['label']
-            # batch_train_mask = cluster.ndata['train_mask']
 
         cnt += 1
         print("Epoch: {}".format(epoch))
