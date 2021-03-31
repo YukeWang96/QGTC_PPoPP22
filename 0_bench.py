@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
-
+import warnings
+warnings.filterwarnings("ignore")
 
 hidden = [16] #[16, 32, 64, 128, 256]
 num_layers = [1]

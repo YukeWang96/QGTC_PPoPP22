@@ -1,30 +1,21 @@
-import warnings
-warnings.filterwarnings("ignore")
-
 import argparse
 import os
 import time
 import random
 import sys
-
 import numpy as np
-import networkx as nx
-import sklearn.preprocessing
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import dgl
 from dgl.data import register_data_args
-import collections
 import os.path as osp
-
 from modules import *
 from sampler import ClusterIter
-from utils import Logger, evaluate, save_log_dir, load_data
+from utils import load_data
 
 import matplotlib.pylab as plt
 import numpy as np
-from scipy.sparse import coo_matrix
 
 # from QGTC_conv import *
 import QGTC
@@ -34,12 +25,20 @@ from dgl.data import AMDataset, AmazonCoBuyComputerDataset
 
 from config import *
 
-def PAD8(input):
-    return int((input + 7)//8)
-
-def PAD128(input):
-    return int((input + 127)//128)
-
+parser = argparse.ArgumentParser()
+register_data_args(parser)
+parser.add_argument("--dropout", type=float, default=0.5, help="dropout probability")
+parser.add_argument("--gpu", type=int, default=0, help="gpu")
+parser.add_argument("--dim", type=int, default=10, help="input dimension of each dataset")
+parser.add_argument("--n-epochs", type=int, default=3, help="number of training epochs")
+parser.add_argument("--batch-size", type=int, default=20, help="batch size")
+parser.add_argument("--psize", type=int, default=1500, help="number of partitions")
+parser.add_argument("--n-hidden", type=int, default=16, help="number of hidden gcn units")
+parser.add_argument("--n-classes", type=int, default=10, help="number of classes")
+parser.add_argument("--n-layers", type=int, default=1, help="number of hidden gcn layers")
+parser.add_argument("--use-pp", action='store_true',help="whether to use precomputation")
+args = parser.parse_args()
+print(args)
 
 def main(args):
     torch.manual_seed(args.rnd_seed)
@@ -47,9 +46,6 @@ def main(args):
     random.seed(args.rnd_seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
-
-    multitask_data = set(['ppi'])
-    multitask = args.dataset in multitask_data
 
     # load and preprocess dataset
     if args.dataset in ['ppi', 'reddit']:
@@ -74,58 +70,18 @@ def main(args):
         val_mask = data.val_mask
         test_mask = data.test_mask
 
-    psize = len(train_mask)/args.psize
-    # print(train_mask)
-    # sys.exit(0)
     train_nid = np.nonzero(train_mask.data.numpy())[0].astype(np.int64)
-
-    # Normalize features
-    # if args.normalize:
-    #     feats = g.ndata['feat']
-    #     train_feats = feats[train_mask]
-    #     scaler = sklearn.preprocessing.StandardScaler()
-    #     scaler.fit(train_feats.data.numpy())
-    #     features = scaler.transform(feats.data.numpy())
-    #     g.ndata['feat'] = torch.FloatTensor(features)
-
     in_feats = g.ndata['feat'].shape[1]
     n_classes = data.num_classes
-    n_edges = g.number_of_edges()
-    n_train_samples = train_mask.int().sum().item()
-    n_val_samples = val_mask.int().sum().item()
-    n_test_samples = test_mask.int().sum().item()
-
-    # print("""----Data statistics------'
-    # #Edges %d
-    # #Classes %d
-    # #Train samples %d
-    # #Val samples %d
-    # #Test samples %d""" %
-    #         (n_edges, n_classes,
-    #         n_train_samples,
-    #         n_val_samples,
-    #         n_test_samples))
-
-    # create GCN model
-    # if args.self_loop and not args.dataset.startswith('reddit'):
-        # g = dgl.remove_self_loop(g)
-        # g = dgl.add_self_loop(g)
-        # print("adding self-loop edges")
-
     # metis only support int64 graph
     g = g.long()
     # get the subgraph based on the partitioning nodes list.
     cluster_iterator = ClusterIter(args.dataset, g, args.psize, args.batch_size, train_nid, use_pp=False)
 
-    if args.gpu < 0:
-        cuda = False
-    else:
-        cuda = True
-        torch.cuda.set_device(args.gpu)
-        val_mask = val_mask.cuda()
-        test_mask = test_mask.cuda()
-        g = g.int().to(args.gpu)
-
+    torch.cuda.set_device(args.gpu)
+    val_mask = val_mask.cuda()
+    test_mask = test_mask.cuda()
+    g = g.int().to(args.gpu)
     # print('labels shape:', g.ndata['label'].shape)
     # print("features shape, ", g.ndata['feat'].shape)
     feat_size  = g.ndata['feat'].shape[1]
@@ -139,40 +95,16 @@ def main(args):
                         args.dropout, args.use_pp)
         # model = GIN(in_feats, args.n_hidden, n_classes)
 
-    # print(model)
-    if cuda:
-        model.cuda()
 
-    # logger and so on
-    # log_dir = save_log_dir(args)
-    # logger = Logger(os.path.join(log_dir, 'loggings'))
-    # logger.write(args)
-
-    # Loss function
-    if multitask:
-        # print('Using multi-label loss')
-        loss_f = nn.BCEWithLogitsLoss()
-    else:
-        # print('Using multi-class loss')
-        loss_f = nn.CrossEntropyLoss()
-
-    # use optimizer
-    optimizer = torch.optim.Adam(model.parameters(),
-                                 lr=args.lr,
-                                 weight_decay=args.weight_decay)
-
-    # set train_nids to cuda tensor
-    if cuda:
-        train_nid = torch.from_numpy(train_nid).cuda()
+    model.cuda()
+    train_nid = torch.from_numpy(train_nid).cuda()
 
     start_time = time.time()
-    best_f1 = -1
-
     hidden_1 = args.n_hidden
     output = args.n_classes
 
     # total_ops = 0
-    allocation = 0
+    transfering = 0
     running_time = 0
 
     W_1 = torch.ones((feat_size, hidden_1)).cuda()
@@ -201,7 +133,7 @@ def main(args):
                     cluster = cluster.to(torch.cuda.current_device())
 
                 torch.cuda.synchronize()
-                allocation += time.perf_counter() - t
+                transfering += time.perf_counter() - t
                 # model.train()
                 torch.cuda.synchronize()
                 t = time.perf_counter()   
@@ -235,7 +167,7 @@ def main(args):
                 X = cluster.X
 
                 torch.cuda.synchronize()
-                allocation += time.perf_counter() - t
+                transfering += time.perf_counter() - t
 
                 torch.cuda.synchronize()
                 t = time.perf_counter()
@@ -244,7 +176,6 @@ def main(args):
 
                     # if epoch == 0 and j == 0:
                     #     print("A.size: {}".format(A.size()))
-
                     run_GIN = False
                     if run_GIN:
                         # torch.cuda.synchronize()
@@ -316,80 +247,21 @@ def main(args):
 
                 torch.cuda.synchronize()
                 running_time += time.perf_counter() - t
-                # total_ops += 2*num_nodes*num_nodes*hidden_1 +  2*num_nodes*feat_size*hidden_1 \
-                #             + 2*num_nodes*num_nodes*output + 2*num_nodes*hidden_1*output
 
             # batch_labels = cluster.ndata['label']
             # batch_train_mask = cluster.ndata['train_mask']
-            # loss = loss_f(pred[batch_train_mask],
-            #               batch_labels[batch_train_mask])
 
-            # optimizer.zero_grad()
-            # loss.backward()
-            # optimizer.step()
-
-            # if j % args.log_every == 0:
-            #     print("epoch:{}/{}, Iteration {}/{}, #N: {}, {:.3f} GB"\
-            #     .format(epoch, args.n_epochs, j, len(cluster_iterator), num_nodes, \
-            #         torch.cuda.memory_allocated(device=cluster.device) / 1024 / 1024 / 1024)),
-            # print("{}".format(epoch), end=" ")
         cnt += 1
         print("Epoch: {}".format(epoch))
-        # hand the current tensor back to host Memory
         cluster = cluster.cpu()
 
-    # torch.cuda.synchronize()
+    torch.cuda.synchronize()
     end_time = time.time()
-    print("Trans (ms): {:.3f}, Compute (ms): {:.3f}".format(allocation/cnt*1e3, running_time/cnt*1e3))
+    print("Trans (ms): {:.3f}, Compute (ms): {:.3f}".format(transfering/cnt*1e3, running_time/cnt*1e3))
     # print("{:.3f}, {:.3f}, {:.3f}".format(layer1_t/cnt*1e3, layer2_t/cnt*1e3, layer3_t/cnt*1e3))
     print("Avg. Epoch: {:.3f} ms".format((end_time - start_time)*1000/cnt))
     # print("GFLOPS: {:.3f}".format(total_ops/(end_time - start_time) / 10e9))
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='GCN')
-    register_data_args(parser)
-    parser.add_argument("--dropout", type=float, default=0.5,
-                        help="dropout probability")
-    parser.add_argument("--gpu", type=int, default=0,
-                        help="gpu")
-    parser.add_argument("--lr", type=float, default=3e-2,
-                        help="learning rate")
-    parser.add_argument("--dim", type=int, default=10,
-                        help="input dimension of each dataset")
-
-    parser.add_argument("--n-epochs", type=int, default=3, help="number of training epochs")
-    parser.add_argument("--batch-size", type=int, default=30, help="batch size")
-    parser.add_argument("--psize", type=int, default=1500, help="partition number")
-
-    parser.add_argument("--n-hidden", type=int, default=16,
-                        help="number of hidden gcn units")
-    parser.add_argument("--log-every", type=int, default=100,
-                        help="the frequency to save model")
-    parser.add_argument("--test-batch-size", type=int, default=1000,
-                        help="test batch size")
-    parser.add_argument("--n-classes", type=int, default=10,
-                        help="number of classes")
-
-    parser.add_argument("--n-layers", type=int, default=1,
-                        help="number of hidden gcn layers")
-    parser.add_argument("--val-every", type=int, default=1,
-                        help="number of epoch of doing inference on validation")
-    parser.add_argument("--rnd-seed", type=int, default=3,
-                        help="number of epoch of doing inference on validation")
-    parser.add_argument("--self-loop", action='store_true',
-                        help="graph self-loop (default=False)")
-    parser.add_argument("--use-pp", action='store_true',
-                        help="whether to use precomputation")
-    parser.add_argument("--normalize", action='store_true',
-                        help="whether to use normalized feature")
-    parser.add_argument("--use-val", action='store_true',
-                        help="whether to use validated best model to test")
-    parser.add_argument("--weight-decay", type=float, default=5e-4,
-                        help="Weight for L2 loss")
-    parser.add_argument("--note", type=str, default='none',
-                        help="note for log dir")
-
-    args = parser.parse_args()
-    # print(args)
     main(args)

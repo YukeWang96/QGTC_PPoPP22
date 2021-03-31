@@ -18,17 +18,9 @@ class GraphSAGELayer(nn.Module):
         super(GraphSAGELayer, self).__init__()
         # The input feature size gets doubled as we concatenated the original
         # features with the new features.
-        self.linear = nn.Linear(2 * in_feats, out_feats, bias=bias)
+        self.linear = nn.Linear(in_feats, out_feats, bias=bias)
         self.activation = activation
         self.use_pp = use_pp
-        if dropout:
-            self.dropout = nn.Dropout(p=dropout)
-        else:
-            self.dropout = 0.
-        if use_lynorm:
-            self.lynorm = nn.LayerNorm(out_feats, elementwise_affine=True)
-        else:
-            self.lynorm = lambda x: x
         self.reset_parameters()
 
     def reset_parameters(self):
@@ -39,21 +31,12 @@ class GraphSAGELayer(nn.Module):
 
     def forward(self, g, h):
         g = g.local_var()
-        if not self.use_pp or not self.training:
-            norm = self.get_norm(g)
-            g.ndata['h'] = h
-            g.update_all(fn.copy_src(src='h', out='m'),
-                         fn.sum(msg='m', out='h'))
-            ah = g.ndata.pop('h')
-            h = self.concat(h, ah, norm)
-
-        if self.dropout:
-            h = self.dropout(h)
-
+        g.ndata['h'] = h
+        g.update_all(fn.copy_src(src='h', out='m'), \
+                    fn.sum(msg='m', out='h'))
+        ah = g.ndata.pop('h')
         h = self.linear(h)
-        h = self.lynorm(h)
-        if self.activation:
-            h = self.activation(h)
+        h = self.activation(h)
         return h
 
     def concat(self, h, ah, norm):
@@ -61,11 +44,11 @@ class GraphSAGELayer(nn.Module):
         h = torch.cat((h, ah), dim=1)
         return h
 
-    def get_norm(self, g):
-        norm = 1. / g.in_degrees().float().unsqueeze(1)
-        norm[torch.isinf(norm)] = 0
-        norm = norm.to(self.linear.weight.device)
-        return norm
+    # def get_norm(self, g):
+    #     norm = 1. / g.in_degrees().float().unsqueeze(1)
+    #     norm[torch.isinf(norm)] = 0
+    #     norm = norm.to(self.linear.weight.device)
+    #     return norm
 
 class GraphSAGE(nn.Module):
     def __init__(self,
@@ -75,7 +58,7 @@ class GraphSAGE(nn.Module):
                  n_layers,
                  activation,
                  dropout,
-                 use_pp):
+                 use_pp=False):
         super(GraphSAGE, self).__init__()
         self.layers = nn.ModuleList()
 
