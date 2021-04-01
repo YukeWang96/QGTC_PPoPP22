@@ -15,6 +15,7 @@ from tqdm import *
 
 import matplotlib.pylab as plt
 import numpy as np
+from scipy.sparse import coo_matrix
 
 # from QGTC_conv import *
 import QGTC
@@ -129,13 +130,24 @@ def main(args):
 
     cnt = 0
     for epoch in tqdm(range(args.n_epochs)):
-        for _, cluster in enumerate(cluster_iterator):
+        for j, cluster in enumerate(cluster_iterator):
             if args.regular:
                 torch.cuda.synchronize()
                 t = time.perf_counter()      
         
                 cluster = cluster.to(torch.cuda.current_device())
-       
+
+                edges = cluster.edges()
+                row  = edges[0].cpu().numpy()
+                col  = edges[1].cpu().numpy()
+                data = np.ones(len(row))
+                num_nodes = max(max(row), max(col)) + 1
+                A = coo_matrix((data, (row, col)), shape=(num_nodes, num_nodes)).toarray()
+                # print(A)
+                plt.spy(A)
+                # plt.show()
+                plt.savefig('ppi/{}.pdf'.format(j))
+
                 torch.cuda.synchronize()
                 transfering += time.perf_counter() - t
 
