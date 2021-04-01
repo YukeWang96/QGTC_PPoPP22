@@ -1,28 +1,18 @@
-import math
-
 import dgl.function as fn
 import torch
 import torch.nn as nn
-from torch_geometric.nn import SAGEConv, BatchNorm
+from torch_geometric.nn import SAGEConv
 import torch.nn.functional as F
 
 ########################
-### GIN
+### GraphSAGE
 ########################
-
 class GraphSAGELayer(nn.Module):
     def __init__(self,
                  in_feats,
                  out_feats):
         super(GraphSAGELayer, self).__init__()
-        self.linear = nn.Linear(in_feats, out_feats, bias=bias)
-        self.reset_parameters()
-
-    def reset_parameters(self):
-        stdv = 1. / math.sqrt(self.linear.weight.size(1))
-        self.linear.weight.data.uniform_(-stdv, stdv)
-        if self.linear.bias is not None:
-            self.linear.bias.data.uniform_(-stdv, stdv)
+        self.linear = nn.Linear(in_feats, out_feats)
 
     def forward(self, g, h):
         g = g.local_var()
@@ -39,19 +29,15 @@ class GraphSAGE(nn.Module):
                  in_feats,
                  n_hidden,
                  n_classes,
-                 n_layers,
-                 activation,
-                 dropout,
-                 use_pp=False):
+                 n_layers):
         super(GraphSAGE, self).__init__()
         self.layers = nn.ModuleList()
 
         # input layer
         self.layers.append(GraphSAGELayer(in_feats, n_hidden))
         # hidden layers
-        for i in range(1):
-            self.layers.append(
-                GraphSAGELayer(n_hidden, n_hidden))
+        # for i in range(1):
+        self.layers.append(GraphSAGELayer(n_hidden, n_hidden))
         # output layer
         self.layers.append(GraphSAGELayer(n_hidden, n_classes))
 
@@ -121,18 +107,16 @@ class SAGE_PyG(torch.nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels, num_layers):
         super(SAGE_PyG, self).__init__()
         self.convs = torch.nn.ModuleList()
-        self.batch_norms = torch.nn.ModuleList()
+        # Input Layer
         self.convs.append(SAGEConv(in_channels, hidden_channels))
-        self.batch_norms.append(BatchNorm(hidden_channels))
+        # Hidden Layer
         for _ in range(num_layers - 2):
             self.convs.append(SAGEConv(hidden_channels, hidden_channels))
-            self.batch_norms.append(BatchNorm(hidden_channels))
+        # Output Layer
         self.convs.append(SAGEConv(hidden_channels, out_channels))
 
     def forward(self, x, edge_index):
-        for conv, batch_norm in zip(self.convs[:-1], self.batch_norms):
+        for conv in self.convs[:-1]:
             x = conv(x, edge_index)
-            x = batch_norm(x)
             x = F.relu(x)
-            x = F.dropout(x, p=0.2, training=self.training)
         return self.convs[-1](x, edge_index)

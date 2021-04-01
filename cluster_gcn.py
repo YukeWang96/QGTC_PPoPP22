@@ -1,5 +1,4 @@
 import argparse
-import os
 import time
 import random
 import sys
@@ -7,7 +6,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import dgl
 from dgl.data import register_data_args
 import os.path as osp
 from modules import *
@@ -26,15 +24,17 @@ from dgl.data import AMDataset, AmazonCoBuyComputerDataset
 
 parser = argparse.ArgumentParser()
 register_data_args(parser)
-parser.add_argument("--dropout", type=float, default=0.5, help="dropout probability")
 parser.add_argument("--gpu", type=int, default=0, help="gpu")
-parser.add_argument("--dim", type=int, default=10, help="input dimension of each dataset")
-parser.add_argument("--n-epochs", type=int, default=3, help="number of training epochs")
+
+parser.add_argument("--n-epochs", type=int, default=200, help="number of training epochs")
 parser.add_argument("--batch-size", type=int, default=20, help="batch size")
 parser.add_argument("--psize", type=int, default=1500, help="number of partitions")
+
+parser.add_argument("--dim", type=int, default=10, help="input dimension of each dataset")
 parser.add_argument("--n-hidden", type=int, default=16, help="number of hidden gcn units")
 parser.add_argument("--n-classes", type=int, default=10, help="number of classes")
 parser.add_argument("--n-layers", type=int, default=1, help="number of hidden gcn layers")
+
 parser.add_argument("--use-pp", action='store_true',help="whether to use precomputation")
 parser.add_argument("--regular", action='store_true',help="whether to use PyG or DGL")
 parser.add_argument("--use_PyG", action='store_true',help="whether to use PyG")
@@ -95,9 +95,8 @@ def main(args):
         model = SAGE_PyG(in_feats, args.n_hidden, 
                             n_classes, num_layers=args.n_layers+2)
     else:
-        model = GraphSAGE(in_feats, args.n_hidden,
-                        n_classes, args.n_layers, F.relu,
-                        args.dropout, args.use_pp)
+        model = GraphSAGE(in_feats, args.n_hidden, \
+                            n_classes, args.n_layers)
         # model = GIN(in_feats, args.n_hidden, n_classes)
 
 
@@ -130,7 +129,7 @@ def main(args):
 
     cnt = 0
     for epoch in tqdm(range(args.n_epochs)):
-        for j, cluster in enumerate(cluster_iterator):
+        for _, cluster in enumerate(cluster_iterator):
             if args.regular:
                 torch.cuda.synchronize()
                 t = time.perf_counter()      
@@ -234,7 +233,6 @@ def main(args):
                     del bit_output_4
                     del float_output
                     torch.cuda.empty_cache()
-                    
                     # sys.exit(0)
                 else:
                     # 1-layer
@@ -251,7 +249,6 @@ def main(args):
                 running_time += time.perf_counter() - t
 
         cnt += 1
-        print("Epoch: {}".format(epoch))
         cluster = cluster.cpu()
 
     torch.cuda.synchronize()
