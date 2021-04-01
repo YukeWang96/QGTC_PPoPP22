@@ -152,6 +152,28 @@ def TEST_GINConv(M=3, K=3, N=3, N1=3, nbits_a=2, nbits_x=2, nbits_w=2):
     # print("2: val_AXW: \n", val_AXW)
 
 
+##########################
+# * Profile_Non-zero Tile
+# * A*X
+##########################
+def PROFILE_NonZeroTile(M=3, K=3, N=3, nbits_a=1, nbits_x=1, rounds=200):
+    A = torch.ones((M, K)).cuda()
+    X = torch.ones((K, N)).cuda()
+
+    # hidden.
+    bit_a = QGTC.val2bit(A, nbits_a, False, False)
+    bit_x = QGTC.val2bit(X, nbits_x, True, False)
+
+    torch.cuda.synchronize()    
+    start = time.perf_counter()
+
+    for _ in range(rounds):
+        QGTC.bitMM2Bit(bit_a, bit_x, M, K, N, nbits_a, nbits_x, nbits_x)
+        # QGTC.bitMM2Int(bit_a, bit_x, M, K, N, nbits_a, nbits_x, False)
+    
+    torch.cuda.synchronize()   
+    dur =  time.perf_counter() - start
+    print("N: {}, TFLOPs: {:.3f}".format(N, 2*M*N*K*rounds/dur/1e12))
 
 if __name__ == '__main__':
     # test_bitencodingAndDecoding()
@@ -160,4 +182,8 @@ if __name__ == '__main__':
     # T = 32
     # TEST_bitMM2bit(M=T, K=T, N=T, nbits_a=2, nbits_b=2)
     # TEST_GINConv(M=3, K=3, N=3, N1=3, nbits_a=1, nbits_x=2, nbits_w=2)
-    TEST_GCNConv(N=8, D=128, D1=8, nbits_a=1, nbits_x=2, nbits_w=2)
+    # TEST_GCNConv(N=8, D=128, D1=8, nbits_a=1, nbits_x=2, nbits_w=2)
+
+    for T in range(4):
+        N = (2**T) * 1024
+        PROFILE_NonZeroTile(N, N, N, nbits_x=2)
