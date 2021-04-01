@@ -6,3 +6,5 @@ QGTC_kernel/build
 QGTC_kernel/dist
 QGTC_kernel/QGTC.egg-info
 *pdf
+*.so
+*.o

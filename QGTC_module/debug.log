@@ -44,7 +44,7 @@ In file included from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages
                  from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/torch/extension.h:4,
                  from /home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:1:
 /home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp: In function ‘at::Tensor bitMM2Bit(at::Tensor, at::Tensor, int, int, int, int, int, int)’:
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:62:42: warning: ‘at::DeprecatedTypeProperties& at::Tensor::type() const’ is deprecated: Tensor.type() is deprecated. Instead use Tensor.options(), which in many cases (e.g. in a constructor) is a drop-in replacement. If you were using data from type(), that is now available from Tensor itself, so instead of tensor.type().scalar_type(), use tensor.scalar_type() instead and instead of tensor.type().backend() use tensor.device(). [-Wdeprecated-declarations]
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:63:42: warning: ‘at::DeprecatedTypeProperties& at::Tensor::type() const’ is deprecated: Tensor.type() is deprecated. Instead use Tensor.options(), which in many cases (e.g. in a constructor) is a drop-in replacement. If you were using data from type(), that is now available from Tensor itself, so instead of tensor.type().scalar_type(), use tensor.scalar_type() instead and instead of tensor.type().backend() use tensor.device(). [-Wdeprecated-declarations]
  #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
                                           ^
 /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/c10/macros/Macros.h:171:65: note: in definition of macro ‘C10_UNLIKELY’
@@ -59,13 +59,13 @@ In file included from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages
 /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/c10/util/Exception.h:341:32: note: in expansion of macro ‘TORCH_CHECK_WITH’
  #define TORCH_CHECK(cond, ...) TORCH_CHECK_WITH(Error, cond, __VA_ARGS__)
                                 ^~~~~~~~~~~~~~~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:62:23: note: in expansion of macro ‘TORCH_CHECK’
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:63:23: note: in expansion of macro ‘TORCH_CHECK’
  #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
                        ^~~~~~~~~~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:64:24: note: in expansion of macro ‘CHECK_CUDA’
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:65:24: note: in expansion of macro ‘CHECK_CUDA’
  #define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x)
                         ^~~~~~~~~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:79:3: note: in expansion of macro ‘CHECK_INPUT’
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:80:3: note: in expansion of macro ‘CHECK_INPUT’
    CHECK_INPUT(bit_X1);
    ^~~~~~~~~~~
 In file included from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/ATen/Tensor.h:3:0,
@@ -96,7 +96,7 @@ In file included from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages
                  from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/all.h:8,
                  from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/torch/extension.h:4,
                  from /home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:1:
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:62:42: warning: ‘at::DeprecatedTypeProperties& at::Tensor::type() const’ is deprecated: Tensor.type() is deprecated. Instead use Tensor.options(), which in many cases (e.g. in a constructor) is a drop-in replacement. If you were using data from type(), that is now available from Tensor itself, so instead of tensor.type().scalar_type(), use tensor.scalar_type() instead and instead of tensor.type().backend() use tensor.device(). [-Wdeprecated-declarations]
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:63:42: warning: ‘at::DeprecatedTypeProperties& at::Tensor::type() const’ is deprecated: Tensor.type() is deprecated. Instead use Tensor.options(), which in many cases (e.g. in a constructor) is a drop-in replacement. If you were using data from type(), that is now available from Tensor itself, so instead of tensor.type().scalar_type(), use tensor.scalar_type() instead and instead of tensor.type().backend() use tensor.device(). [-Wdeprecated-declarations]
  #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
                                           ^
 /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/c10/macros/Macros.h:171:65: note: in definition of macro ‘C10_UNLIKELY’
@@ -111,13 +111,13 @@ In file included from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages
 /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/c10/util/Exception.h:341:32: note: in expansion of macro ‘TORCH_CHECK_WITH’
  #define TORCH_CHECK(cond, ...) TORCH_CHECK_WITH(Error, cond, __VA_ARGS__)
                                 ^~~~~~~~~~~~~~~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:62:23: note: in expansion of macro ‘TORCH_CHECK’
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:63:23: note: in expansion of macro ‘TORCH_CHECK’
  #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
                        ^~~~~~~~~~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:64:24: note: in expansion of macro ‘CHECK_CUDA’
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:65:24: note: in expansion of macro ‘CHECK_CUDA’
  #define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x)
                         ^~~~~~~~~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:80:3: note: in expansion of macro ‘CHECK_INPUT’
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:81:3: note: in expansion of macro ‘CHECK_INPUT’
    CHECK_INPUT(bit_X2);
    ^~~~~~~~~~~
 In file included from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/ATen/Tensor.h:3:0,
@@ -149,7 +149,7 @@ In file included from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages
                  from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/torch/extension.h:4,
                  from /home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:1:
 /home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp: In function ‘at::Tensor bitMM2Bit_col(at::Tensor, at::Tensor, int, int, int, int, int, int)’:
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:62:42: warning: ‘at::DeprecatedTypeProperties& at::Tensor::type() const’ is deprecated: Tensor.type() is deprecated. Instead use Tensor.options(), which in many cases (e.g. in a constructor) is a drop-in replacement. If you were using data from type(), that is now available from Tensor itself, so instead of tensor.type().scalar_type(), use tensor.scalar_type() instead and instead of tensor.type().backend() use tensor.device(). [-Wdeprecated-declarations]
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:63:42: warning: ‘at::DeprecatedTypeProperties& at::Tensor::type() const’ is deprecated: Tensor.type() is deprecated. Instead use Tensor.options(), which in many cases (e.g. in a constructor) is a drop-in replacement. If you were using data from type(), that is now available from Tensor itself, so instead of tensor.type().scalar_type(), use tensor.scalar_type() instead and instead of tensor.type().backend() use tensor.device(). [-Wdeprecated-declarations]
  #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
                                           ^
 /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/c10/macros/Macros.h:171:65: note: in definition of macro ‘C10_UNLIKELY’
@@ -164,13 +164,13 @@ In file included from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages
 /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/c10/util/Exception.h:341:32: note: in expansion of macro ‘TORCH_CHECK_WITH’
  #define TORCH_CHECK(cond, ...) TORCH_CHECK_WITH(Error, cond, __VA_ARGS__)
                                 ^~~~~~~~~~~~~~~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:62:23: note: in expansion of macro ‘TORCH_CHECK’
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:63:23: note: in expansion of macro ‘TORCH_CHECK’
  #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
                        ^~~~~~~~~~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:64:24: note: in expansion of macro ‘CHECK_CUDA’
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:65:24: note: in expansion of macro ‘CHECK_CUDA’
  #define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x)
                         ^~~~~~~~~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:101:3: note: in expansion of macro ‘CHECK_INPUT’
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:102:3: note: in expansion of macro ‘CHECK_INPUT’
    CHECK_INPUT(bit_X1);
    ^~~~~~~~~~~
 In file included from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/ATen/Tensor.h:3:0,
@@ -201,7 +201,7 @@ In file included from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages
                  from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/all.h:8,
                  from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/torch/extension.h:4,
                  from /home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:1:
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:62:42: warning: ‘at::DeprecatedTypeProperties& at::Tensor::type() const’ is deprecated: Tensor.type() is deprecated. Instead use Tensor.options(), which in many cases (e.g. in a constructor) is a drop-in replacement. If you were using data from type(), that is now available from Tensor itself, so instead of tensor.type().scalar_type(), use tensor.scalar_type() instead and instead of tensor.type().backend() use tensor.device(). [-Wdeprecated-declarations]
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:63:42: warning: ‘at::DeprecatedTypeProperties& at::Tensor::type() const’ is deprecated: Tensor.type() is deprecated. Instead use Tensor.options(), which in many cases (e.g. in a constructor) is a drop-in replacement. If you were using data from type(), that is now available from Tensor itself, so instead of tensor.type().scalar_type(), use tensor.scalar_type() instead and instead of tensor.type().backend() use tensor.device(). [-Wdeprecated-declarations]
  #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
                                           ^
 /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/c10/macros/Macros.h:171:65: note: in definition of macro ‘C10_UNLIKELY’
@@ -216,13 +216,13 @@ In file included from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages
 /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/c10/util/Exception.h:341:32: note: in expansion of macro ‘TORCH_CHECK_WITH’
  #define TORCH_CHECK(cond, ...) TORCH_CHECK_WITH(Error, cond, __VA_ARGS__)
                                 ^~~~~~~~~~~~~~~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:62:23: note: in expansion of macro ‘TORCH_CHECK’
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:63:23: note: in expansion of macro ‘TORCH_CHECK’
  #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
                        ^~~~~~~~~~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:64:24: note: in expansion of macro ‘CHECK_CUDA’
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:65:24: note: in expansion of macro ‘CHECK_CUDA’
  #define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x)
                         ^~~~~~~~~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:102:3: note: in expansion of macro ‘CHECK_INPUT’
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:103:3: note: in expansion of macro ‘CHECK_INPUT’
    CHECK_INPUT(bit_X2);
    ^~~~~~~~~~~
 In file included from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/ATen/Tensor.h:3:0,
@@ -253,8 +253,8 @@ In file included from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages
                  from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/all.h:8,
                  from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/torch/extension.h:4,
                  from /home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:1:
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp: In function ‘at::Tensor bitMM2Int(at::Tensor, at::Tensor, int, int, int, int, int)’:
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:62:42: warning: ‘at::DeprecatedTypeProperties& at::Tensor::type() const’ is deprecated: Tensor.type() is deprecated. Instead use Tensor.options(), which in many cases (e.g. in a constructor) is a drop-in replacement. If you were using data from type(), that is now available from Tensor itself, so instead of tensor.type().scalar_type(), use tensor.scalar_type() instead and instead of tensor.type().backend() use tensor.device(). [-Wdeprecated-declarations]
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp: In function ‘at::Tensor bitMM2Int(at::Tensor, at::Tensor, int, int, int, int, int, bool)’:
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:63:42: warning: ‘at::DeprecatedTypeProperties& at::Tensor::type() const’ is deprecated: Tensor.type() is deprecated. Instead use Tensor.options(), which in many cases (e.g. in a constructor) is a drop-in replacement. If you were using data from type(), that is now available from Tensor itself, so instead of tensor.type().scalar_type(), use tensor.scalar_type() instead and instead of tensor.type().backend() use tensor.device(). [-Wdeprecated-declarations]
  #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
                                           ^
 /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/c10/macros/Macros.h:171:65: note: in definition of macro ‘C10_UNLIKELY’
@@ -269,13 +269,13 @@ In file included from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages
 /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/c10/util/Exception.h:341:32: note: in expansion of macro ‘TORCH_CHECK_WITH’
  #define TORCH_CHECK(cond, ...) TORCH_CHECK_WITH(Error, cond, __VA_ARGS__)
                                 ^~~~~~~~~~~~~~~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:62:23: note: in expansion of macro ‘TORCH_CHECK’
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:63:23: note: in expansion of macro ‘TORCH_CHECK’
  #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
                        ^~~~~~~~~~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:64:24: note: in expansion of macro ‘CHECK_CUDA’
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:65:24: note: in expansion of macro ‘CHECK_CUDA’
  #define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x)
                         ^~~~~~~~~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:122:3: note: in expansion of macro ‘CHECK_INPUT’
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:124:3: note: in expansion of macro ‘CHECK_INPUT’
    CHECK_INPUT(bit_X1);
    ^~~~~~~~~~~
 In file included from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/ATen/Tensor.h:3:0,
@@ -306,7 +306,7 @@ In file included from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages
                  from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/torch/csrc/api/include/torch/all.h:8,
                  from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/torch/extension.h:4,
                  from /home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:1:
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:62:42: warning: ‘at::DeprecatedTypeProperties& at::Tensor::type() const’ is deprecated: Tensor.type() is deprecated. Instead use Tensor.options(), which in many cases (e.g. in a constructor) is a drop-in replacement. If you were using data from type(), that is now available from Tensor itself, so instead of tensor.type().scalar_type(), use tensor.scalar_type() instead and instead of tensor.type().backend() use tensor.device(). [-Wdeprecated-declarations]
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:63:42: warning: ‘at::DeprecatedTypeProperties& at::Tensor::type() const’ is deprecated: Tensor.type() is deprecated. Instead use Tensor.options(), which in many cases (e.g. in a constructor) is a drop-in replacement. If you were using data from type(), that is now available from Tensor itself, so instead of tensor.type().scalar_type(), use tensor.scalar_type() instead and instead of tensor.type().backend() use tensor.device(). [-Wdeprecated-declarations]
  #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
                                           ^
 /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/c10/macros/Macros.h:171:65: note: in definition of macro ‘C10_UNLIKELY’
@@ -321,13 +321,13 @@ In file included from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages
 /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/c10/util/Exception.h:341:32: note: in expansion of macro ‘TORCH_CHECK_WITH’
  #define TORCH_CHECK(cond, ...) TORCH_CHECK_WITH(Error, cond, __VA_ARGS__)
                                 ^~~~~~~~~~~~~~~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:62:23: note: in expansion of macro ‘TORCH_CHECK’
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:63:23: note: in expansion of macro ‘TORCH_CHECK’
  #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
                        ^~~~~~~~~~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:64:24: note: in expansion of macro ‘CHECK_CUDA’
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:65:24: note: in expansion of macro ‘CHECK_CUDA’
  #define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x)
                         ^~~~~~~~~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:123:3: note: in expansion of macro ‘CHECK_INPUT’
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:125:3: note: in expansion of macro ‘CHECK_INPUT’
    CHECK_INPUT(bit_X2);
    ^~~~~~~~~~~
 In file included from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/ATen/Tensor.h:3:0,
@@ -359,7 +359,7 @@ In file included from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages
                  from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/torch/extension.h:4,
                  from /home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:1:
 /home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp: In function ‘at::Tensor val2bit(at::Tensor, int, bool, bool)’:
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:62:42: warning: ‘at::DeprecatedTypeProperties& at::Tensor::type() const’ is deprecated: Tensor.type() is deprecated. Instead use Tensor.options(), which in many cases (e.g. in a constructor) is a drop-in replacement. If you were using data from type(), that is now available from Tensor itself, so instead of tensor.type().scalar_type(), use tensor.scalar_type() instead and instead of tensor.type().backend() use tensor.device(). [-Wdeprecated-declarations]
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:63:42: warning: ‘at::DeprecatedTypeProperties& at::Tensor::type() const’ is deprecated: Tensor.type() is deprecated. Instead use Tensor.options(), which in many cases (e.g. in a constructor) is a drop-in replacement. If you were using data from type(), that is now available from Tensor itself, so instead of tensor.type().scalar_type(), use tensor.scalar_type() instead and instead of tensor.type().backend() use tensor.device(). [-Wdeprecated-declarations]
  #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
                                           ^
 /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/c10/macros/Macros.h:171:65: note: in definition of macro ‘C10_UNLIKELY’
@@ -374,13 +374,13 @@ In file included from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages
 /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/c10/util/Exception.h:341:32: note: in expansion of macro ‘TORCH_CHECK_WITH’
  #define TORCH_CHECK(cond, ...) TORCH_CHECK_WITH(Error, cond, __VA_ARGS__)
                                 ^~~~~~~~~~~~~~~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:62:23: note: in expansion of macro ‘TORCH_CHECK’
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:63:23: note: in expansion of macro ‘TORCH_CHECK’
  #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
                        ^~~~~~~~~~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:64:24: note: in expansion of macro ‘CHECK_CUDA’
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:65:24: note: in expansion of macro ‘CHECK_CUDA’
  #define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x)
                         ^~~~~~~~~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:140:3: note: in expansion of macro ‘CHECK_INPUT’
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:142:3: note: in expansion of macro ‘CHECK_INPUT’
    CHECK_INPUT(input);
    ^~~~~~~~~~~
 In file included from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/ATen/Tensor.h:3:0,
@@ -412,7 +412,7 @@ In file included from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages
                  from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/torch/extension.h:4,
                  from /home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:1:
 /home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp: In function ‘at::Tensor bit2val(at::Tensor, int, int, int, bool, bool)’:
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:62:42: warning: ‘at::DeprecatedTypeProperties& at::Tensor::type() const’ is deprecated: Tensor.type() is deprecated. Instead use Tensor.options(), which in many cases (e.g. in a constructor) is a drop-in replacement. If you were using data from type(), that is now available from Tensor itself, so instead of tensor.type().scalar_type(), use tensor.scalar_type() instead and instead of tensor.type().backend() use tensor.device(). [-Wdeprecated-declarations]
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:63:42: warning: ‘at::DeprecatedTypeProperties& at::Tensor::type() const’ is deprecated: Tensor.type() is deprecated. Instead use Tensor.options(), which in many cases (e.g. in a constructor) is a drop-in replacement. If you were using data from type(), that is now available from Tensor itself, so instead of tensor.type().scalar_type(), use tensor.scalar_type() instead and instead of tensor.type().backend() use tensor.device(). [-Wdeprecated-declarations]
  #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
                                           ^
 /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/c10/macros/Macros.h:171:65: note: in definition of macro ‘C10_UNLIKELY’
@@ -427,13 +427,13 @@ In file included from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages
 /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/c10/util/Exception.h:341:32: note: in expansion of macro ‘TORCH_CHECK_WITH’
  #define TORCH_CHECK(cond, ...) TORCH_CHECK_WITH(Error, cond, __VA_ARGS__)
                                 ^~~~~~~~~~~~~~~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:62:23: note: in expansion of macro ‘TORCH_CHECK’
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:63:23: note: in expansion of macro ‘TORCH_CHECK’
  #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
                        ^~~~~~~~~~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:64:24: note: in expansion of macro ‘CHECK_CUDA’
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:65:24: note: in expansion of macro ‘CHECK_CUDA’
  #define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x)
                         ^~~~~~~~~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:157:3: note: in expansion of macro ‘CHECK_INPUT’
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_host.cpp:159:3: note: in expansion of macro ‘CHECK_INPUT’
    CHECK_INPUT(input);
    ^~~~~~~~~~~
 In file included from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/ATen/Tensor.h:3:0,
@@ -622,22 +622,40 @@ In file included from /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages
 /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
    T * data() const {
  ^ ~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_device.cu: In function ‘at::Tensor bitMM2Int_cuda(at::Tensor, at::Tensor, int, int, int, int, int)’:
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_device.cu:336:161: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
-     QGTC_layer_output<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads_1, shared_memory>>>(
-                                                                                                                                                                 ^
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_device.cu: In function ‘at::Tensor bitMM2Int_cuda(at::Tensor, at::Tensor, int, int, int, int, int, int)’:
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_device.cu:332:168: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+         QGTC_layer_output_PAD128<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads_1, shared_memory>>>(
+                                                                                                                                                                        ^
 /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
    T * data() const {
  ^ ~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_device.cu:336:183: warning: ‘T* at::Tensor::data() const [with T = int]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
-     QGTC_layer_output<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads_1, shared_memory>>>(
-                                                                                                                                                                                       ^
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_device.cu:332:190: warning: ‘T* at::Tensor::data() const [with T = int]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+         QGTC_layer_output_PAD128<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads_1, shared_memory>>>(
+                                                                                                                                                                                              ^
 /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
    T * data() const {
  ^ ~~
-/home/yuke/sc21_QGTC/QGTC_module/QGTC_device.cu:336:205: warning: ‘T* at::Tensor::data() const [with T = int]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
-     QGTC_layer_output<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads_1, shared_memory>>>(
-                                                                                                                                                                                                             ^
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_device.cu:332:212: warning: ‘T* at::Tensor::data() const [with T = int]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+         QGTC_layer_output_PAD128<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads_1, shared_memory>>>(
+                                                                                                                                                                                                                    ^
+/home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
+   T * data() const {
+ ^ ~~
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_device.cu:341:166: warning: ‘T* at::Tensor::data() const [with T = float]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+         QGTC_layer_output_PAD8<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads_1, shared_memory>>>(
+                                                                                                                                                                      ^
+/home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
+   T * data() const {
+ ^ ~~
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_device.cu:341:188: warning: ‘T* at::Tensor::data() const [with T = int]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+         QGTC_layer_output_PAD8<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads_1, shared_memory>>>(
+                                                                                                                                                                                            ^
+/home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
+   T * data() const {
+ ^ ~~
+/home/yuke/sc21_QGTC/QGTC_module/QGTC_device.cu:341:210: warning: ‘T* at::Tensor::data() const [with T = int]’ is deprecated: Tensor.data<T>() is deprecated. Please use Tensor.data_ptr<T>() instead. [-Wdeprecated-declarations]
+         QGTC_layer_output_PAD8<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads_1, shared_memory>>>(
+                                                                                                                                                                                                                  ^
 /home/yuke/anaconda3/envs/qgtc/lib/python3.7/site-packages/torch/include/ATen/core/TensorBody.h:363:1: note: declared here
    T * data() const {
  ^ ~~

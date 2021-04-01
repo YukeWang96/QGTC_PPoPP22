@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "/home/yuke/anaconda3/envs/dgl/bin/python",
+    "python.pythonPath": "/home/yuke/anaconda3/envs/qgtc/bin/python",
     "files.associations": {
         "cctype": "cpp",
         "clocale": "cpp",

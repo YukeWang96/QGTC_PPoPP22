@@ -312,7 +312,7 @@ torch::Tensor bitMM2Int_cuda(
     const int X2_width,
     const int bit1,
     const int bit2,
-    const bool pad_128=false
+    const int pad_128=false
 )
 {
     // allocate the output Tensor on GPU.
@@ -343,13 +343,12 @@ torch::Tensor bitMM2Int_cuda(
             X1_height, X1_width, X2_width, bit1, bit2
         );
     }
-    
+
     cudaError_t error = cudaGetLastError();
     if(error != cudaSuccess){
         printf("CUDA error at bitMM2Int_cuda: %s\n", cudaGetErrorString(error));
         exit(-1);
     }
-
 
     return float_X_out;
 }

@@ -1,3 +1,3 @@
 # ninja log v5
-0	19908	1617304874374925461	/home/yuke/sc21_QGTC/QGTC_module/build/temp.linux-x86_64-3.7/QGTC_host.o	36867ff8285ff830
-0	36068	1617304890531007328	/home/yuke/sc21_QGTC/QGTC_module/build/temp.linux-x86_64-3.7/QGTC_device.o	1cdbabe81294b20a
+0	20667	1617314828451767372	/home/yuke/sc21_QGTC/QGTC_module/build/temp.linux-x86_64-3.7/QGTC_host.o	36867ff8285ff830
+1	36219	1617314844003847274	/home/yuke/sc21_QGTC/QGTC_module/build/temp.linux-x86_64-3.7/QGTC_device.o	1cdbabe81294b20a

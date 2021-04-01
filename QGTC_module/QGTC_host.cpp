@@ -46,9 +46,9 @@ torch::Tensor bitMM2Bit_col_cuda(
 );
 
 
-//
+// 
 // bit_X1 and bit_x2 --> float output.
-//
+// 
 torch::Tensor bitMM2Int_cuda(
     torch::Tensor bit_X1,
     torch::Tensor bit_X2,
@@ -108,9 +108,9 @@ torch::Tensor bitMM2Bit_col(
 }
 
 
-//
+// 
 // bit_X1 and bit_X2 --> [ float ] output.
-//
+// 
 torch::Tensor bitMM2Int(
     torch::Tensor bit_X1,
     torch::Tensor bit_X2,
@@ -170,5 +170,5 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   m.def("bitMM2Bit", &bitMM2Bit, "QGTC [ bit_A x bit_B --> bit_C ] forward (CUDA)");
   m.def("bitMM2Bit_col", &bitMM2Bit_col, "QGTC [ bit_A x bit_B --> bit_C (column major) ] forward (CUDA)");
 
-  m.def("bitMM2Int", &bitMM2Int, "QGTC [ bit_A x bit_B --> int32_C ] forward (CUDA)");
+  m.def("bitMM2Int", &bitMM2Int, "QGTC [ bit_A x bit_B --> float32 ] forward (CUDA)");
 }
