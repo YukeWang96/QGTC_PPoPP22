@@ -311,38 +311,45 @@ torch::Tensor bitMM2Int_cuda(
     const int X1_width,
     const int X2_width,
     const int bit1,
-    const int bit2
+    const int bit2,
+    const bool pad_128=false
 )
 {
     // allocate the output Tensor on GPU.
-    // auto options = torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA, 0);
-    // printf("X1_height: %d, X2_width: %d\n", X1_height, X2_width);
     torch::Tensor float_X_out = torch::zeros({X1_height, X2_width}).to(torch::kCUDA);
-    // int out_height = float_X_out.size(0);
-    // int out_width = float_X_out.size(1);
-    // printf("out_height: %d\n", out_height);
-    // printf("out_height: %d, out_width: %d\n", out_height, out_width);
-    // exit(-1);
 
     int dev = 0;
     cudaDeviceProp deviceProp;
+    cudaGetDeviceProperties(&deviceProp, dev);
+
     int numBlocksPerSm;
     int shared_memory = 64*1e3; // 64KB
 
-    cudaGetDeviceProperties(&deviceProp, dev);
-    cudaFuncSetAttribute(QGTC_layer_output, cudaFuncAttributeMaxDynamicSharedMemorySize, shared_memory);
-    cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, QGTC_layer_output, numThreads_1, shared_memory);
-
-    QGTC_layer_output<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads_1, shared_memory>>>(
-        float_X_out.data<float>(), bit_X1.data<int>(), bit_X2.data<int>(),
-        X1_height, X1_width, X2_width, bit1, bit2
-    );
-
+    if (pad_128){   // for GIN like A (XW), XW is PAD128
+        cudaFuncSetAttribute(QGTC_layer_output_PAD128, cudaFuncAttributeMaxDynamicSharedMemorySize, shared_memory);
+        cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, QGTC_layer_output_PAD128, numThreads_1, shared_memory);
+    
+        QGTC_layer_output_PAD128<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads_1, shared_memory>>>(
+            float_X_out.data<float>(), bit_X1.data<int>(), bit_X2.data<int>(),
+            X1_height, X1_width, X2_width, bit1, bit2
+        );
+    }
+    else{   // for all other case C = XW, W is PAD8.
+        cudaFuncSetAttribute(QGTC_layer_output_PAD8, cudaFuncAttributeMaxDynamicSharedMemorySize, shared_memory);
+        cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, QGTC_layer_output_PAD8, numThreads_1, shared_memory);
+    
+        QGTC_layer_output_PAD8<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads_1, shared_memory>>>(
+            float_X_out.data<float>(), bit_X1.data<int>(), bit_X2.data<int>(),
+            X1_height, X1_width, X2_width, bit1, bit2
+        );
+    }
+    
     cudaError_t error = cudaGetLastError();
     if(error != cudaSuccess){
         printf("CUDA error at bitMM2Int_cuda: %s\n", cudaGetErrorString(error));
         exit(-1);
     }
+
 
     return float_X_out;
 }

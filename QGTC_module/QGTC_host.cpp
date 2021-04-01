@@ -56,7 +56,8 @@ torch::Tensor bitMM2Int_cuda(
     const int X1_width,
     const int X2_width,
     const int bit1,
-    const int bit2
+    const int bit2,
+    const int pad_128=false
 );
 
 #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
@@ -117,14 +118,15 @@ torch::Tensor bitMM2Int(
     const int X1_width,
     const int X2_width,
     const int bit1,
-    const int bit2
+    const int bit2,
+    const bool pad_128=false
 ) {
   CHECK_INPUT(bit_X1);
   CHECK_INPUT(bit_X2);
 
   return bitMM2Int_cuda(bit_X1, bit_X2, \
                         X1_height, X1_width, X2_width, \
-                        bit1, bit2);
+                        bit1, bit2, pad_128);
 }
 
 //

@@ -550,7 +550,7 @@ void QGTC_layer_hidden_col(
 // (bit_X, bit_W) --> (float X_out)
 //
 __global__ 
-void QGTC_layer_output(
+void QGTC_layer_output_PAD8(
     float* X_out, 
     int* __restrict__ bit_X, 
     int* __restrict__ bit_W,
@@ -666,4 +666,127 @@ void QGTC_layer_output(
         } //end if laneid < 8
     }
 }
+
+
+//
+// (bit_X, bit_W) --> (float X_out)
+//
+__global__ 
+void QGTC_layer_output_PAD128(
+    float* X_out, 
+    int* __restrict__ bit_X, 
+    int* __restrict__ bit_W,
+    const int X_height,
+    const int X_width,
+    const int W_width,
+    const int act_bit,
+    const int w_bit
+)
+{
+    using namespace nvcuda;
+    using namespace nvcuda::wmma::experimental;
+
+    GET_LANEID;
+    GET_WARPID;
+    extern __shared__ int Cs[];
+
+    const int act_offset = PAD8(X_height)*STEP128(X_width)*128/32;
+    const int w_offset = STEP128(X_width)*PAD128(W_width)*128/32;
+
+    const int gdx = STEP8(X_height); //vertical
+    const int gdy = STEP8(W_width); //horizontal
+    const int gdk = STEP128(X_width);
+
+    // printf("act_bit: %d, w_bit: %d, act_offset: %d, w_offset: %d, gdx: %d, gdy: %d, gdk: %d\n", act_bit, w_bit, act_offset, w_offset, gdx, gdy, gdk);
+
+    for (int bid=blockIdx.x*warpPerBlock+warpid; bid<gdx*gdy; bid+=gridDim.x*warpPerBlock)
+    {
+        wmma::fragment<wmma::matrix_a, 8, 8, 128, precision::b1, wmma::row_major> a_frag;
+        wmma::fragment<wmma::matrix_b, 8, 8, 128, precision::b1, wmma::col_major> b_frag;
+        wmma::fragment<wmma::accumulator, 8, 8, 128, int> c_frag;
+        wmma::fragment<wmma::accumulator, 8, 8, 128, int> tmp_frag;
+
+        const int bx = bid / gdy;
+        const int by = bid % gdy;
+
+        wmma::fill_fragment(c_frag, 0);
+
+        for (int bit = 0; bit < act_bit*w_bit; bit++){
+
+            int b_act = bit % act_bit;
+            int b_w = bit / act_bit;
+            int b_opt = b_act + b_w;
+
+            // accmuluation of the current bit.
+            wmma::fill_fragment(tmp_frag, 0);
+
+            for (int i=0; i<gdk; i++)
+            {
+                // atomicAdd(&counter_global, 1);
+                #ifdef base
+                load_matrix_sync(a_frag, bit_X + b_act*act_offset + bx*8*gdk*4 + i*128/32, gdk*128);
+                load_matrix_sync(b_frag, bit_W + b_w*w_offset + by*8*gdk*4 + i*128/32, gdk*128);
+                bmma_sync(tmp_frag, a_frag, b_frag, tmp_frag, bmmaBitOpAND);
+                #else 
+                typedef union {unsigned x[4];} uint4;
+                uint4 tmp;
+                unsigned val = 0;
+                unsigned cmp = 0;
+
+                if (laneid < 8){
+                    tmp = * (uint4*) (bit_X + b_act*act_offset + bx*8*gdk*4 + i*128/32 + laneid*gdk*128);
+                    val = tmp.x[0] | tmp.x[1] | tmp.x[2] | tmp.x[3];
+                }
+                cmp = __ballot_sync(0x000000FF, val > 0);
+
+                if (cmp > 0){
+                    atomicAdd(&counter, 1);
+
+                    // printf("hello here\n");
+                    load_matrix_sync(a_frag, bit_X + b_act*act_offset + bx*8*gdk*4 + i*128/32, gdk*128);
+                    load_matrix_sync(b_frag, bit_W + b_w*w_offset + by*8*gdk*4 + i*128/32, gdk*128);
+                    bmma_sync(tmp_frag, a_frag, b_frag, tmp_frag, bmmaBitOpAND);
+                }  
+                #endif
+            }
+
+            // Accumulation.
+            #pragma unroll
+            for (int t = 0; t < tmp_frag.num_elements; t++) 
+            {
+                // printf("%d\n", c_frag.x[t]);
+                c_frag.x[t] += (tmp_frag.x[t]<<b_opt);
+            }
+            __syncwarp();
+        }
+
+        store_matrix_sync(&Cs[warpid*64], c_frag, 8, wmma::mem_row_major);
+        // if (laneid == 0 && warpid == 0){
+        //     for (int i=0; i<8; i++){
+        //         for (int j=0; j<8; j++){
+        //             printf("%d ", Cs[warpid*64 + i * 8 + j]);
+        //         }
+        //         printf("\n");
+        //     }
+        // }
+
+        float* output_sub = &(X_out[bx*(W_width)*8+by*8]);
+
+        if (laneid < 8)
+        {
+            for (int j=0; j<8; j++)
+            {
+                if ((bx*8+j)<(X_height))
+                {
+                    if (by*8+laneid<(W_width))
+                    {
+                        float val = Cs[warpid*64+j*8+laneid]*1.0f; //* (p->bn_scale_gpu[by*8+laneid]) + (p->bn_bias_gpu[by*8+laneid]);
+                        output_sub[j*(W_width)+laneid] = val;
+                    }
+                }
+            }
+        } //end if laneid < 8
+    }
+}
+
 #endif

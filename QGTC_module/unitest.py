@@ -100,16 +100,21 @@ def TEST_GCNConv(N=3, D=3, D1=3, nbits_a=2, nbits_x=2, nbits_w=2):
 
     bit_XW_col = QGTC.bitMM2Bit_col(bit_x, bit_w, N, D, D1, nbits_a, nbits_x, nbits_x)
     # print(bit_XW_col)                       # column-major: nbits*PAD8(height), STEP128(width)*4}
-    print(bit_XW_col.size())
-    print("N: {}, D1: {}".format(N, D1))
-    print_tensor(bit_XW_col)
+    # print(bit_XW_col.size())
+    # print("N: {}, D1: {}".format(N, D1))
+    # print_tensor(bit_XW_col)
+
     val_XW = QGTC.bit2val(bit_XW_col, nbits_x, N, D1, True, False)
     print("**********************")
     print("1: val_AX: \n", val_XW)
+    int_AXW = QGTC.bitMM2Int(bit_a, bit_XW_col, N, N, D1, nbits_a, nbits_x, True)
+    print("int_AXW:\n", int_AXW)
 
-    # int_AX = QGTC.bitMM2Int(bit_a, bit_XW_col, N, N, D1, nbits_a, nbits_x)
-    # print("int_AX:\n", int_AX)
+    # bit_AXW = QGTC.bitMM2Bit(bit_a, bit_XW_col, N, N, D1, nbits_a, nbits_x, nbits_x)
+    # val_AXW = QGTC.bit2val(bit_AXW, nbits_x, N, D1, False, False)
+    # print("1: val_AX: \n", val_AXW)
 
+    # ref = torch.mm(X, W)
     # int_AXW = QGTC.bitMM2Int(bit_AX, bit_w, M, K, N, nbits_a, nbits_w)
     # print("int_AXW:\n", int_AXW)
     # bit_AXW = QGTC.bitMM2Bit(bit_AX, bit_w, M, N, N1, nbits_a, nbits_x, nbits_x)
@@ -152,7 +157,7 @@ if __name__ == '__main__':
     # test_bitencodingAndDecoding()
     # TEST_bitMM2Int(M=3, K=3, N=3, nbits_a=3, nbits_b=3)
     # for T in range(64):
-    T = 32
+    # T = 32
     # TEST_bitMM2bit(M=T, K=T, N=T, nbits_a=2, nbits_b=2)
     # TEST_GINConv(M=3, K=3, N=3, N1=3, nbits_a=1, nbits_x=2, nbits_w=2)
-    TEST_GCNConv(N=8, D=128, D1=8, nbits_a=2, nbits_x=2, nbits_w=2)
+    TEST_GCNConv(N=8, D=128, D1=8, nbits_a=1, nbits_x=2, nbits_w=2)
