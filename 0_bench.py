@@ -23,7 +23,7 @@ dataset = [
 		# ('SW-620H'                   , 66       , 2) ,
 
 		# ('PROTEINS_full'             , 32     , 2) ,   
-		# ('ppi'	            		 , 50	  , 121),   
+		('ppi'	            		 , 50	  , 121),   
 		# ( 'artist'                 	 , 100	  , 12),
 		# ( 'soc-BlogCatalog'	     	 , 128	  , 39),     
 
@@ -34,7 +34,6 @@ dataset = [
 
 		# ('YeastH'                    , 75       , 2) ,   
 		# ( 'wiki-topcats'             , 300	  , 12),
-
 	    # ( 'reddit'                   , 602    , 41),
 		# ( 'COLLAB'                   , 100      , 3) ,
 		# ( 'Reddit'                   , 602      , 41),
@@ -47,7 +46,10 @@ for n_Layer in num_layers:
 		for data, d, c in dataset:
 			print("=> {}, hiddn: {}".format(data, hid))
 			for p in partitions:
-				command = "python cluster_gcn.py --gpu 0 --dataset {} --dim {} --n-classes {} --n-hidden {} --psize {}".\
+				command = "python cluster_gcn.py --gpu 0 \
+							--dataset {} --dim {} --n-hidden {} --n-classes {} \
+							--psize {}\
+							--regular".\
 							format(data, d, c, hid, p)		
 				# command = "sudo ncu --csv --set full python main_gcn.py --dataset {0} --dim {1} --hidden {2} --classes {3} --num_layers {4} --model {5} | tee prof_{0}.csv".format(data, d, hid, c, n_Layer, model)		
 				os.system(command)

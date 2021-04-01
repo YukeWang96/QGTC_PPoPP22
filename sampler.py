@@ -8,8 +8,6 @@ from partition_utils import *
 import sys
 from scipy.sparse import coo_matrix
 
-from config import *
-
 class ClusterTensor(torch.nn.Module):
     def __init__(self, A, X):
         super(ClusterTensor, self).__init__()
@@ -23,7 +21,7 @@ class ClusterIter(object):
     '''The partition sampler given a DGLGraph and partition number.
     The metis is used as the graph partition backend.
     '''
-    def __init__(self, dn, g, psize, batch_size, seed_nid, use_pp=False):
+    def __init__(self, dn, g, psize, batch_size, seed_nid, use_pp=False, regular=False):
         """Initialize the sampler.
 
         Paramters
@@ -49,7 +47,8 @@ class ClusterIter(object):
         if use_pp:
             self.precalc(self.g)
             print('precalculating')
-
+        
+        self.regular = regular
         self.psize = psize
         self.batch_size = batch_size
         # cache the partitions of known datasets&partition number
@@ -68,7 +67,7 @@ class ClusterIter(object):
         random.shuffle(self.par_li)
         self.get_fn = get_subgraph
 
-        if not regular:
+        if not self.regular:
             self.cTensor_li = []
             # preprocess all subgraphs.
             for cid in range(self.max):
@@ -119,7 +118,7 @@ class ClusterIter(object):
     def __next__(self):
         global regular
         if self.n < self.max:
-            if not regular:
+            if not self.regular:
                 item = self.cTensor_li[self.n]
                 self.n += 1
                 return item

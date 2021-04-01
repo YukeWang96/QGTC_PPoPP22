@@ -13,6 +13,7 @@ import os.path as osp
 from modules import *
 from sampler import ClusterIter
 from utils import load_data
+from tqdm import *
 
 import matplotlib.pylab as plt
 import numpy as np
@@ -45,9 +46,9 @@ print(args)
 
 
 def main(args):
-    torch.manual_seed(args.rnd_seed)
-    np.random.seed(args.rnd_seed)
-    random.seed(args.rnd_seed)
+    torch.manual_seed(3)
+    np.random.seed(2)
+    random.seed(2)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
@@ -80,7 +81,7 @@ def main(args):
     # metis only support int64 graph
     g = g.long()
     # get the subgraph based on the partitioning nodes list.
-    cluster_iterator = ClusterIter(args.dataset, g, args.psize, args.batch_size, train_nid, use_pp=False)
+    cluster_iterator = ClusterIter(args.dataset, g, args.psize, args.batch_size, train_nid, use_pp=False, regular=args.regular)
 
     torch.cuda.set_device(args.gpu)
     val_mask = val_mask.cuda()
@@ -128,7 +129,7 @@ def main(args):
     layer3_t = 0
 
     cnt = 0
-    for epoch in range(args.n_epochs):
+    for epoch in tqdm(range(args.n_epochs)):
         for j, cluster in enumerate(cluster_iterator):
             if args.regular:
                 torch.cuda.synchronize()

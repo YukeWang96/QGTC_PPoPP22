@@ -6,21 +6,16 @@ import torch.nn as nn
 from torch_geometric.nn import SAGEConv, BatchNorm
 import torch.nn.functional as F
 
+########################
+### GIN
+########################
+
 class GraphSAGELayer(nn.Module):
     def __init__(self,
                  in_feats,
-                 out_feats,
-                 activation,
-                 dropout,
-                 bias=True,
-                 use_pp=False,
-                 use_lynorm=True):
+                 out_feats):
         super(GraphSAGELayer, self).__init__()
-        # The input feature size gets doubled as we concatenated the original
-        # features with the new features.
         self.linear = nn.Linear(in_feats, out_feats, bias=bias)
-        self.activation = activation
-        self.use_pp = use_pp
         self.reset_parameters()
 
     def reset_parameters(self):
@@ -35,20 +30,9 @@ class GraphSAGELayer(nn.Module):
         g.update_all(fn.copy_src(src='h', out='m'), \
                     fn.sum(msg='m', out='h'))
         ah = g.ndata.pop('h')
-        h = self.linear(h)
-        h = self.activation(h)
+        h = self.linear(ah)
+        h = F.relu(h)
         return h
-
-    def concat(self, h, ah, norm):
-        ah = ah * norm
-        h = torch.cat((h, ah), dim=1)
-        return h
-
-    # def get_norm(self, g):
-    #     norm = 1. / g.in_degrees().float().unsqueeze(1)
-    #     norm[torch.isinf(norm)] = 0
-    #     norm = norm.to(self.linear.weight.device)
-    #     return norm
 
 class GraphSAGE(nn.Module):
     def __init__(self,
@@ -63,24 +47,23 @@ class GraphSAGE(nn.Module):
         self.layers = nn.ModuleList()
 
         # input layer
-        self.layers.append(GraphSAGELayer(in_feats, n_hidden, activation=activation,
-                                        dropout=dropout, use_pp=use_pp, use_lynorm=True))
+        self.layers.append(GraphSAGELayer(in_feats, n_hidden))
         # hidden layers
         for i in range(1):
             self.layers.append(
-                GraphSAGELayer(n_hidden, n_hidden, activation=activation, dropout=dropout,
-                             use_pp=False, use_lynorm=True))
+                GraphSAGELayer(n_hidden, n_hidden))
         # output layer
-        self.layers.append(GraphSAGELayer(n_hidden, n_classes, activation=None,
-                                        dropout=dropout, use_pp=False, use_lynorm=False))
+        self.layers.append(GraphSAGELayer(n_hidden, n_classes))
 
     def forward(self, g):
         h = g.ndata['feat']
         for layer in self.layers:
             h = layer(g, h)
         return h
-
-
+        
+########################
+### GIN
+########################
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
