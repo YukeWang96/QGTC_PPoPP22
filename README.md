@@ -1,4 +1,4 @@
-QGTC: Accelerating Quantized GNN via GPU Tensor Core
+QGTC: Accelerating Quantized GNN via GPU Tensor Core [on going]
 ============
 
 
