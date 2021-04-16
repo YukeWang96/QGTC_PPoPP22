@@ -1,6 +1,6 @@
-QGTC: Accelerating Quantized GNN via GPU Tensor Core [on going]
+QGTC: Accelerating Quantized GNN via GPU Tensor Core
 ============
-
+**Note that This project is still under active development.**
 
 Dependencies
 ------------
