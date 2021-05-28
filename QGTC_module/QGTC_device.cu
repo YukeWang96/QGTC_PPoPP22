@@ -231,9 +231,28 @@ torch::Tensor bitMM2Bit_cuda(
     cudaFuncSetAttribute(QGTC_layer_hidden, cudaFuncAttributeMaxDynamicSharedMemorySize, shared_memory);
     cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, QGTC_layer_hidden, numThreads_1, shared_memory);
 
+
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+
+    cudaEventRecord(start);
+
+    #define PROF 200
+    for (int i = 0; i < PROF; i++)
     QGTC_layer_hidden<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads_1, shared_memory>>>(
         bit_X_out.data<int>(), bit_X1.data<int>(), bit_X2.data<int>(),
         X1_height, X1_width, X2_width, bit1, bit2, output_bit);
+
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
+
+    printf("X1_height %d, X1_width: %d, X2_width: %d, TFLOPs: %.3f\n", \
+        X1_height, X1_width, X2_width, \
+        2.0f*X1_height*X1_width*X2_width*PROF/(milliseconds/1e3)/1e12);
+
 
     cudaError_t error = cudaGetLastError();
     if(error != cudaSuccess){
