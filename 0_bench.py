@@ -9,7 +9,7 @@ data_dir = 'graphs/'
 partitions = [1500] # 1500, 3000, 4500, 6000, 7500, 9000]
 
 dataset = [
-		('ppi'	            		 , 50	  , 121),   
+		# ('ppi'	            		 , 50	  , 121),   
 		( 'artist'                 	 , 100	  , 12),
 		( 'soc-BlogCatalog'	     	 , 128	  , 39),    
 ]

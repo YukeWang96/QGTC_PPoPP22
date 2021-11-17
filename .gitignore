@@ -10,3 +10,5 @@ __pycache__/*
 *.o
 *linux*
 .vscode*
+qgtc_graphs/*
+*.tar.gz

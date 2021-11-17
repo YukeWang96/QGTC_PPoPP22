@@ -32,20 +32,28 @@ class QGTC_dataset(torch.nn.Module):
         self.test_mask = torch.BoolTensor(self.test_mask)
 
     def init_edges(self, path):
-        fp = open(path, "r")
-        src_li = []
-        dst_li = []
+        # fp = open(path, "r")
+        # src_li = []
+        # dst_li = []
         start = time.perf_counter()
-        for line in fp:
-            src, dst = line.strip('\n').split()
-            src, dst = int(src), int(dst)
-            src_li.append(src)
-            dst_li.append(dst)
-            self.nodes.add(src)
-            self.nodes.add(dst)
+        # for line in fp:
+        #     src, dst = line.strip('\n').split()
+        #     src, dst = int(src), int(dst)
+        #     src_li.append(src)
+        #     dst_li.append(dst)
+        #     self.nodes.add(src)
+        #     self.nodes.add(dst)
+        
+        start = time.perf_counter()
+        graph_obj = np.load(path)
+        src_li = graph_obj['src_li']
+        dst_li = graph_obj['dst_li']
+
         self.edge_index = np.array([src_li, dst_li])
         self.g.add_edges(src_li, dst_li) 
-        self.num_nodes = max(self.nodes) + 1
+        # self.num_nodes = max(src_li + dst_li) + 1 
+        self.num_nodes = graph_obj['num_nodes']
+        
         dur = time.perf_counter() - start
         print("Loading (ms):\t{:.3f}".format(dur*1e3))
 

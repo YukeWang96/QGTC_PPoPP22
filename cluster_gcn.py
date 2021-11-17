@@ -13,7 +13,7 @@ from sampler import ClusterIter
 from utils import load_data
 from tqdm import *
 
-import matplotlib.pylab as plt
+# import matplotlib.pylab as plt
 import numpy as np
 from scipy.sparse import coo_matrix
 
@@ -69,7 +69,7 @@ def main(args):
         val_mask = split_idx['valid']
         test_mask = split_idx['test']
     else:
-        path = osp.join("/home/yuke/.graphs/orig", args.dataset)
+        path = osp.join("./graphs", args.dataset+".npz")
         data = QGTC_dataset(path, args.dim, args.n_classes)
         g = data.g
         train_mask = data.train_mask
@@ -117,7 +117,7 @@ def main(args):
     W_3 = torch.ones((hidden_1, output)).cuda()
 
     bw_A = 1
-    bw_X = 1
+    bw_X = 4
     bw_W = bw_X
 
     bit_W1 = QGTC.val2bit(W_1.cuda(), bw_W, True, False)
