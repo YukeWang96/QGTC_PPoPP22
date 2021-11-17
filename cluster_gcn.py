@@ -69,7 +69,7 @@ def main(args):
         val_mask = split_idx['valid']
         test_mask = split_idx['test']
     else:
-        path = osp.join("./graphs", args.dataset+".npz")
+        path = osp.join("./qgtc_graphs", args.dataset+".npz")
         data = QGTC_dataset(path, args.dim, args.n_classes)
         g = data.g
         train_mask = data.train_mask
