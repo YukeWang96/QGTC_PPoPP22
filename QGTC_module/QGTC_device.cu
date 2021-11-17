@@ -206,7 +206,7 @@ torch::Tensor bit2val_cuda(
 }
 
 //
-// bit_X1 and bit_x2 --> [ int32 ] output.
+// bit_X1 and bit_x2 --> [ int32 ] in bit output.
 //
 torch::Tensor bitMM2Bit_cuda(
     torch::Tensor bit_X1,
@@ -238,7 +238,7 @@ torch::Tensor bitMM2Bit_cuda(
 
     cudaEventRecord(start);
 
-    #define PROF 200
+    #define PROF 1
     for (int i = 0; i < PROF; i++)
     QGTC_layer_hidden<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads_1, shared_memory>>>(
         bit_X_out.data<int>(), bit_X1.data<int>(), bit_X2.data<int>(),
@@ -249,9 +249,9 @@ torch::Tensor bitMM2Bit_cuda(
     float milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);
 
-    printf("X1_height %d, X1_width: %d, X2_width: %d, TFLOPs: %.3f\n", \
-        X1_height, X1_width, X2_width, \
-        2.0f*X1_height*X1_width*X2_width*PROF/(milliseconds/1e3)/1e12);
+    // printf("X1_height %d, X1_width: %d, X2_width: %d, TFLOPs: %.3f\n", \
+    //     X1_height, X1_width, X2_width, \
+    //     2.0f*X1_height*X1_width*X2_width*PROF/(milliseconds/1e3)/1e12);
 
 
     cudaError_t error = cudaGetLastError();

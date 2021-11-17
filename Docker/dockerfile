@@ -23,7 +23,8 @@ RUN pip install torch-scatter -f https://pytorch-geometric.com/whl/torch-1.8.0+c
     pip install torch-sparse -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html  \
     pip install torch-cluster -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html \
     pip install torch-spline-conv -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html \
-    pip install torch-geometric
+    pip install torch-geometric \
+    pip install ogb
 
 RUN conda init
 RUN /bin/bash -c "source root/.bashrc"

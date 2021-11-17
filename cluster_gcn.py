@@ -27,7 +27,7 @@ parser = argparse.ArgumentParser()
 register_data_args(parser)
 parser.add_argument("--gpu", type=int, default=0, help="gpu")
 
-parser.add_argument("--n-epochs", type=int, default=200, help="number of training epochs")
+parser.add_argument("--n-epochs", type=int, default=1, help="number of training epochs")
 parser.add_argument("--batch-size", type=int, default=20, help="batch size")
 parser.add_argument("--psize", type=int, default=1500, help="number of partitions")
 
@@ -117,7 +117,7 @@ def main(args):
     W_3 = torch.ones((hidden_1, output)).cuda()
 
     bw_A = 1
-    bw_X = 32
+    bw_X = 1
     bw_W = bw_X
 
     bit_W1 = QGTC.val2bit(W_1.cuda(), bw_W, True, False)
@@ -144,9 +144,9 @@ def main(args):
                 num_nodes = max(max(row), max(col)) + 1
                 A = coo_matrix((data, (row, col)), shape=(num_nodes, num_nodes)).toarray()
                 # print(A)
-                plt.spy(A)
+                # plt.spy(A)
                 # plt.show()
-                plt.savefig('ppi/{}.pdf'.format(j))
+                # plt.savefig('ppi/{}.pdf'.format(j))
 
                 torch.cuda.synchronize()
                 transfering += time.perf_counter() - t
@@ -216,7 +216,7 @@ def main(args):
                         # torch.cuda.synchronize()
                         # t = time.perf_counter()
                         bit_output_4 = QGTC.bitMM2Bit(bit_A, bit_output_3, A.size(0), A.size(0), W_2.size(1), bw_A, bw_X, bw_X)
-                        float_output = QGTC.bitMM2Int(bit_output_4, bit_W3, A.size(0), W_2.size(1), W_3.size(1), bw_X, bw_W)
+                        float_output = QGTC.bitMM2Int(bit_output_4, bit_W3, A.size(0), W_2.size(1), W_3.size(1), bw_X, bw_W, False)
                         # torch.cuda.synchronize()
                         # layer3_t += time.perf_counter() - t
                     
@@ -234,7 +234,7 @@ def main(args):
 
                         # 3-layer  [hidden, output]
                         bit_output_4 = QGTC.bitMM2Bit(bit_output_3, bit_W3, A.size(0), W_2.size(1), W_3.size(1), bw_X, bw_W, bw_X)
-                        float_output = QGTC.bitMM2Int(bit_A, bit_output_4, A.size(0), A.size(0), W_2.size(1), bw_A, bw_X)
+                        float_output = QGTC.bitMM2Int(bit_A, bit_output_4, A.size(0), A.size(0), W_2.size(1), bw_A, bw_X, False)
 
                     del bit_A
                     del bit_X
