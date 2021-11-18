@@ -5,7 +5,7 @@ from torch_geometric.nn import GCNConv
 import torch.nn.functional as F
 
 ########################
-### GraphSAGE
+### GraphSAGE (DGL)
 ########################
 class GraphSAGELayer(nn.Module):
     def __init__(self,
@@ -46,7 +46,7 @@ class GraphSAGE(nn.Module):
         return h
         
 ########################
-### GIN
+### GIN (DGL)
 ########################
 import torch
 import torch.nn as nn
@@ -100,7 +100,9 @@ class GIN(nn.Module):
             h = self.ginlayers[i](g, h)
         return h
 
-
+########################
+### GraphSAGE (PyG)
+########################
 class SAGE_PyG(torch.nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels, num_layers):
         super(SAGE_PyG, self).__init__()
@@ -117,15 +119,6 @@ class SAGE_PyG(torch.nn.Module):
 
     def forward(self, x, edge_index):
         x = self.convs[0](x, edge_index)
-        # print(x.size())
-        # print(edge_index.size())
-
         x = self.convs[1](x, edge_index)
-        # print(x.size())
-        # print(edge_index.size())
-        
         x = self.convs[2](x, edge_index)
-        # print(x.size())
-        # print(edge_index.size())
-        # exit(0)
-        # return self.convs[-1](x, edge_index)
+        return 
