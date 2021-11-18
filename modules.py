@@ -1,7 +1,7 @@
 import dgl.function as fn
 import torch
 import torch.nn as nn
-from torch_geometric.nn import SAGEConv
+from torch_geometric.nn import GCNConv
 import torch.nn.functional as F
 
 ########################
@@ -32,11 +32,9 @@ class GraphSAGE(nn.Module):
                  n_layers):
         super(GraphSAGE, self).__init__()
         self.layers = nn.ModuleList()
-
         # input layer
         self.layers.append(GraphSAGELayer(in_feats, n_hidden))
         # hidden layers
-        # for i in range(1):
         self.layers.append(GraphSAGELayer(n_hidden, n_hidden))
         # output layer
         self.layers.append(GraphSAGELayer(n_hidden, n_classes))
@@ -108,15 +106,26 @@ class SAGE_PyG(torch.nn.Module):
         super(SAGE_PyG, self).__init__()
         self.convs = torch.nn.ModuleList()
         # Input Layer
-        self.convs.append(SAGEConv(in_channels, hidden_channels))
+        self.convs.append(GCNConv(in_channels, hidden_channels, normalize=False,
+                 bias=False))
         # Hidden Layer
-        for _ in range(num_layers - 2):
-            self.convs.append(SAGEConv(hidden_channels, hidden_channels))
+        self.convs.append(GCNConv(hidden_channels, hidden_channels, normalize=False,
+                 bias=False))
         # Output Layer
-        self.convs.append(SAGEConv(hidden_channels, out_channels))
+        self.convs.append(GCNConv(hidden_channels, out_channels,  normalize=False,
+                 bias=False))
 
     def forward(self, x, edge_index):
-        for conv in self.convs[:-1]:
-            x = conv(x, edge_index)
-            x = F.relu(x)
-        return self.convs[-1](x, edge_index)
+        x = self.convs[0](x, edge_index)
+        # print(x.size())
+        # print(edge_index.size())
+
+        x = self.convs[1](x, edge_index)
+        # print(x.size())
+        # print(edge_index.size())
+        
+        x = self.convs[2](x, edge_index)
+        # print(x.size())
+        # print(edge_index.size())
+        # exit(0)
+        # return self.convs[-1](x, edge_index)

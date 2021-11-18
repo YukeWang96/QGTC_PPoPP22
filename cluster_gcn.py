@@ -1,23 +1,17 @@
 import argparse
 import time
 import random
-import sys
 import numpy as np
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 from dgl.data import register_data_args
 import os.path as osp
 from modules import *
 from sampler import ClusterIter
 from utils import load_data
 from tqdm import *
-
-# import matplotlib.pylab as plt
 import numpy as np
 from scipy.sparse import coo_matrix
 
-# from QGTC_conv import *
 import QGTC
 from dataset import *
 from ogb.nodeproppred import DglNodePropPredDataset
@@ -27,7 +21,7 @@ parser = argparse.ArgumentParser()
 register_data_args(parser)
 parser.add_argument("--gpu", type=int, default=0, help="gpu")
 
-parser.add_argument("--n-epochs", type=int, default=1, help="number of training epochs")
+parser.add_argument("--n-epochs", type=int, default=20, help="number of training epochs")
 parser.add_argument("--batch-size", type=int, default=20, help="batch size")
 parser.add_argument("--psize", type=int, default=1500, help="number of partitions")
 
@@ -100,7 +94,6 @@ def main(args):
                             n_classes, args.n_layers)
         # model = GIN(in_feats, args.n_hidden, n_classes)
 
-
     model.cuda()
     train_nid = torch.from_numpy(train_nid).cuda()
 
@@ -117,7 +110,7 @@ def main(args):
     W_3 = torch.ones((hidden_1, output)).cuda()
 
     bw_A = 1
-    bw_X = 4
+    bw_X = 8
     bw_W = bw_X
 
     bit_W1 = QGTC.val2bit(W_1.cuda(), bw_W, True, False)
@@ -131,10 +124,10 @@ def main(args):
     cnt = 0
     for epoch in tqdm(range(args.n_epochs)):
         for j, cluster in enumerate(cluster_iterator):
-            if args.regular:
+            if args.regular: # for DGL and PyG
                 torch.cuda.synchronize()
                 t = time.perf_counter()      
-        
+
                 cluster = cluster.to(torch.cuda.current_device())
 
                 edges = cluster.edges()
@@ -142,25 +135,19 @@ def main(args):
                 col  = edges[1].cpu().numpy()
                 data = np.ones(len(row))
                 num_nodes = max(max(row), max(col)) + 1
-                A = coo_matrix((data, (row, col)), shape=(num_nodes, num_nodes)).toarray()
-                # print(A)
-                # plt.spy(A)
-                # plt.show()
-                # plt.savefig('ppi/{}.pdf'.format(j))
 
+                A = coo_matrix((data, (row, col)), shape=(num_nodes, num_nodes)).toarray()
                 torch.cuda.synchronize()
                 transfering += time.perf_counter() - t
-
-
+                
                 torch.cuda.synchronize()
                 t = time.perf_counter()   
-                
                 if args.use_PyG:
                     edge_idx = torch.stack([cluster.edges()[0], cluster.edges()[1]], dim=0).long()
                     model(cluster.ndata['feat'], edge_idx)
+                    # exit(0)
                 else:
                     model(cluster)    
-
                 torch.cuda.synchronize()
                 running_time += time.perf_counter() - t
             else:
@@ -245,17 +232,6 @@ def main(args):
                     del bit_output_4
                     del float_output
                     torch.cuda.empty_cache()
-                    # sys.exit(0)
-                else:
-                    # 1-layer
-                    X = torch.mm(A, X)
-                    X_out = torch.mm(X, W_1)
-                    # 2-layer
-                    X_out = torch.mm(A, X_out)
-                    X_out = torch.mm(X_out, W_2)
-                    # 3-layer
-                    X_out = torch.mm(A, X_out)
-                    X_out = torch.mm(X_out, W_3)
 
                 torch.cuda.synchronize()
                 running_time += time.perf_counter() - t
@@ -266,10 +242,7 @@ def main(args):
     torch.cuda.synchronize()
     end_time = time.time()
     print("Trans (ms): {:.3f}, Compute (ms): {:.3f}".format(transfering/cnt*1e3, running_time/cnt*1e3))
-    # print("{:.3f}, {:.3f}, {:.3f}".format(layer1_t/cnt*1e3, layer2_t/cnt*1e3, layer3_t/cnt*1e3))
     print("Avg. Epoch: {:.3f} ms".format((end_time - start_time)*1000/cnt))
-    # print("GFLOPS: {:.3f}".format(total_ops/(end_time - start_time) / 10e9))
-
 
 if __name__ == '__main__':
     main(args)
