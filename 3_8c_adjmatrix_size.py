@@ -1,36 +1,18 @@
 #!/usr/bin/env python3
-import os
-import warnings
-warnings.filterwarnings("ignore")
+import torch
+import QGTC
 
-hidden = [16] #[16, 32, 64, 128, 256]
-num_layers = [1]
-partitions = [1500] # 1500, 3000, 4500, 6000, 7500, 9000]
-# --use_QGTC
-dataset = [
-		( 'artist'                 	 , 100	  , 12),
-		( 'soc-BlogCatalog'	     	 , 128	  , 39),    
-]
+def PROFILE_NonZeroTile(M=3, K=3, N=3, nbits_a=1, nbits_x=1):
+    A = torch.ones((M, K)).cuda()
+    X = torch.ones((K, N)).cuda()
 
-for n_Layer in num_layers:
-	for hid in hidden:
-		for data, d, c in dataset:
-			print("=> {}, hiddn: {}".format(data, hid))
-			for p in partitions:
-				command = "python cluster_gcn.py --gpu 0 \
-							--dataset {} --dim {} \
-                            --n-hidden {} \
-                            --n-classes {} \
-							--psize {}\
-							--regular \
-							--use_PyG".\
-							format(data, d, c, hid, p)		
-				os.system(command)
-				print()
-		print("----------------------------")
-	print("===========================")
- 
+    bit_a = QGTC.val2bit(A, nbits_a, False, False)
+    bit_x = QGTC.val2bit(X, nbits_x, True, False)
 
-os.system("python cluster_gcn.py --gpu 0 --dataset ppi --use_QGTC")
-os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-arxiv --regular")
-os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-products --regular")
+    QGTC.bitMM2Bit_profile(bit_a, bit_x, M, K, N, nbits_a, nbits_x, nbits_x)
+
+if __name__ == '__main__':
+	for dim in [16, 32, 64, 128, 256, 512, 1024]:
+		for T in range(3):
+			N = (2**T) * 1024
+			PROFILE_NonZeroTile(N, N, dim, nbits_x=1)

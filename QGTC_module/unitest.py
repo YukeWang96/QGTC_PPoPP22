@@ -168,8 +168,8 @@ def PROFILE_NonZeroTile(M=3, K=3, N=3, nbits_a=1, nbits_x=1, rounds=200):
     # start = time.perf_counter()
 
     # for _ in range(rounds):
-    QGTC.bitMM2Bit(bit_a, bit_x, M, K, N, nbits_a, nbits_x, nbits_x)
-    # QGTC.bitMM2Int(bit_a, bit_x, M, K, N, nbits_a, nbits_x, False)
+    QGTC.bitMM2Bit_profile(bit_a, bit_x, M, K, N, nbits_a, nbits_x, nbits_x)
+        # QGTC.bitMM2Int(bit_a, bit_x, M, K, N, nbits_a, nbits_x, False)
     
     # torch.cuda.synchronize()   
     # dur =  time.perf_counter() - start
@@ -184,9 +184,9 @@ if __name__ == '__main__':
     # TEST_GINConv(M=3, K=3, N=3, N1=3, nbits_a=1, nbits_x=2, nbits_w=2)
     # TEST_GCNConv(N=8, D=128, D1=8, nbits_a=1, nbits_x=2, nbits_w=2)
 
-#  32, 64, 128, 256, 512
-    for dim in [32]:
-        for T in range(4):
-            N = (2**T) * 1024
-            PROFILE_NonZeroTile(N, N, dim, nbits_x=2)
-        # print("===================")
+    for bitwidth in [1, 2, 4, 8]:
+        print("========", bitwidth, "bit ==================")
+        for dim in [16, 32, 64]:
+            for T in range(3):
+                N = (2**T) * 1024
+                PROFILE_NonZeroTile(N, N, dim, nbits_x=bitwidth)

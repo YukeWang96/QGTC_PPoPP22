@@ -60,6 +60,18 @@ torch::Tensor bitMM2Int_cuda(
     const int pad_128=false
 );
 
+
+torch::Tensor bitMM2Bit_cuda_profile(
+    torch::Tensor bit_X1,
+    torch::Tensor bit_X2,
+    const int X1_height,
+    const int X1_width,
+    const int X2_width,
+    const int bit1,
+    const int bit2,
+    const int output_bit
+);
+
 #define CHECK_CUDA(x) TORCH_CHECK(x.type().is_cuda(), #x " must be a CUDA tensor")
 #define CHECK_CONTIGUOUS(x) TORCH_CHECK(x.is_contiguous(), #x " must be contiguous")
 #define CHECK_INPUT(x) CHECK_CUDA(x); CHECK_CONTIGUOUS(x)
@@ -83,6 +95,26 @@ torch::Tensor bitMM2Bit(
   return bitMM2Bit_cuda(bit_X1, bit_X2, \
                         X1_height, X1_width, X2_width, \
                         bit1, bit2, output_bit);
+}
+
+
+
+torch::Tensor bitMM2Bit_profile(
+    torch::Tensor bit_X1,
+    torch::Tensor bit_X2,
+    const int X1_height,
+    const int X1_width,
+    const int X2_width,
+    const int bit1,
+    const int bit2,
+    const int output_bit
+) {
+  CHECK_INPUT(bit_X1);
+  CHECK_INPUT(bit_X2);
+
+  return bitMM2Bit_cuda_profile(bit_X1, bit_X2, \
+                                X1_height, X1_width, X2_width, \
+                                bit1, bit2, output_bit);
 }
 
 
@@ -168,6 +200,8 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   m.def("bit2val", &bit2val, "quantize a [ bit --> int32 ] tensor (CUDA)");
 
   m.def("bitMM2Bit", &bitMM2Bit, "QGTC [ bit_A x bit_B --> bit_C ] forward (CUDA)");
+  m.def("bitMM2Bit_profile", &bitMM2Bit_profile, "QGTC [ bit_A x bit_B --> bit_C ] forward (CUDA) for profiling (200)");
+
   m.def("bitMM2Bit_col", &bitMM2Bit_col, "QGTC [ bit_A x bit_B --> bit_C (column major) ] forward (CUDA)");
 
   m.def("bitMM2Int", &bitMM2Int, "QGTC [ bit_A x bit_B --> float32 ] forward (CUDA)");

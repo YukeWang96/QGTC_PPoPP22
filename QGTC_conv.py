@@ -9,8 +9,6 @@ import torch.nn as nn
 class Aggregation_Qnt(torch.autograd.Function):
     @staticmethod
     def forward(ctx, bit_A, bit_X, bit_W, act_bit, w_bit, input=False, hidden=False, output=False):
-        # ctx.save_for_backward(X, )
-
         assert input+hidden+output == 1
 
         if input or hidden:
