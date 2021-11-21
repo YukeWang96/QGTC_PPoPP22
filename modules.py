@@ -83,16 +83,15 @@ class GIN(nn.Module):
         super(GIN, self).__init__()
         self.num_layers = num_layers
         self.ginlayers = torch.nn.ModuleList()
-        
-        for layer in range(self.num_layers):
-            if layer == 0:
-                mlp = nn.Linear(input_dim, hidden_dim)
-            elif layer < self.num_layers - 1:
-                mlp = nn.Linear(hidden_dim, hidden_dim) 
-            else:
-                mlp = nn.Linear(hidden_dim, output_dim) 
-
-            self.ginlayers.append(GINConv(ApplyNodeFunc(mlp), "sum", init_eps=0, learn_eps=False))
+        # Input Layer
+        self.ginlayers.append(GINConv(ApplyNodeFunc(nn.Linear(input_dim, hidden_dim)), 
+                                    "sum", init_eps=0, learn_eps=False))
+        # Hidden Layer
+        self.ginlayers.append(GINConv(ApplyNodeFunc(nn.Linear(hidden_dim, hidden_dim)), 
+                                      "sum", init_eps=0, learn_eps=False))
+        # Output Layer
+        self.ginlayers.append(GINConv(ApplyNodeFunc(nn.Linear(hidden_dim, output_dim)), 
+                                      "sum", init_eps=0, learn_eps=False))
 
     def forward(self, g):
         h = g.ndata['feat']

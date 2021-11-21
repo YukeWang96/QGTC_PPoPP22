@@ -1,21 +1,21 @@
 import argparse
 import time
 import random
+import os.path as osp
 import numpy as np
+
 import torch
 from dgl.data import register_data_args
-import os.path as osp
 from modules import *
 from sampler import ClusterIter
 from utils import load_data
 from tqdm import *
 import numpy as np
-from scipy.sparse import coo_matrix
-
 import QGTC
 from dataset import *
 from ogb.nodeproppred import DglNodePropPredDataset
-from dgl.data import AMDataset, AmazonCoBuyComputerDataset
+import warnings
+warnings.filterwarnings("ignore")
 
 parser = argparse.ArgumentParser()
 register_data_args(parser)
@@ -90,9 +90,10 @@ def main(args):
         model = SAGE_PyG(in_feats, args.n_hidden, 
                             n_classes, num_layers=args.n_layers+2)
     else:
-        model = GraphSAGE(in_feats, args.n_hidden, \
-                            n_classes, args.n_layers)
-        # model = GIN(in_feats, args.n_hidden, n_classes)
+        if args.run_GIN:
+            model = GIN(in_feats, args.n_hidden, n_classes)
+        else:
+            model = GraphSAGE(in_feats, args.n_hidden, n_classes, args.n_layers)
 
     model.cuda()
     train_nid = torch.from_numpy(train_nid).cuda()
@@ -124,19 +125,12 @@ def main(args):
     cnt = 0
     for epoch in tqdm(range(args.n_epochs)):
         for j, cluster in enumerate(cluster_iterator):
-            if args.regular: # for DGL and PyG
+            
+            # for DGL and PyG
+            if args.regular: 
                 torch.cuda.synchronize()
                 t = time.perf_counter()      
-
                 cluster = cluster.to(torch.cuda.current_device())
-
-                edges = cluster.edges()
-                row  = edges[0].cpu().numpy()
-                col  = edges[1].cpu().numpy()
-                data = np.ones(len(row))
-                num_nodes = max(max(row), max(col)) + 1
-
-                A = coo_matrix((data, (row, col)), shape=(num_nodes, num_nodes)).toarray()
                 torch.cuda.synchronize()
                 transfering += time.perf_counter() - t
                 
@@ -145,7 +139,6 @@ def main(args):
                 if args.use_PyG:
                     edge_idx = torch.stack([cluster.edges()[0], cluster.edges()[1]], dim=0).long()
                     model(cluster.ndata['feat'], edge_idx)
-                    # exit(0)
                 else:
                     model(cluster)    
                 torch.cuda.synchronize()
@@ -174,9 +167,6 @@ def main(args):
                 t = time.perf_counter()
                 
                 if args.use_QGTC:
-
-                    # if epoch == 0 and j == 0:
-                    #     print("A.size: {}".format(A.size()))
                     if args.run_GIN:
                         # torch.cuda.synchronize()
                         # t = time.perf_counter()
@@ -223,15 +213,15 @@ def main(args):
                         bit_output_4 = QGTC.bitMM2Bit(bit_output_3, bit_W3, A.size(0), W_2.size(1), W_3.size(1), bw_X, bw_W, bw_X)
                         float_output = QGTC.bitMM2Int(bit_A, bit_output_4, A.size(0), A.size(0), W_2.size(1), bw_A, bw_X, False)
 
-                    del bit_A
-                    del bit_X
-                    del bit_output
-                    del bit_output_1
-                    del bit_output_2
-                    del bit_output_3
-                    del bit_output_4
-                    del float_output
-                    torch.cuda.empty_cache()
+                    # del bit_A
+                    # del bit_X
+                    # del bit_output
+                    # del bit_output_1
+                    # del bit_output_2
+                    # del bit_output_3
+                    # del bit_output_4
+                    # del float_output
+                    # torch.cuda.empty_cache()
 
                 torch.cuda.synchronize()
                 running_time += time.perf_counter() - t

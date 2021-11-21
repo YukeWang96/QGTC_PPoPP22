@@ -1,7 +1,5 @@
 QGTC: Accelerating Quantized GNN via GPU Tensor Core
 ============
-**Note that this project is still under active development and subject to changes.**
-
 ## Clone this project.
 ------------
 
@@ -73,3 +71,28 @@ TORCH_CUDA_ARCH_LIST="8.6" python setup.py  clean --all install
 + `./run_ppi.sh` for running `PPI` dataset.
 + `./run_ogb.sh` for running `ogbn-arxiv` and `ogbn-products` dataset.
 + `./run_all` for running all the above three experiments together by following the order of `bench.py`, `run_ppi.sh` and `run_ogb.sh`
+
+
+## Figure 7. Speedup comparison.
+------------
+### (a) Cluster GCN.
+```
+./0_7_eval_QGTC_cluster_GCN.py
+./1_7a_eval_DGL_cluster_GCN.py
+```
+### (b) Batched GIN.
+```
+./0_7_eval_QGTC_cluster_GCN.py
+./1_7b_eval_DGL_batched_GIN.py
+```
+### (c) Comparison with PyG on cluster GCN;
+```
+./0_7_eval_QGTC_cluster_GCN.py
+./2_7c_eval_PyG_cluster_GCN.py
+```
+
+## Figure 8: Additional studies.
+------------
+### (a) Comparison with the cuBLASgemmEX (int8) on Tensor Core; 
+### (b) Zero-tile jumping efficiency; 
+### (c) Adjacencymatrix size impact.
