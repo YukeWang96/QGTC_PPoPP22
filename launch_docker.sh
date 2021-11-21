@@ -1,0 +1,1 @@
+docker run -it --rm --gpus all -v $PWD:/qgtc happy233/qgtc:updated /bin/bash
