@@ -6,7 +6,7 @@ QGTC: Accelerating Quantized GNN via GPU Tensor Core
 ------------
 
 ```
-git clone git@github.com:YukeWang96/SC21_QGTC.git
+git clone git@gitlab.com:YK-Wang96/ppopp22_qgtc.git
 ```
 
 ## Dependencies.
@@ -18,9 +18,19 @@ git clone git@github.com:YukeWang96/SC21_QGTC.git
 ## Environment Setup.
 ------------
 ### [**Method-1**] Install via Docker (**Recommended**).
-+ Go to `Docker/`
-+ Run `./build.sh`
-+ Run `./launch.sh`
+
++ (i)  Pull docker image:  
+```
+docker pull happy233/qgtc:base
+docker run -it --rm --gpus all -v $PWD/:/qgtc happy233/qgtc:base /bin/bash
+
+```
++ (ii) Build docker from scratch:
+```
+cd Docker/
+./build.sh
+./launch.sh
+```
 
 ### [**Method-2**] Install via Conda.
 + Install **`conda`** on system **[Toturial](https://www.digitalocean.com/community/tutorials/how-to-install-anaconda-on-ubuntu-18-04-quickstart)**.
