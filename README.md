@@ -21,8 +21,8 @@ git clone git@gitlab.com:YK-Wang96/ppopp22_qgtc.git
 
 + (i)  Pull docker image:  
 ```
-docker pull happy233/qgtc:base
-docker run -it --rm --gpus all -v $PWD/:/qgtc happy233/qgtc:base /bin/bash
+docker pull happy233/qgtc:updated
+docker run -it --rm --gpus all -v $PWD/:/qgtc happy233/qgtc:updated /bin/bash
 
 ```
 + (ii) Build docker from scratch:
@@ -68,6 +68,7 @@ TORCH_CUDA_ARCH_LIST="8.6" python setup.py  clean --all install
 
 ## Running Experiments
 ------------
++ Get dataset `wget https://project-datasets.s3.us-west-2.amazonaws.com/qgtc_graphs.tar.gz` and `tar -zxvf qgtc_graphs.tar.gz`.
 + `./bench.py` for running `proteins`, `artist` and `soc-Blogcatalog` dataset.
 + `./run_ppi.sh` for running `PPI` dataset.
 + `./run_ogb.sh` for running `ogbn-arxiv` and `ogbn-products` dataset.

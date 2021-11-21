@@ -5,7 +5,6 @@ warnings.filterwarnings("ignore")
 
 hidden = [16] #[16, 32, 64, 128, 256]
 num_layers = [1]
-data_dir = 'graphs/'
 partitions = [1500] # 1500, 3000, 4500, 6000, 7500, 9000]
 # --use_QGTC
 dataset = [
