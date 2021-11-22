@@ -35,6 +35,7 @@ parser.add_argument("--regular", action='store_true',help="whether to use PyG or
 parser.add_argument("--use_PyG", action='store_true',help="whether to use PyG")
 parser.add_argument("--run_GIN", action='store_true',help="whether to run GIN model")
 parser.add_argument("--use_QGTC", action='store_true',help="whether to use QGTC")
+parser.add_argument("--zerotile_jump", action='store_true',help="whether to profile zero-tile jumping")
 
 args = parser.parse_args()
 print(args)
@@ -200,7 +201,12 @@ def main(args):
                     else: # GCN
                         bit_A = QGTC.val2bit(A, bw_A, False, False)
                         bit_X = QGTC.val2bit(X, bw_X, True, False)
-
+                        
+                        if args.zerotile_jump:
+                            QGTC.bitMM2Bit_base_cnt(bit_X, bit_W1, X.size(0), X.size(1), W_1.size(1), bw_X, bw_W, bw_X)
+                            QGTC.bitMM2Bit_zerojump_cnt(bit_X, bit_W1, X.size(0), X.size(1), W_1.size(1), bw_X, bw_W, bw_X)
+                            continue
+                            
                         # 1-layer [in_feat, hidden]
                         bit_output = QGTC.bitMM2Bit(bit_X, bit_W1, X.size(0), X.size(1), W_1.size(1), bw_X, bw_W, bw_X)
                         bit_output_1 = QGTC.bitMM2Bit(bit_A, bit_output, A.size(0), A.size(1), W_1.size(1), bw_A, bw_X, bw_X)
@@ -222,7 +228,6 @@ def main(args):
                     # del bit_output_4
                     # del float_output
                     # torch.cuda.empty_cache()
-
                 torch.cuda.synchronize()
                 running_time += time.perf_counter() - t
 

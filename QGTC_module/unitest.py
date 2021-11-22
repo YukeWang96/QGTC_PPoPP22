@@ -3,7 +3,6 @@ import torch
 import QGTC
 import time
 
-
 def print_tensor(input_tensor):
     height = input_tensor.size(0)
     width = input_tensor.size(1)
@@ -164,16 +163,8 @@ def PROFILE_NonZeroTile(M=3, K=3, N=3, nbits_a=1, nbits_x=1, rounds=200):
     bit_a = QGTC.val2bit(A, nbits_a, False, False)
     bit_x = QGTC.val2bit(X, nbits_x, True, False)
 
-    # torch.cuda.synchronize()    
-    # start = time.perf_counter()
-
-    # for _ in range(rounds):
-    QGTC.bitMM2Bit_profile(bit_a, bit_x, M, K, N, nbits_a, nbits_x, nbits_x)
-        # QGTC.bitMM2Int(bit_a, bit_x, M, K, N, nbits_a, nbits_x, False)
-    
-    # torch.cuda.synchronize()   
-    # dur =  time.perf_counter() - start
-    # print("M: {}, K: {}, N: {}, TFLOPs: {:.3f}".format(M, K, N, 2*M*N*K*rounds/dur/1e12))
+    QGTC.bitMM2Bit_base_cnt(bit_a, bit_x, M, K, N, nbits_a, nbits_x, nbits_x)
+    QGTC.bitMM2Bit_zerojump_cnt(bit_a, bit_x, M, K, N, nbits_a, nbits_x, nbits_x)
 
 if __name__ == '__main__':
     # test_bitencodingAndDecoding()

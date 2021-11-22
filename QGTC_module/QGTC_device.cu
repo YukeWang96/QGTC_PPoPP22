@@ -265,6 +265,114 @@ torch::Tensor bitMM2Bit_cuda(
     return bit_X_out;
 }
 
+
+//
+// bit_X1 and bit_x2 --> [ int32 ] in bit output.
+//
+torch::Tensor bitMM2Bit_cuda_base_cnt(
+    torch::Tensor bit_X1,
+    torch::Tensor bit_X2,
+    const int X1_height,
+    const int X1_width,
+    const int X2_width,
+    const int bit1,
+    const int bit2,
+    const int output_bit
+)
+{
+    // allocate the output Tensor on GPU.
+    auto bit_X_out = torch::zeros({output_bit*PAD8(X1_height), STEP128(X2_width)*4}, torch::kInt32).to(torch::kCUDA);
+    
+    int dev = 0;
+    cudaDeviceProp deviceProp;
+    int numBlocksPerSm;
+    int shared_memory = 64*1e3; // 64KB
+
+    cudaGetDeviceProperties(&deviceProp, dev);
+    cudaFuncSetAttribute(QGTC_layer_hidden_base_cnt, cudaFuncAttributeMaxDynamicSharedMemorySize, shared_memory);
+    cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, QGTC_layer_hidden_base_cnt, numThreads_1, shared_memory);
+
+
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+
+    cudaEventRecord(start);
+
+    QGTC_layer_hidden_base_cnt<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads_1, shared_memory>>>(
+        bit_X_out.data<int>(), bit_X1.data<int>(), bit_X2.data<int>(),
+        X1_height, X1_width, X2_width, bit1, bit2, output_bit);
+
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
+
+    cudaError_t error = cudaGetLastError();
+    if(error != cudaSuccess){
+        printf("CUDA error at bitMM2Bit_cuda_base_cnt: %s\n", cudaGetErrorString(error));
+        exit(-1);
+    }
+    
+    print_counter_global<<<1,1>>>();
+    return bit_X_out;
+}
+
+
+
+//
+// bit_X1 and bit_x2 --> [ int32 ] in bit output.
+//
+torch::Tensor bitMM2Bit_cuda_zerojump_cnt(
+    torch::Tensor bit_X1,
+    torch::Tensor bit_X2,
+    const int X1_height,
+    const int X1_width,
+    const int X2_width,
+    const int bit1,
+    const int bit2,
+    const int output_bit
+)
+{
+    // allocate the output Tensor on GPU.
+    auto bit_X_out = torch::zeros({output_bit*PAD8(X1_height), STEP128(X2_width)*4}, torch::kInt32).to(torch::kCUDA);
+    
+    int dev = 0;
+    cudaDeviceProp deviceProp;
+    int numBlocksPerSm;
+    int shared_memory = 64*1e3; // 64KB
+
+    cudaGetDeviceProperties(&deviceProp, dev);
+    cudaFuncSetAttribute(QGTC_layer_hidden_zerojump_cnt, cudaFuncAttributeMaxDynamicSharedMemorySize, shared_memory);
+    cudaOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocksPerSm, QGTC_layer_hidden_zerojump_cnt, numThreads_1, shared_memory);
+
+
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+
+    cudaEventRecord(start);
+
+    QGTC_layer_hidden_zerojump_cnt<<<numBlocksPerSm*deviceProp.multiProcessorCount, numThreads_1, shared_memory>>>(
+        bit_X_out.data<int>(), bit_X1.data<int>(), bit_X2.data<int>(),
+        X1_height, X1_width, X2_width, bit1, bit2, output_bit);
+
+    cudaEventRecord(stop);
+    cudaEventSynchronize(stop);
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
+
+    cudaError_t error = cudaGetLastError();
+    if(error != cudaSuccess){
+        printf("CUDA error at QGTC_layer_hidden_zerojump_cnt: %s\n", cudaGetErrorString(error));
+        exit(-1);
+    }
+    
+    print_counter<<<1,1>>>();
+    return bit_X_out;
+}
+
+
 //
 // bit_X1 and bit_x2 --> [ int32 ] in bit output. profiling for 200 rounds.
 //
