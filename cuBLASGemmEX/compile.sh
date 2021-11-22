@@ -1,0 +1,1 @@
+nvcc -arch=sm_86 cublas_main.cu -o cublas_main -lcublas
