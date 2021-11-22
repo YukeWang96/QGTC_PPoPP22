@@ -13,3 +13,4 @@ __pycache__/*
 qgtc_graphs/*
 *.tar.gz
 *.log
+*.csv
