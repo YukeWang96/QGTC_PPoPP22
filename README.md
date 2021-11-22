@@ -93,6 +93,18 @@ TORCH_CUDA_ARCH_LIST="8.6" python setup.py  clean --all install
 
 ## Figure 8: Additional studies.
 ------------
-### (a) Comparison with the cuBLASgemmEX (int8) on Tensor Core; 
-### (b) Zero-tile jumping efficiency; 
+### (a) Comparison with the cuBLASgemmEX (int8) on Tensor Core.
+```
+./3_8a_cuBLAS_INT8.py
+cd cuBLASGemmEX/
+./compile.sh
+./bench_cuBLAS_INT8.py
+```
+### (b) Zero-tile jumping efficiency.
+```
+./3_8b_zero_tile_jumping.py
+```
 ### (c) Adjacencymatrix size impact.
+```
+./3_8c_adjmatrix_size.py
+```
