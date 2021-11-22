@@ -104,7 +104,6 @@ def main(args):
     hidden_1 = args.n_hidden
     output = args.n_classes
 
-    # total_ops = 0
     transfering = 0
     running_time = 0
 
@@ -113,7 +112,7 @@ def main(args):
     W_3 = torch.ones((hidden_1, output)).cuda()
 
     bw_A = 1
-    bw_X = 8
+    bw_X = 4
     bw_W = bw_X
 
     bit_W1 = QGTC.val2bit(W_1.cuda(), bw_W, True, False)

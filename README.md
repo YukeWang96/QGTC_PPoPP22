@@ -29,7 +29,6 @@ cd Docker/
 ./build.sh
 ./launch.sh
 ```
-
 ### [**Method-2**] Install via Conda.
 + Install **`conda`** on system **[Toturial](https://www.digitalocean.com/community/tutorials/how-to-install-anaconda-on-ubuntu-18-04-quickstart)**.
 + Create a **`conda`** environment: 
