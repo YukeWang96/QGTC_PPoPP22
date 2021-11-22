@@ -3,14 +3,16 @@ import os
 import warnings
 warnings.filterwarnings("ignore")
 
-hidden = 		[16] #[16, 32, 64, 128, 256]
+hidden = 		[16]
 num_layers = 	[1]
-partitions = 	[1500] # 1500, 3000, 4500, 6000, 7500, 9000]
+partitions = 	[1500] 
 
 dataset = [
 		( 'artist'                 	 , 100	  , 12),
 		( 'soc-BlogCatalog'	     	 , 128	  , 39),    
 ]
+
+os.system("touch DGL_cluster_GCN.log")
 
 for n_Layer in num_layers:
 	for hid in hidden:
@@ -22,13 +24,15 @@ for n_Layer in num_layers:
                             --n-hidden {} \
                             --n-classes {} \
 							--psize {}\
-							--regular".\
+							--regular >> DGL_cluster_GCN.log".\
 							format(data, d, hid, c, p)		
 				os.system(command)
 				print()
 
-os.system("python cluster_gcn.py --gpu 0 --dataset ppi --regular")
+os.system("python cluster_gcn.py --gpu 0 --dataset ppi --regular >> DGL_cluster_GCN.log")
 print()
-os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-arxiv --regular")
+os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-arxiv --regular >> DGL_cluster_GCN.log")
 print()
 # os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-products --regular")
+
+os.system("./parse_time.py DGL_cluster_GCN.log > DGL_cluster_GCN.csv")

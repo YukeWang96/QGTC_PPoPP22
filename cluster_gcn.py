@@ -5,15 +5,16 @@ import os.path as osp
 import numpy as np
 
 import torch
+from ogb.nodeproppred import DglNodePropPredDataset
 from dgl.data import register_data_args
+
 from modules import *
 from sampler import ClusterIter
 from utils import load_data
-from tqdm import *
-import numpy as np
-import QGTC
 from dataset import *
-from ogb.nodeproppred import DglNodePropPredDataset
+from tqdm import *
+import QGTC
+
 import warnings
 warnings.filterwarnings("ignore")
 

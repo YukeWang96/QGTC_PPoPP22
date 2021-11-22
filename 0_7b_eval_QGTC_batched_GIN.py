@@ -12,10 +12,12 @@ dataset = [
 		( 'soc-BlogCatalog'	     	 , 128	  , 39),    
 ]
 
+os.system("touch QGTC_batched_GIN.log")
+
+
 for n_Layer in num_layers:
 	for hid in hidden:
 		for data, d, c in dataset:
-			# print("=> {}, hiddn: {}".format(data, hid))
 			for p in partitions:
 				command = "python cluster_gcn.py \
     						--gpu 0 \
@@ -25,13 +27,15 @@ for n_Layer in num_layers:
                             --n-classes {} \
 							--psize {}\
 							--use_QGTC \
-							--run_GIN".\
+							--run_GIN >> QGTC_batched_GIN.log".\
 							format(data, d, c, hid, p)		
 				os.system(command)
 				print()
  
-os.system("python cluster_gcn.py --gpu 0 --dataset ppi --use_QGTC --run_GIN")
+os.system("python cluster_gcn.py --gpu 0 --dataset ppi --use_QGTC --run_GIN >> QGTC_batched_GIN.log")
 print()
-os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-arxiv --use_QGTC --run_GIN")
+os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-arxiv --use_QGTC --run_GIN >> QGTC_batched_GIN.log")
 print()
 # os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-products --use_QGTC --run_GIN")
+
+os.system("./parse_time.py QGTC_batched_GIN.log > QGTC_batched_GIN.csv")

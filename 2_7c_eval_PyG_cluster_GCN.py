@@ -12,6 +12,8 @@ dataset = [
 		( 'soc-BlogCatalog'	     	 , 128	  , 39),    
 ]
 
+os.system("touch PyG_cluster_GCN.log")
+
 for n_Layer in num_layers:
 	for hid in hidden:
 		for data, d, c in dataset:
@@ -24,14 +26,15 @@ for n_Layer in num_layers:
                             --n-classes {} \
 							--psize {}\
 							--regular \
-							--use_PyG".\
+							--use_PyG >> PyG_cluster_GCN.log".\
 							format(data, d, c, hid, p)		
 				os.system(command)
 				print()
  
 
-os.system("python cluster_gcn.py --gpu 0 --dataset ppi --regular --use_PyG")
+os.system("python cluster_gcn.py --gpu 0 --dataset ppi --regular --use_PyG >> PyG_cluster_GCN.log")
 print()
-os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-arxiv --regular --use_PyG")
+os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-arxiv --regular --use_PyG >> PyG_cluster_GCN.log")
 print()
 # os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-products --regular --use_PyG")
+os.system("./parse_time.py PyG_cluster_GCN.log > PyG_cluster_GCN.csv")
