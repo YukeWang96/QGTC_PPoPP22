@@ -81,13 +81,13 @@ TORCH_CUDA_ARCH_LIST="8.6" python setup.py  clean --all install
 ./1_7a_eval_DGL_cluster_GCN.py
 ```
 + Check the results in `QGTC_cluster_GCN_*bit.csv` and  `DGL_cluster_GCN.csv`. You will expect the result likes this.
-```
-dataset 	 Epoch (ms)
-artist 	 148.048
-soc-BlogCatalog 	 190.511
-ppi 	 128.056
-ogbn-arxiv 	 191.97
-```
+
+| dataset          |  Epoch (ms) |
+|------------------|-------------|
+| artist           |  263.646    |
+| soc-BlogCatalog  |  209.495    |
+| ppi              |  189.016    |
+| ogbn-arxiv       |  208.616    |
 
 ### (b) Batched GIN.
 + (optional) You can change the `bitwidth=4` at `0_7b_eval_QGTC_batched_GIN.py` to [1,2,4,8] for evaluation. default is 2 bit.
