@@ -39,3 +39,6 @@ os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-arxiv --use_QGTC --zerot
 print()
 # os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-products --use_QGTC")
 os.system("./parse_counter.py zerotile_jumping.log > zerotile_jumping.csv")
+if not os.path.exists("logs"):
+	os.system("mkdir logs/")
+os.system("mv *.log logs/")

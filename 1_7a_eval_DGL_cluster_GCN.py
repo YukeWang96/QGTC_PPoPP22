@@ -36,3 +36,6 @@ print()
 # os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-products --regular")
 
 os.system("./parse_time.py DGL_cluster_GCN.log > DGL_cluster_GCN.csv")
+if not os.path.exists("logs"):
+	os.system("mkdir logs/")
+os.system("mv *.log logs/")

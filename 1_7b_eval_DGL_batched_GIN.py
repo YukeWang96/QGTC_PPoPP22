@@ -36,3 +36,6 @@ os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-arxiv --regular --run_GI
 print()
 # os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-products --regular")
 os.system("./parse_time.py DGL_batched_GIN.log > DGL_batched_GIN.csv")
+if not os.path.exists("logs"):
+	os.system("mkdir logs/")
+os.system("mv *.log logs/")
