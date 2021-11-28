@@ -21,7 +21,6 @@ git clone git@gitlab.com:YK-Wang96/ppopp22_qgtc.git
 ```
 docker pull happy233/qgtc:updated
 docker run -it --rm --gpus all -v $PWD/:/qgtc happy233/qgtc:updated /bin/bash
-
 ```
 + (ii) Build docker from scratch:
 ```
