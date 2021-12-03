@@ -1,5 +1,17 @@
 QGTC: Accelerating Quantized GNN via GPU Tensor Core
 ============
+
++ **Cite this project and [paper](https://arxiv.org/abs/2111.09547).**
+```
+@inproceedings{QGTC,
+  title={QGTC: Accelerating Quantized GNN via GPU Tensor Core},
+  author={Yuke Wang and Boyuan Feng and Yufei Ding},
+  booktitle={ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming. (PPoPP'22)},
+  year={2022}
+}
+```
+
+
 ## Clone this project.
 ------------
 
