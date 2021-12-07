@@ -88,7 +88,7 @@ TORCH_CUDA_ARCH_LIST="8.6" python setup.py  clean --all install
 ### (a) Cluster GCN.
 + (optional) You can change the `bitwidth=4` at `0_7_eval_QGTC_cluster_GCN.py` to [1,2,4,8] for evaluation. default is 2 bit.
 ```
-./0_7_eval_QGTC_cluster_GCN.py
+./0_7a_eval_QGTC_cluster_GCN.py
 ./1_7a_eval_DGL_cluster_GCN.py
 ```
 + Check the results in `QGTC_cluster_GCN_*bit.csv` and  `DGL_cluster_GCN.csv`. You will expect the result likes this.
@@ -110,7 +110,7 @@ Check the results in `QGTC_batched_GIN_*bit.csv` and  `DGL_batched_GIN.csv`.
 
 ### (c) Comparison with PyG on cluster GCN;
 ```
-./0_7_eval_QGTC_cluster_GCN.py
+./0_7a_eval_QGTC_cluster_GCN.py
 ./2_7c_eval_PyG_cluster_GCN.py
 ```
 Check the results in `QGTC_cluster_GCN_*bit.csv` and  `PyG_cluster_GCN.csv`.
