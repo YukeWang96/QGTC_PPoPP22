@@ -16,7 +16,7 @@ QGTC: Accelerating Quantized GNN via GPU Tensor Core
 ------------
 
 ```
-git clone git@gitlab.com:YK-Wang96/ppopp22_qgtc.git
+git clone git@github.com:YukeWang96/PPoPP22_QGTC.git
 ```
 
 ## Dependencies.
