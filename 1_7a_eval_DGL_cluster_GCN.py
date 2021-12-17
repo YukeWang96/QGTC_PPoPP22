@@ -18,7 +18,7 @@ for n_Layer in num_layers:
 	for hid in hidden:
 		for data, d, c in dataset:
 			for p in partitions:
-				command = "python cluster_gcn.py \
+				command = "python cluster_gcn_dgl.py \
         					--gpu 0 \
 							--dataset {} \
            					--dim {} \
@@ -30,11 +30,11 @@ for n_Layer in num_layers:
 				os.system(command)
 				print()
 
-os.system("python cluster_gcn.py --gpu 0 --dataset ppi --regular >> DGL_cluster_GCN.log")
+os.system("python cluster_gcn_dgl.py --gpu 0 --dataset ppi --regular >> DGL_cluster_GCN.log")
 print()
-os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-arxiv --regular >> DGL_cluster_GCN.log")
+os.system("python cluster_gcn_dgl.py --gpu 0 --dataset ogbn-arxiv --regular >> DGL_cluster_GCN.log")
 print()
-os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-products --regular >> DGL_cluster_GCN.log")
+os.system("python cluster_gcn_dgl.py --gpu 0 --dataset ogbn-products --regular >> DGL_cluster_GCN.log")
 
 os.system("./parse_time.py DGL_cluster_GCN.log > DGL_cluster_GCN.csv")
 if not os.path.exists("logs"):
