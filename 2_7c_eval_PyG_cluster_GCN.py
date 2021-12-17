@@ -8,6 +8,7 @@ num_layers = 	[1]
 partitions = 	[1500] # 1500, 3000, 4500, 6000, 7500, 9000]
 
 dataset = [
+        ('Proteins'             , 29       , 2) ,   
 		( 'artist'                 	 , 100	  , 12),
 		( 'soc-BlogCatalog'	     	 , 128	  , 39),    
 ]
@@ -36,7 +37,8 @@ os.system("python cluster_gcn.py --gpu 0 --dataset ppi --regular --use_PyG >> Py
 print()
 os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-arxiv --regular --use_PyG >> PyG_cluster_GCN.log")
 print()
-# os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-products --regular --use_PyG")
+os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-products --regular --use_PyG >> PyG_cluster_GCN.log")
+print()
 os.system("./parse_time.py PyG_cluster_GCN.log > PyG_cluster_GCN.csv")
 if not os.path.exists("logs"):
 	os.system("mkdir logs/")

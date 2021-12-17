@@ -10,6 +10,7 @@ partitions = 	[1500]
 bitwidth = 2 # 1,2,4,8
 
 dataset = [
+        ('Proteins'             , 29       , 2) ,   
 		( 'artist'                 	 , 100	  , 12),
 		( 'soc-BlogCatalog'	     	 , 128	  , 39),    
 ]

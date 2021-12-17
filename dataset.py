@@ -52,8 +52,9 @@ class QGTC_dataset(torch.nn.Module):
         self.edge_index = np.array([src_li, dst_li])
         self.g.add_edges(src_li, dst_li) 
         # self.num_nodes = max(src_li + dst_li) + 1 
-        self.num_nodes = graph_obj['num_nodes']
-        
+        # self.num_nodes = graph_obj['num_nodes']
+        self.num_nodes = self.g.number_of_nodes()
+        # print(self.num_nodes)        
         dur = time.perf_counter() - start
         print("Loading (ms):\t{:.3f}".format(dur*1e3))
 
