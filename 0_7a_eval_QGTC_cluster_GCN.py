@@ -37,7 +37,8 @@ os.system("python cluster_gcn_{0}.py --gpu 0 --dataset ppi --use_QGTC >> QGTC_cl
 print()
 os.system("python cluster_gcn_{0}.py --gpu 0 --dataset ogbn-arxiv --use_QGTC >> QGTC_cluster_GCN_{0}bit.log".format(bitwidth))
 print()
-# os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-products --use_QGTC")
+os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-products --use_QGTC >> QGTC_cluster_GCN_{0}bit.log".format(bitwidth))
+print()
 os.system("./parse_time.py QGTC_cluster_GCN_{0}bit.log > QGTC_cluster_GCN_{0}bit.csv".format(bitwidth))
 if not os.path.exists("logs"):
 	os.system("mkdir logs/")

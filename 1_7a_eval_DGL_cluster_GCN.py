@@ -36,7 +36,7 @@ print()
 os.system("python cluster_gcn_dgl.py --gpu 0 --dataset ogbn-arxiv --regular >> DGL_cluster_GCN.log")
 print()
 os.system("python cluster_gcn_dgl.py --gpu 0 --dataset ogbn-products --regular >> DGL_cluster_GCN.log")
-
+print()
 os.system("./parse_time.py DGL_cluster_GCN.log > DGL_cluster_GCN_proteins.csv")
 if not os.path.exists("logs"):
 	os.system("mkdir logs/")

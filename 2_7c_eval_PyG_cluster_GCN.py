@@ -8,7 +8,7 @@ num_layers = 	[1]
 partitions = 	[1500] # 1500, 3000, 4500, 6000, 7500, 9000]
 
 dataset = [
-        ('Proteins'             , 29       , 2) ,   
+        ('Proteins'             	 , 29     , 2) ,   
 		( 'artist'                 	 , 100	  , 12),
 		( 'soc-BlogCatalog'	     	 , 128	  , 39),    
 ]

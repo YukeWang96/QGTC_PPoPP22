@@ -77,16 +77,12 @@ TORCH_CUDA_ARCH_LIST="8.6" python setup.py  clean --all install
 ## Running Experiments
 ------------
 + Get dataset `wget https://project-datasets.s3.us-west-2.amazonaws.com/qgtc_graphs.tar.gz` and then `tar -zxvf qgtc_graphs.tar.gz`
-<!-- + `./bench.py` for running `proteins`, `artist` and `soc-Blogcatalog` dataset.
-+ `./run_ppi.sh` for running `PPI` dataset.
-+ `./run_ogb.sh` for running `ogbn-arxiv` and `ogbn-products` dataset.
-+ `./run_all` for running all the above three experiments together by following the order of `bench.py`, `run_ppi.sh` and `run_ogb.sh` -->
-
++ Get dataset `wget https://project-datasets.s3.us-west-2.amazonaws.com/dataset_ogb.tar.gz` and then `tar -zxvf dataset_ogb.tar.gz`
 
 ## Figure 7. Speedup comparison.
 ------------
 ### (a) Cluster GCN.
-+ (optional) You can change the `bitwidth=4` at `0_7_eval_QGTC_cluster_GCN.py` to [1,2,4,8] for evaluation. default is 2 bit.
++ (optional) You can change the `bitwidth=4` at `0_7_eval_QGTC_cluster_GCN.py` to `[1,2,4,8]` for evaluation. default is 2 bit.
 ```
 ./0_7a_eval_QGTC_cluster_GCN.py
 ./1_7a_eval_DGL_cluster_GCN.py
