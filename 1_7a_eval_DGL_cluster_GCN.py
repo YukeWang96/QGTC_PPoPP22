@@ -7,18 +7,19 @@ hidden = 		[16]
 num_layers = 	[1]
 partitions = 	[1500] 
 
+os.system("touch DGL_cluster_GCN.log")
+
 dataset = [
 		( 'artist'                 	 , 100	  , 12),
 		( 'soc-BlogCatalog'	     	 , 128	  , 39),    
 ]
 
-os.system("touch DGL_cluster_GCN.log")
-
 for n_Layer in num_layers:
 	for hid in hidden:
 		for data, d, c in dataset:
 			for p in partitions:
-				command = "python cluster_gcn.py --gpu 0 \
+				command = "python cluster_gcn.py \
+        					--gpu 0 \
 							--dataset {} \
            					--dim {} \
                             --n-hidden {} \
@@ -33,7 +34,7 @@ os.system("python cluster_gcn.py --gpu 0 --dataset ppi --regular >> DGL_cluster_
 print()
 os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-arxiv --regular >> DGL_cluster_GCN.log")
 print()
-# os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-products --regular")
+os.system("python cluster_gcn.py --gpu 0 --dataset ogbn-products --regular >> DGL_cluster_GCN.log")
 
 os.system("./parse_time.py DGL_cluster_GCN.log > DGL_cluster_GCN.csv")
 if not os.path.exists("logs"):
