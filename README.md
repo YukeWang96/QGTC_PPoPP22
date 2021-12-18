@@ -76,18 +76,19 @@ TORCH_CUDA_ARCH_LIST="8.6" python setup.py  clean --all install
 
 ## Running Experiments
 ------------
-+ Get dataset `wget https://project-datasets.s3.us-west-2.amazonaws.com/qgtc_graphs.tar.gz` and then `tar -zxvf qgtc_graphs.tar.gz`
-+ Get dataset `wget https://project-datasets.s3.us-west-2.amazonaws.com/dataset_ogb.tar.gz` and then `tar -zxvf dataset_ogb.tar.gz`
+### Download datasets
+```
+./download_dataset.sh
+```
 
-## Figure 7. Speedup comparison.
+### Figure 7. Speedup comparison.
 ------------
-### (a) Cluster GCN.
-+ (optional) You can change the `bitwidth=4` at `0_7_eval_QGTC_cluster_GCN.py` to `[1,2,4,8]` for evaluation. default is 2 bit.
++ **(a) Cluster GCN**. You can change the `bitwidth=4` at `0_7_eval_QGTC_cluster_GCN.py` to `[1,2,4,8]` for evaluation. default is 2 bit.
 ```
 ./0_7a_eval_QGTC_cluster_GCN.py
 ./1_7a_eval_DGL_cluster_GCN.py
 ```
-+ Check the results in `QGTC_cluster_GCN_*bit.csv` and  `DGL_cluster_GCN.csv`. You will expect the result likes this.
+Check the results in `QGTC_cluster_GCN_*bit.csv` and  `DGL_cluster_GCN.csv`. You will expect the result likes this.
 
 | dataset          |  Epoch (ms) |
 |------------------|-------------|
@@ -96,15 +97,14 @@ TORCH_CUDA_ARCH_LIST="8.6" python setup.py  clean --all install
 | ppi              |  189.016    |
 | ogbn-arxiv       |  208.616    |
 
-### (b) Batched GIN.
-+ (optional) You can change the `bitwidth=4` at `0_7b_eval_QGTC_batched_GIN.py` to [1,2,4,8] for evaluation. default is 2 bit.
++ **(b) Batched GIN**. You can change the `bitwidth=4` at `0_7b_eval_QGTC_batched_GIN.py` to [1,2,4,8] for evaluation. default is 2 bit.
 ```
 ./0_7b_eval_QGTC_batched_GIN.py
 ./1_7b_eval_DGL_batched_GIN.py
 ```
 Check the results in `QGTC_batched_GIN_*bit.csv` and  `DGL_batched_GIN.csv`.
 
-### (c) Comparison with PyG on cluster GCN;
++ **(c) Comparison with PyG on cluster GCN**
 ```
 ./0_7a_eval_QGTC_cluster_GCN.py
 ./2_7c_eval_PyG_cluster_GCN.py
@@ -114,7 +114,7 @@ Check the results in `QGTC_cluster_GCN_*bit.csv` and  `PyG_cluster_GCN.csv`.
 
 ## Figure 8: Additional studies.
 ------------
-### (a) Comparison with the cuBLASgemmEX (int8) on Tensor Core.
++ **(a) Comparison with the cuBLASgemmEX (int8) on Tensor Core**.
 ```
 ./3_8a_cuBLAS_INT8.py
 cd cuBLASGemmEX/
@@ -177,13 +177,13 @@ M: 2048, K: 2048, N: 64, TFLOPS: 6.30
 M: 4096, K: 4096, N: 64, TFLOPS: 6.65
 ```
 
-### (b) Zero-tile jumping efficiency.
++ **(b) Zero-tile jumping efficiency**.
 ```
 ./3_8b_zero_tile_jumping.py
 ```
 **check the results in `zerotile_jumping.csv`**
 
-### (c) Adjacencymatrix size impact.
++ **(c) Adjacencymatrix size impact**.
 ```
 ./3_8c_adjmatrix_size.py
 ```
