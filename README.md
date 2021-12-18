@@ -116,7 +116,7 @@ Check the results in `QGTC_cluster_GCN_*bit.csv` and  `PyG_cluster_GCN.csv`.
 ------------
 + **(a) Comparison with the cuBLASgemmEX (int8) on Tensor Core**.
 ```
-./3_8a_cuBLAS_INT8.py
+./3_8a_QGTC_GEMM_INT8.py
 cd cuBLASGemmEX/
 ./compile.sh
 ./bench_cuBLAS_INT8.py

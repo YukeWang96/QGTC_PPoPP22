@@ -12,7 +12,7 @@ def PROFILE_NonZeroTile(M=3, K=3, N=3, nbits_a=1, nbits_x=1):
     QGTC.bitMM2Bit_profile(bit_a, bit_x, M, K, N, nbits_a, nbits_x, nbits_x)
 
 if __name__ == '__main__':
-    for bitwidth in [1, 2, 4, 8]:
+    for bitwidth in [1, 2, 3, 4, 5, 6, 7, 8]:
         print("========", bitwidth, "bit ==================")
         for dim in [16, 32, 64]:
             for T in range(3):
