@@ -12,7 +12,8 @@ for line in fp:
         data = line.split(",")[1].split("=")[1].strip('\'')
         # print(global_counter)
         # print(counter)
-        data_li.append([data, sum(global_counter), sum(counter), (sum(global_counter) - sum(counter))/sum(global_counter)])
+        # data_li.append([data, sum(global_counter), sum(counter), (sum(global_counter) - sum(counter))/sum(global_counter)])
+        data_li.append([data, sum(global_counter), sum(counter), sum(counter)/sum(global_counter)])
         global_counter = []
         counter = []
     if 'counter_global:' in line:
@@ -23,6 +24,11 @@ for line in fp:
         data = int(line.split(":")[1].strip('\''))
         counter.append(data)
 
-print("dataset",",", "non-jumping",",","jumping",",","reduction ratio")
+# print("dataset",",", "non-jumping",",","jumping",",","reduction ratio")
+# for dat, gc, c, ratio in data_li:
+    # print(dat,",", gc,",",c,",","{:.3f}".format(ratio))
+    
+    
+print("dataset",",", "non-jumping",",","jumping",",","ratio(jumping/non-jumping)")
 for dat, gc, c, ratio in data_li:
     print(dat,",", gc,",",c,",","{:.3f}".format(ratio))
