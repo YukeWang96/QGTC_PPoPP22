@@ -13,7 +13,7 @@ dataset = [
 		( 'soc-BlogCatalog'	     	 , 128	  , 39),    
 ]
 
-os.system("touch DGL_batched_GIN.log")
+os.system("touch res_DGL_batched_GIN.log")
 
 for n_Layer in num_layers:
 	for hid in hidden:
@@ -27,18 +27,18 @@ for n_Layer in num_layers:
                             --n-classes {} \
 							--psize {}\
 							--regular \
-							--run_GIN >> DGL_batched_GIN.log".\
+							--run_GIN >> res_DGL_batched_GIN.log".\
 							format(data, d, hid, c, p)		
 				os.system(command)
 				print()
 
-os.system("python batched_gin_dgl.py --gpu 0 --dataset ppi --regular --run_GIN >> DGL_batched_GIN.log")
+os.system("python batched_gin_dgl.py --gpu 0 --dataset ppi --regular --run_GIN >> res_DGL_batched_GIN.log")
 print()
-os.system("python batched_gin_dgl.py --gpu 0 --dataset ogbn-arxiv --regular --run_GIN >> DGL_batched_GIN.log")
+os.system("python batched_gin_dgl.py --gpu 0 --dataset ogbn-arxiv --regular --run_GIN >> res_DGL_batched_GIN.log")
 print()
-os.system("python batched_gin_dgl.py --gpu 0 --dataset ogbn-products --regular >> DGL_batched_GIN.log")
+os.system("python batched_gin_dgl.py --gpu 0 --dataset ogbn-products --regular >> res_DGL_batched_GIN.log")
 print()
-os.system("./parse_time.py DGL_batched_GIN.log > DGL_batched_GIN.csv")
+os.system("./parse_time.py res_DGL_batched_GIN.log > res_DGL_batched_GIN.csv")
 if not os.path.exists("logs"):
 	os.system("mkdir logs/")
 os.system("mv *.log logs/")

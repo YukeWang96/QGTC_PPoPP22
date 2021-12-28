@@ -15,7 +15,7 @@ dataset = [
 		( 'soc-BlogCatalog'	     	 , 128	  , 39),    
 ]
 
-os.system("touch QGTC_cluster_GCN_{}bit.log".format(bitwidth))
+os.system("touch res_QGTC_cluster_GCN_{}bit.log".format(bitwidth))
 
 for n_Layer in num_layers:
 	for hid in hidden:
@@ -29,18 +29,18 @@ for n_Layer in num_layers:
                             --n-classes {} \
 							--psize {}\
 							--use_QGTC \
-           					>> QGTC_cluster_GCN_{}bit.log".\
+           					>> res_QGTC_cluster_GCN_{}bit.log".\
 							format(bitwidth, data, d, hid, c, p, bitwidth)		
 				os.system(command)
 				print()
 
-os.system("python cluster_gcn_{0}.py --gpu 0 --dataset ppi --use_QGTC >> QGTC_cluster_GCN_{0}bit.log".format(bitwidth))
+os.system("python cluster_gcn_{0}.py --gpu 0 --dataset ppi --use_QGTC >> res_QGTC_cluster_GCN_{0}bit.log".format(bitwidth))
 print()
-os.system("python cluster_gcn_{0}.py --gpu 0 --dataset ogbn-arxiv --use_QGTC >> QGTC_cluster_GCN_{0}bit.log".format(bitwidth))
+os.system("python cluster_gcn_{0}.py --gpu 0 --dataset ogbn-arxiv --use_QGTC >> res_QGTC_cluster_GCN_{0}bit.log".format(bitwidth))
 print()
-os.system("python cluster_gcn_{0}.py --gpu 0 --dataset ogbn-products --use_QGTC >> QGTC_cluster_GCN_{0}bit.log".format(bitwidth))
+os.system("python cluster_gcn_{0}.py --gpu 0 --dataset ogbn-products --use_QGTC >> res_QGTC_cluster_GCN_{0}bit.log".format(bitwidth))
 print()
-os.system("./parse_time.py QGTC_cluster_GCN_{0}bit.log > QGTC_cluster_GCN_{0}bit.csv".format(bitwidth))
+os.system("./parse_time.py res_QGTC_cluster_GCN_{0}bit.log > res_QGTC_cluster_GCN_{0}bit.csv".format(bitwidth))
 if not os.path.exists("logs"):
 	os.system("mkdir logs/")
 os.system("mv *.log logs/")

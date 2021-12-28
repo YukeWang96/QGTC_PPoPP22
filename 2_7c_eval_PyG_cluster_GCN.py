@@ -13,7 +13,7 @@ dataset = [
 		( 'soc-BlogCatalog'	     	 , 128	  , 39),    
 ]
 
-os.system("touch PyG_cluster_GCN.log")
+os.system("touch res_PyG_cluster_GCN.log")
 
 for n_Layer in num_layers:
 	for hid in hidden:
@@ -28,19 +28,19 @@ for n_Layer in num_layers:
                             --n-classes {} \
 							--psize {}\
 							--regular \
-							--use_PyG >> PyG_cluster_GCN.log".\
+							--use_PyG >> res_PyG_cluster_GCN.log".\
 							format(data, d, c, hid, p)		
 				os.system(command)
 				print()
  
 
-os.system("python cluster_gcn_pyg.py --gpu 0 --dataset ppi --regular --use_PyG >> PyG_cluster_GCN.log")
+os.system("python cluster_gcn_pyg.py --gpu 0 --dataset ppi --regular --use_PyG >> res_PyG_cluster_GCN.log")
 print()
-os.system("python cluster_gcn_pyg.py --gpu 0 --dataset ogbn-arxiv --regular --use_PyG >> PyG_cluster_GCN.log")
+os.system("python cluster_gcn_pyg.py --gpu 0 --dataset ogbn-arxiv --regular --use_PyG >> res_PyG_cluster_GCN.log")
 print()
-os.system("python cluster_gcn_pyg.py --gpu 0 --dataset ogbn-products --regular --use_PyG >> PyG_cluster_GCN.log")
+os.system("python cluster_gcn_pyg.py --gpu 0 --dataset ogbn-products --regular --use_PyG >> res_PyG_cluster_GCN.log")
 print()
-os.system("./parse_time.py PyG_cluster_GCN.log > PyG_cluster_GCN.csv")
+os.system("./parse_time.py res_PyG_cluster_GCN.log > res_PyG_cluster_GCN.csv")
 if not os.path.exists("logs"):
 	os.system("mkdir logs/")
 os.system("mv *.log logs/")

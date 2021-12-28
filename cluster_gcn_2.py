@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser()
 register_data_args(parser)
 parser.add_argument("--gpu", type=int, default=0, help="gpu")
 
-parser.add_argument("--n-epochs", type=int, default=100, help="number of training epochs")
+parser.add_argument("--n-epochs", type=int, default=20, help="number of training epochs")
 parser.add_argument("--batch-size", type=int, default=20, help="batch size")
 parser.add_argument("--psize", type=int, default=1500, help="number of partitions")
 
