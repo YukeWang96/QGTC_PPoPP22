@@ -13,7 +13,6 @@ from sampler import ClusterIter
 from utils import load_data
 from dataset import *
 from tqdm import *
-import QGTC
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -84,51 +83,25 @@ def main(args):
     val_mask = val_mask.cuda()
     test_mask = test_mask.cuda()
     g = g.int().to(args.gpu)
-    # print('labels shape:', g.ndata['label'].shape)
-    # print("features shape, ", g.ndata['feat'].shape)
     feat_size  = g.ndata['feat'].shape[1]
 
-    if args.use_PyG:
-        model = SAGE_PyG(in_feats, args.n_hidden, 
-                            n_classes, num_layers=args.n_layers+2)
-    else:
-        if args.run_GIN:
-            model = GIN(in_feats, args.n_hidden, n_classes)
-        else:
-            model = GraphSAGE(in_feats, args.n_hidden, n_classes, args.n_layers)
+    model = SAGE_PyG(in_feats, args.n_hidden, 
+                        n_classes, num_layers=args.n_layers+2)
 
     model.cuda()
     train_nid = torch.from_numpy(train_nid).cuda()
 
     start_time = time.time()
-    transfering = 0
-    running_time = 0
-    
     cnt = 0
-    for epoch in tqdm(range(args.n_epochs)):
-        for j, cluster in enumerate(cluster_iterator):
-            
-            # for DGL and PyG
-            if args.regular: 
-                torch.cuda.synchronize()
-                t = time.perf_counter()      
-                cluster = cluster.to(torch.cuda.current_device())
-                torch.cuda.synchronize()
-                transfering += time.perf_counter() - t
-                
-                torch.cuda.synchronize()
-                t = time.perf_counter()   
-                edge_idx = torch.stack([cluster.edges()[0], cluster.edges()[1]], dim=0).long()
-                model(cluster.ndata['feat'], edge_idx)
-                torch.cuda.synchronize()
-                running_time += time.perf_counter() - t
-
+    for _ in tqdm(range(args.n_epochs)):
+        for j, cluster in enumerate(cluster_iterator):              
+            cluster = cluster.to(torch.cuda.current_device())
+            edge_idx = torch.stack([cluster.edges()[0], cluster.edges()[1]], dim=0).long()
         cnt += 1
         cluster = cluster.cpu()
 
     torch.cuda.synchronize()
     end_time = time.time()
-    print("Trans (ms): {:.3f}, Compute (ms): {:.3f}".format(transfering/cnt*1e3, running_time/cnt*1e3))
     print("Avg. Epoch: {:.3f} ms".format((end_time - start_time)*1000/cnt))
 
 if __name__ == '__main__':
