@@ -7,11 +7,7 @@ hidden = 		[16]
 num_layers = 	[1]
 partitions = 	[1500]
 
-<<<<<<< HEAD
 bitwidth = 2
-=======
-bitwidth = 2 # 1,2,4,8
->>>>>>> 69486b42730fe849b8dcff4f144caf02deb03773
 
 dataset = [
         ( 'Proteins'             	 , 29     , 2) ,   
