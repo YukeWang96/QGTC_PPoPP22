@@ -105,7 +105,7 @@ cd cuBLASGemmEX/
 ./compile.sh
 ./bench_cuBLAS_INT8.py
 ```
-running `./3_8a_cuBLAS_INT8.py` you will get the result like this 
+running `./2_7c_cuBLAS_INT8.py` you will get the result like this 
 ```
 ======== 1 bit ==================
 X1_height 1024, X1_width: 1024, X2_width: 16, TFLOPs: 5.847
@@ -163,13 +163,13 @@ M: 4096, K: 4096, N: 64, TFLOPS: 6.65
 
 + **(b) Zero-tile jumping efficiency**.
 ```
-./3_8b_zero_tile_jumping.py
+./3_8a_zero_tile_jumping.py
 ```
 **check the results in `zerotile_jumping.csv`**
 
 + **(c) Adjacencymatrix size impact**.
 ```
-./3_8c_adjmatrix_size.py
+./3_8b_adjmatrix_size.py
 ```
 you will get the result like this
 ```
