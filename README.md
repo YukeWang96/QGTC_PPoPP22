@@ -60,15 +60,6 @@ conda install -c dglteam dgl-cuda11.0
 pip install torch requests
 ```
 
-+ Install [**`Pytorch-Geometric (PyG)`**](https://github.com/rusty1s/pytorch_geometric).
-```
-pip install torch-scatter -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html
-pip install torch-sparse -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html
-pip install torch-cluster -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html
-pip install torch-spline-conv -f https://pytorch-geometric.com/whl/torch-1.8.0+cu111.html
-pip install torch-geometric
-```
-
 ### Install QGTC. Go to `QGTC_module/`, then run 
 ```
 TORCH_CUDA_ARCH_LIST="8.6" python setup.py  clean --all install 
@@ -103,13 +94,6 @@ Check the results in `QGTC_cluster_GCN_*bit.csv` and  `DGL_cluster_GCN.csv`. You
 ./1_7b_eval_DGL_batched_GIN.py
 ```
 Check the results in `QGTC_batched_GIN_*bit.csv` and  `DGL_batched_GIN.csv`.
-
-+ **(c) Comparison with PyG on cluster GCN**
-```
-./0_7a_eval_QGTC_cluster_GCN.py
-./2_7c_eval_PyG_cluster_GCN.py
-```
-Check the results in `QGTC_cluster_GCN_*bit.csv` and  `PyG_cluster_GCN.csv`.
 
 
 ## Figure 8: Additional studies.

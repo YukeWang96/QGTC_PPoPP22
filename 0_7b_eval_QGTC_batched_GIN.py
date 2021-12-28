@@ -3,11 +3,11 @@ import os
 import warnings
 warnings.filterwarnings("ignore")
 
-hidden = 		[16] #[16, 32, 64, 128, 256]
+hidden = 		[16]
 num_layers = 	[1]
-partitions = 	[1500] # 1500, 3000, 4500, 6000, 7500, 9000]
+partitions = 	[1500]
 
-bitwidth = 8 # 1,2,4,8,16,32
+bitwidth = 2
 
 dataset = [
         ( 'Proteins'                 , 29     , 2) ,   

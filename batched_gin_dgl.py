@@ -32,8 +32,7 @@ parser.add_argument("--n-classes", type=int, default=10, help="number of classes
 parser.add_argument("--n-layers", type=int, default=1, help="number of hidden gcn layers")
 
 parser.add_argument("--use-pp", action='store_true',help="whether to use precomputation")
-parser.add_argument("--regular", action='store_true',help="whether to use PyG or DGL")
-parser.add_argument("--use_PyG", action='store_true',help="whether to use PyG")
+parser.add_argument("--regular", action='store_true',help="whether to use DGL")
 parser.add_argument("--run_GIN", action='store_true',help="whether to run GIN model")
 parser.add_argument("--use_QGTC", action='store_true',help="whether to use QGTC")
 parser.add_argument("--zerotile_jump", action='store_true',help="whether to profile zero-tile jumping")
@@ -88,14 +87,10 @@ def main(args):
     # print("features shape, ", g.ndata['feat'].shape)
     feat_size  = g.ndata['feat'].shape[1]
 
-    if args.use_PyG:
-        model = SAGE_PyG(in_feats, args.n_hidden, 
-                            n_classes, num_layers=args.n_layers+2)
+    if args.run_GIN:
+        model = GIN(in_feats, args.n_hidden, n_classes)
     else:
-        if args.run_GIN:
-            model = GIN(in_feats, args.n_hidden, n_classes)
-        else:
-            model = GraphSAGE(in_feats, args.n_hidden, n_classes, args.n_layers)
+        model = GraphSAGE(in_feats, args.n_hidden, n_classes, args.n_layers)
 
     model.cuda()
     train_nid = torch.from_numpy(train_nid).cuda()
