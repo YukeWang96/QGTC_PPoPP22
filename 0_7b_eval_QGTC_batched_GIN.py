@@ -22,7 +22,7 @@ for n_Layer in num_layers:
 	for hid in hidden:
 		for data, d, c in dataset:
 			for p in partitions:
-				command = "python cluster_gcn_{}.py \
+				command = "python main_qgtc.py \
     						--gpu 0 \
 							--dataset {} \
        						--dim {} \
@@ -35,11 +35,11 @@ for n_Layer in num_layers:
 				os.system(command)
 				print()
  
-os.system("python cluster_gcn_{0}.py --gpu 0 --dataset ppi --use_QGTC --run_GIN >> res_QGTC_batched_GIN_{0}bit.log".format(bitwidth))
+os.system("python main_qgtc.py --gpu 0 --dataset ppi --use_QGTC --run_GIN >> res_QGTC_batched_GIN_{0}bit.log".format(bitwidth))
 print()
-os.system("python cluster_gcn_{0}.py --gpu 0 --dataset ogbn-arxiv --use_QGTC --run_GIN >> res_QGTC_batched_GIN_{0}bit.log".format(bitwidth))
+os.system("python main_qgtc.py --gpu 0 --dataset ogbn-arxiv --use_QGTC --run_GIN >> res_QGTC_batched_GIN_{0}bit.log".format(bitwidth))
 print()
-os.system("python cluster_gcn_{0}.py --gpu 0 --dataset ogbn-products --use_QGTC --run_GIN  >> res_QGTC_batched_GIN_{0}bit.log".format(bitwidth))
+os.system("python main_qgtc.py --gpu 0 --dataset ogbn-products --use_QGTC --run_GIN  >> res_QGTC_batched_GIN_{0}bit.log".format(bitwidth))
 print()
 os.system("./parse_time.py res_QGTC_batched_GIN_{0}bit.log > res_QGTC_batched_GIN_{0}bit.csv".format(bitwidth))
 if not os.path.exists("logs"):
