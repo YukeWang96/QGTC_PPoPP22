@@ -3,7 +3,7 @@ import os
 import warnings
 warnings.filterwarnings("ignore")
 
-hidden = 		[16] 
+hidden = 		[64] 
 num_layers = 	[1]
 partitions = 	[1500] 
 
