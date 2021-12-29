@@ -32,7 +32,7 @@ for n_Layer in num_layers:
 							--use_QGTC \
            					--bit_width {}\
 							--run_GIN >> res_QGTC_batched_GIN_{}bit.log".\
-							format(bitwidth, data, d, c, hid, p, bitwidth, bitwidth)		
+							format(data, d, c, hid, p, bitwidth, bitwidth)		
 				os.system(command)
 				print()
  

@@ -76,7 +76,8 @@ def main(args):
     n_classes = data.num_classes
     # metis only support int64 graph
     g = g.long()
-    cluster_iterator = ClusterIter(args.dataset, g, args.psize, args.batch_size, train_nid, use_pp=False, regular=args.regular, bit_width=args.bit_width)
+    cluster_iterator = ClusterIter(args.dataset, g, args.psize, args.batch_size, train_nid, 
+                                   use_pp=False, regular=args.regular, bit_width=args.bit_width, run_GIN=args.run_GIN)
 
     torch.cuda.set_device(args.gpu)
     val_mask = val_mask.cuda()

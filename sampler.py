@@ -22,7 +22,7 @@ class ClusterIter(object):
     '''The partition sampler given a DGLGraph and partition number.
     The metis is used as the graph partition backend.
     '''
-    def __init__(self, dn, g, psize, batch_size, seed_nid, use_pp=False, regular=False, bit_width=2):
+    def __init__(self, dn, g, psize, batch_size, seed_nid, use_pp=False, regular=False, bit_width=2, run_GIN=False):
         """Initialize the sampler.
 
         Paramters
@@ -94,8 +94,13 @@ class ClusterIter(object):
                 X_size_0 = X.size(0)
                 X_size_1 = X.size(1)
                 
-                bit_A = QGTC.val2bit(A.cuda(), 1, False, False)
-                bit_X = QGTC.val2bit(X.cuda(), self.bit_width, True, False)                
+                if not run_GIN: #  run GCN
+                    bit_A = QGTC.val2bit(A.cuda(), 1, False, False)
+                    bit_X = QGTC.val2bit(X.cuda(), self.bit_width, True, False) 
+                else: # run GIN
+                    bit_A = QGTC.val2bit(A.cuda(), 1, False, False)
+                    bit_X = QGTC.val2bit(X.cuda(), self.bit_width, True, False)
+                             
                 cTensor = ClusterTensor(bit_A.cpu(), bit_X.cpu())
                 self.cluster_param_li.append((A_size_0, A_size_1, X_size_0, X_size_1))
                 self.cTensor_li.append(cTensor)

@@ -10,7 +10,7 @@ print("dataset", ",","Epoch (ms)")
 for line in fp:
     if 'dataset' in line:
         if len(line.split(",")) < 5: continue
-        data = line.split(",")[1].split("=")[1].strip('\'')
+        data = line.split(",")[2].split("=")[1].strip('\'')
         data_li.append(data)
     if "Avg. Epoch:" in line:
         ti = float(line.strip("\n").split(":")[1].strip("ms"))
