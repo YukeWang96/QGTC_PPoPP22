@@ -163,13 +163,13 @@ M: 4096, K: 4096, N: 64, TFLOPS: 6.65
 
 + **(b) Zero-tile jumping efficiency**.
 ```
-./3_8a_zero_tile_jumping.py
+./3_8_zero_tile_jumping.py
 ```
 **check the results in `zerotile_jumping.csv`**
 
 + **(c) Adjacencymatrix size impact**.
 ```
-./3_8b_adjmatrix_size.py
+./3_9_adjmatrix_size.py
 ```
 you will get the result like this
 ```
