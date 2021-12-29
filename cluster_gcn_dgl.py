@@ -83,8 +83,6 @@ def main(args):
     val_mask = val_mask.cuda()
     test_mask = test_mask.cuda()
     g = g.int().to(args.gpu)
-    # print('labels shape:', g.ndata['label'].shape)
-    # print("features shape, ", g.ndata['feat'].shape)
     feat_size  = g.ndata['feat'].shape[1]
 
     if args.run_GIN:
@@ -94,36 +92,17 @@ def main(args):
 
     model.cuda()
     train_nid = torch.from_numpy(train_nid).cuda()
-
     start_time = time.time()
 
-    transfering = 0
-    running_time = 0
-
-    cnt = 0
     for epoch in tqdm(range(args.n_epochs)):
         for j, cluster in enumerate(cluster_iterator):
-            # for DGL
-            if args.regular: 
-                # torch.cuda.synchronize()
-                # t = time.perf_counter()      
-                cluster = cluster.to(torch.cuda.current_device())
-                # torch.cuda.synchronize()
-                # transfering += time.perf_counter() - t
-                
-                # torch.cuda.synchronize()
-                # t = time.perf_counter()   
-                model(cluster)    # DGL compute
-                # torch.cuda.synchronize()
-                # running_time += time.perf_counter() - t
-
-        cnt += 1
+            cluster = cluster.to(torch.cuda.current_device())
+            model(cluster)  
         cluster = cluster.cpu()
 
     torch.cuda.synchronize()
     end_time = time.time()
-    # print("Trans (ms): {:.3f}, Compute (ms): {:.3f}".format(transfering/cnt*1e3, running_time/cnt*1e3))
-    print("Avg. Epoch: {:.3f} ms".format((end_time - start_time)*1000/cnt))
+    print("Avg. Epoch: {:.3f} ms".format((end_time - start_time)*1000/args.n_epochs))
 
 if __name__ == '__main__':
     main(args)
