@@ -105,24 +105,24 @@ def main(args):
         for j, cluster in enumerate(cluster_iterator):
             # for DGL
             if args.regular: 
-                torch.cuda.synchronize()
-                t = time.perf_counter()      
+                # torch.cuda.synchronize()
+                # t = time.perf_counter()      
                 cluster = cluster.to(torch.cuda.current_device())
-                torch.cuda.synchronize()
-                transfering += time.perf_counter() - t
+                # torch.cuda.synchronize()
+                # transfering += time.perf_counter() - t
                 
-                torch.cuda.synchronize()
-                t = time.perf_counter()   
+                # torch.cuda.synchronize()
+                # t = time.perf_counter()   
                 model(cluster)    # DGL compute
-                torch.cuda.synchronize()
-                running_time += time.perf_counter() - t
+                # torch.cuda.synchronize()
+                # running_time += time.perf_counter() - t
 
         cnt += 1
         cluster = cluster.cpu()
 
     torch.cuda.synchronize()
     end_time = time.time()
-    print("Trans (ms): {:.3f}, Compute (ms): {:.3f}".format(transfering/cnt*1e3, running_time/cnt*1e3))
+    # print("Trans (ms): {:.3f}, Compute (ms): {:.3f}".format(transfering/cnt*1e3, running_time/cnt*1e3))
     print("Avg. Epoch: {:.3f} ms".format((end_time - start_time)*1000/cnt))
 
 if __name__ == '__main__':
